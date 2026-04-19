@@ -1,0 +1,15 @@
+[project]
+name = "autofeedsync"
+version = "0.1.0"
+description = "CLI foundation for building qBittorrent RSS rules from anime search input."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "InquirerPy>=0.3",
+]
+
+[project.scripts]
+autofeedsync = "autofeedsync.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
