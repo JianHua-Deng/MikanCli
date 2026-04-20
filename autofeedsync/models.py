@@ -13,9 +13,32 @@ class SearchRequest:
     keyword: str
     include_words: tuple[str, ...] = ()
     exclude_words: tuple[str, ...] = ()
-    group: str | None = None
-    resolution: str | None = None
     save_path: str | None = None
+
+
+@dataclass(frozen=True)
+class MikanBangumi:
+    bangumi_id: int
+    title: str
+    page_url: str
+    feed_url: str
+
+
+@dataclass(frozen=True)
+class MikanSubgroup:
+    subgroup_id: int
+    title: str
+    feed_url: str
+    publish_group_url: str | None = None
+
+
+@dataclass(frozen=True)
+class MikanFeedItem:
+    title: str
+    episode_url: str | None = None
+    torrent_url: str | None = None
+    content_length: int | None = None
+    published_at: str | None = None
 
 
 @dataclass(frozen=True)
@@ -25,6 +48,13 @@ class RuleDraft:
     rule_name: str
     must_contain: tuple[str, ...]
     must_not_contain: tuple[str, ...]
+    mikan_title: str | None = None
+    mikan_bangumi_id: int | None = None
+    mikan_page_url: str | None = None
+    mikan_subgroup: str | None = None
+    mikan_subgroup_id: int | None = None
+    mikan_publish_group_url: str | None = None
+    feed_url: str | None = None
     save_path: str | None = None
     notes: tuple[str, ...] = ()
 

@@ -8,10 +8,13 @@ The repository currently contains the first small slice of the project:
 
 - a Python CLI scaffold
 - keyword normalization
+- Mikan Bangumi search, subgroup discovery, and subgroup RSS feed resolution
 - draft qBittorrent rule construction
 - focused tests for the pure logic
 
-This increment does not yet query Mikan or send data to qBittorrent.
+This increment now searches Mikan, lets you select the Bangumi and subgroup,
+resolves the subgroup-specific RSS feed, and prints that feed alongside the
+draft rule details. qBittorrent submission is still not implemented.
 
 ## Usage
 
@@ -40,8 +43,13 @@ If the chosen folder is not already the saved default, AutoFeedSync asks whether
 Current guided flow:
 
 - ask for anime keyword if you did not type one
+- search Mikan for matching Bangumi entries
+- let you choose the correct Mikan entry when more than one match is found
+- fetch subgroup entries from the selected Bangumi page
+- let you choose the correct subgroup RSS feed when more than one subgroup is found
 - optionally ask for release group
 - let you choose a resolution preference from a menu
 - optionally ask for include words
 - optionally ask for exclude words
 - let you choose the download folder from a menu
+- print the resolved Mikan page URL, subgroup, and subgroup RSS feed URL with the draft rule summary
