@@ -213,26 +213,30 @@ def _format_timestamp(value: str | None) -> str:
         return value
 
 
-def _print_feed_preview(subgroup: MikanSubgroup, feed_items: tuple[MikanFeedItem, ...]) -> None:
-    print()
-    print(f"Subgroup preview: {subgroup.title}")
-    print(f"Feed URL: {subgroup.feed_url}")
-    print(f"Items: {len(feed_items)}")
-    print()
+def _build_feed_preview_text(
+    subgroup: MikanSubgroup,
+    feed_items: tuple[MikanFeedItem, ...],
+) -> str:
+    lines = [
+        f"Subgroup preview: {subgroup.title}",
+        f"Feed URL: {subgroup.feed_url}",
+        f"Items: {len(feed_items)}",
+        "",
+    ]
 
     if not feed_items:
-        print("(The RSS feed is empty.)")
-        print()
-        return
+        lines.append("(The RSS feed is empty.)")
+        return "\n".join(lines)
 
     for index, item in enumerate(feed_items, start=1):
-        print(f"{index}. {item.title}")
-        print(
+        lines.append(f"{index}. {item.title}")
+        lines.append(
             "   "
             f"Size: {_format_size(item.content_length)} | "
             f"Updated: {_format_timestamp(item.published_at)}"
         )
-    print()
+
+    return "\n".join(lines)
 
 
 def _select_candidate_or_search_again(
@@ -284,9 +288,9 @@ def _select_subgroup_or_navigate(
     return subgroups[selected]
 
 
-def _confirm_subgroup_selection() -> str:
+def _confirm_subgroup_selection(preview_text: str) -> str:
     return select_option(
-        "Use this subgroup feed?",
+        f"Use this subgroup feed?\n\n{preview_text}",
         [
             (CONFIRM_SUBGROUP, "Yes"),
             (REJECT_SUBGROUP, "No, search with different words"),
@@ -438,8 +442,8 @@ def _run_interactive_selection(
                 print(str(exc))
                 continue
 
-            _print_feed_preview(subgroup, feed_items)
-            decision = _confirm_subgroup_selection()
+            preview_text = _build_feed_preview_text(subgroup, feed_items)
+            decision = _confirm_subgroup_selection(preview_text)
             if decision == BACK_TO_SUBGROUPS:
                 continue
             if decision == REJECT_SUBGROUP:
