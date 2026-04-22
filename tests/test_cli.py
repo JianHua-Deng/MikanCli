@@ -105,13 +105,16 @@ class InteractiveCliTests(unittest.TestCase):
         from unittest.mock import patch
 
         config_path = self.temp_dir / ".autofeedsync.json"
-        with patch("autofeedsync.cli.search_mikan_bangumi", return_value=candidates), patch(
-            "autofeedsync.cli.fetch_mikan_subgroups", return_value=subgroups
+        with patch("autofeedsync.interactive.search_mikan_bangumi", return_value=candidates), patch(
+            "autofeedsync.interactive.fetch_mikan_subgroups", return_value=subgroups
         ), patch(
-            "autofeedsync.cli.fetch_mikan_feed_items", return_value=feed_items
+            "autofeedsync.interactive.fetch_mikan_feed_items", return_value=feed_items
+        ), patch(
+            "autofeedsync.interactive.select_option",
+            side_effect=[0, 0, "yes"],
         ), patch(
             "autofeedsync.cli.select_option",
-            side_effect=[0, 0, "yes", "downloads"],
+            return_value="downloads",
         ), patch(
             "autofeedsync.cli.prompt_text",
             side_effect=["HEVC", "720p"],
@@ -180,10 +183,12 @@ class InteractiveCliTests(unittest.TestCase):
         from unittest.mock import patch
 
         config_path = self.temp_dir / ".autofeedsync.json"
-        with patch("autofeedsync.cli.search_mikan_bangumi", return_value=candidates), patch(
-            "autofeedsync.cli.fetch_mikan_subgroups", return_value=subgroups
+        with patch("autofeedsync.interactive.search_mikan_bangumi", return_value=candidates), patch(
+            "autofeedsync.interactive.fetch_mikan_subgroups", return_value=subgroups
         ), patch(
-            "autofeedsync.cli.fetch_mikan_feed_items", return_value=feed_items
+            "autofeedsync.interactive.fetch_mikan_feed_items", return_value=feed_items
+        ), patch(
+            "autofeedsync.interactive.select_option", side_effect=fake_select_option
         ), patch(
             "autofeedsync.cli.select_option", side_effect=fake_select_option
         ), patch(
@@ -236,12 +241,11 @@ class InteractiveCliTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("autofeedsync.cli.search_mikan_bangumi", return_value=candidates), patch(
-            "autofeedsync.cli.fetch_mikan_subgroups", return_value=subgroups
+        with patch("autofeedsync.interactive.search_mikan_bangumi", return_value=candidates), patch(
+            "autofeedsync.interactive.fetch_mikan_subgroups", return_value=subgroups
         ):
             selected_bangumi, selected_subgroup, notes = resolve_mikan_selection(
                 SearchRequest(keyword="\u836f\u5c4b\u5c11\u5973\u7684\u5462\u5583"),
-                interactive=False,
             )
 
         self.assertEqual(selected_bangumi, candidates[0])

@@ -16,10 +16,17 @@ This increment now searches Mikan, lets you select the Bangumi and subgroup,
 resolves the subgroup-specific RSS feed, and prints that feed alongside the
 draft rule details. qBittorrent submission is still not implemented.
 
+Internally, the project is now split more cleanly by responsibility:
+
+- `cli.py` keeps the entrypoint and CLI assembly
+- `interactive.py` handles Bangumi/subgroup navigation
+- `display.py` handles text rendering
+- `input_helpers.py` handles reusable text and word-list input parsing
+
 ## Usage
 
 ```bash
-python -m autofeedsync "solo leveling" --group SubsPlease --resolution 1080p --include HEVC --exclude 720p
+python -m autofeedsync "solo leveling" --include HEVC --exclude 720p
 ```
 
 You can also run it with no extra arguments and let the script guide you:
@@ -47,8 +54,8 @@ Current guided flow:
 - let you choose the correct Mikan entry when more than one match is found
 - fetch subgroup entries from the selected Bangumi page
 - let you choose the correct subgroup RSS feed when more than one subgroup is found
-- optionally ask for release group
-- let you choose a resolution preference from a menu
+- show the subgroup RSS contents before confirmation
+- let you confirm, go back to subgroup selection, or search again
 - optionally ask for include words
 - optionally ask for exclude words
 - let you choose the download folder from a menu
