@@ -16,6 +16,9 @@ PYPROJECT_PATH = PROJECT_ROOT / "pyproject.toml"
 IMPORT_NAME_OVERRIDES = {
     "InquirerPy": "InquirerPy",
 }
+# Splits a dependency string before version pins, markers, or extras so only the package name remains.
+# Example: "InquirerPy>=0.3" -> "InquirerPy"
+_REQUIREMENT_SPLIT_RE = re.compile(r"[<>=!~;\[]")
 
 
 def load_project_dependencies(pyproject_path: Path = PYPROJECT_PATH) -> list[str]:
@@ -29,7 +32,7 @@ def load_project_dependencies(pyproject_path: Path = PYPROJECT_PATH) -> list[str
 
 
 def requirement_to_import_name(requirement: str) -> str:
-    package_name = re.split(r"[<>=!~;\[]", requirement, maxsplit=1)[0].strip()
+    package_name = _REQUIREMENT_SPLIT_RE.split(requirement, maxsplit=1)[0].strip()
     if package_name in IMPORT_NAME_OVERRIDES:
         return IMPORT_NAME_OVERRIDES[package_name]
     return package_name.replace("-", "_")

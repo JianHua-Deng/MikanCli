@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import re
 
+# Matches one or more whitespace characters so uneven spacing can be collapsed into a single gap.
+# Example: "  Solo \n Leveling  " -> "Solo Leveling"
 _WHITESPACE_RE = re.compile(r"\s+")
+# Matches Windows-forbidden filename characters so generated folder names stay filesystem-safe.
+# Example: 'One Piece: "Egghead"?' -> "One Piece Egghead"
 _INVALID_PATH_CHARS_RE = re.compile(r'[<>:"/\\|?*]')
 
 # Replaces multiple whitespaces or newlines with a single space and trims the edges
