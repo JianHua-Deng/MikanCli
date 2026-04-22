@@ -167,27 +167,39 @@ def parse_search_results(html: str) -> tuple[MikanBangumi, ...]:
     return tuple(parser.candidates)
 
 
-# Matches one subgroup section on a Bangumi page and captures both the subgroup id and its inner HTML.
-# Example: '<div class="subgroup-text" id="370">...</div><div class="episode-table">' -> subgroup_id="370", body="..."
 _SUBGROUP_BLOCK_RE = re.compile(
     r'<div class="subgroup-text" id="(?P<subgroup_id>\d+)">(?P<body>.*?)</div>\s*<div class="episode-table">',
     re.DOTALL,
 )
-# Matches the publish-group link inside a subgroup block so the subgroup title and group URL can be extracted.
-# Example: '<a href="/Home/PublishGroup/223">LoliHouse</a>' -> href="/Home/PublishGroup/223", title="LoliHouse"
+"""
+Matches one subgroup section on a Bangumi page and captures both the subgroup id and its inner HTML.
+Example: '<div class="subgroup-text" id="370">...</div><div class="episode-table">' -> subgroup_id="370", body="..."
+"""
+
+
 _PUBLISH_GROUP_RE = re.compile(
     r'<a href="(?P<href>/Home/PublishGroup/\d+)"[^>]*>(?P<title>.*?)</a>',
     re.DOTALL,
 )
-# Matches a subgroup-specific RSS link and captures the Bangumi id plus subgroup id from the URL itself.
-# Example: '/RSS/Bangumi?bangumiId=3247&subgroupid=370' -> bangumi_id="3247", subgroup_id="370"
+"""
+Matches the publish-group link inside a subgroup block so the subgroup title and group URL can be extracted.
+Example: '<a href="/Home/PublishGroup/223">LoliHouse</a>' -> href="/Home/PublishGroup/223", title="LoliHouse"
+"""
+
 _RSS_RE = re.compile(
     r'<a href="(?P<href>/RSS/Bangumi\?bangumiId=(?P<bangumi_id>\d+)(?:&|&amp;)subgroupid=(?P<subgroup_id>\d+))"[^>]*class="mikan-rss"',
     re.DOTALL,
 )
-# Matches any HTML tag so raw markup can be stripped before the remaining text is normalized.
-# Example: "<span>Prejudice-Studio</span>" -> " Prejudice-Studio "
+"""
+Matches a subgroup-specific RSS link and captures the Bangumi id plus subgroup id from the URL itself.
+Example: '/RSS/Bangumi?bangumiId=3247&subgroupid=370' -> bangumi_id="3247", subgroup_id="370"
+"""
+
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
+"""
+Matches any HTML tag so raw markup can be stripped before the remaining text is normalized.
+Example: "<span>Prejudice-Studio</span>" -> " Prejudice-Studio "
+"""
 
 
 def _strip_tags(value: str) -> str:
