@@ -134,7 +134,7 @@ The task is complete when:
 **Input (CLI):**
 
 ```bash
-python autofeedsync.py "solo leveling" --resolution 1080p --include SubsPlease --exclude 720p
+python -m mikancli "solo leveling" --include SubsPlease --exclude 720p
 ```
 
 **Transformation:**

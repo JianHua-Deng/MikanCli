@@ -4,7 +4,7 @@ import shutil
 import unittest
 from pathlib import Path
 
-from autofeedsync.bootstrap import (
+from mikancli.bootstrap import (
     ensure_runtime_dependencies,
     find_missing_dependencies,
     load_project_dependencies,
@@ -44,7 +44,7 @@ class BootstrapTests(unittest.TestCase):
     def test_find_missing_dependencies_returns_only_missing(self) -> None:
         from unittest.mock import patch
 
-        with patch("autofeedsync.bootstrap.importlib.util.find_spec") as find_spec:
+        with patch("mikancli.bootstrap.importlib.util.find_spec") as find_spec:
             find_spec.side_effect = [object(), None]
             missing = find_missing_dependencies(["rich>=13", "InquirerPy>=0.3"])
 
@@ -59,8 +59,8 @@ class BootstrapTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("autofeedsync.bootstrap.importlib.util.find_spec", return_value=None), patch(
-            "autofeedsync.bootstrap.install_dependencies"
+        with patch("mikancli.bootstrap.importlib.util.find_spec", return_value=None), patch(
+            "mikancli.bootstrap.install_dependencies"
         ) as install_mock:
             installed = ensure_runtime_dependencies(pyproject_path)
 
@@ -76,8 +76,8 @@ class BootstrapTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("autofeedsync.bootstrap.importlib.util.find_spec", return_value=object()), patch(
-            "autofeedsync.bootstrap.install_dependencies"
+        with patch("mikancli.bootstrap.importlib.util.find_spec", return_value=object()), patch(
+            "mikancli.bootstrap.install_dependencies"
         ) as install_mock:
             installed = ensure_runtime_dependencies(pyproject_path)
 

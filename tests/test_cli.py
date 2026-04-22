@@ -5,13 +5,13 @@ import shutil
 import unittest
 from pathlib import Path
 
-from autofeedsync.cli import (
+from mikancli.cli import (
     _build_interactive_draft,
     build_request_from_args,
     resolve_mikan_selection,
 )
-from autofeedsync.config import load_config
-from autofeedsync.models import (
+from mikancli.config import load_config
+from mikancli.models import (
     AppConfig,
     MikanBangumi,
     MikanFeedItem,
@@ -46,7 +46,7 @@ class InteractiveCliTests(unittest.TestCase):
         request = build_request_from_args(
             args,
             config=AppConfig(default_save_path="D:\\Anime\\Default"),
-            config_path=self.temp_dir / ".autofeedsync.json",
+            config_path=self.temp_dir / ".mikancli.json",
         )
 
         self.assertEqual(request.keyword, "Solo Leveling")
@@ -67,7 +67,7 @@ class InteractiveCliTests(unittest.TestCase):
             build_request_from_args(
                 args,
                 config=AppConfig(),
-                config_path=self.temp_dir / ".autofeedsync.json",
+                config_path=self.temp_dir / ".mikancli.json",
             )
 
     def test_build_interactive_draft_asks_include_exclude_after_confirmed_subgroup(self) -> None:
@@ -104,23 +104,23 @@ class InteractiveCliTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        config_path = self.temp_dir / ".autofeedsync.json"
-        with patch("autofeedsync.interactive.search_mikan_bangumi", return_value=candidates), patch(
-            "autofeedsync.interactive.fetch_mikan_subgroups", return_value=subgroups
+        config_path = self.temp_dir / ".mikancli.json"
+        with patch("mikancli.interactive.search_mikan_bangumi", return_value=candidates), patch(
+            "mikancli.interactive.fetch_mikan_subgroups", return_value=subgroups
         ), patch(
-            "autofeedsync.interactive.fetch_mikan_feed_items", return_value=feed_items
+            "mikancli.interactive.fetch_mikan_feed_items", return_value=feed_items
         ), patch(
-            "autofeedsync.interactive.select_option",
+            "mikancli.interactive.select_option",
             side_effect=[0, 0, "yes"],
         ), patch(
-            "autofeedsync.cli.select_option",
+            "mikancli.cli.select_option",
             return_value="downloads",
         ), patch(
-            "autofeedsync.cli.prompt_text",
+            "mikancli.cli.prompt_text",
             side_effect=["HEVC", "720p"],
         ), patch(
-            "autofeedsync.cli.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("autofeedsync.cli.confirm_choice", return_value=True):
+            "mikancli.cli.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.confirm_choice", return_value=True):
             draft = _build_interactive_draft(
                 args,
                 config=AppConfig(),
@@ -182,21 +182,21 @@ class InteractiveCliTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        config_path = self.temp_dir / ".autofeedsync.json"
-        with patch("autofeedsync.interactive.search_mikan_bangumi", return_value=candidates), patch(
-            "autofeedsync.interactive.fetch_mikan_subgroups", return_value=subgroups
+        config_path = self.temp_dir / ".mikancli.json"
+        with patch("mikancli.interactive.search_mikan_bangumi", return_value=candidates), patch(
+            "mikancli.interactive.fetch_mikan_subgroups", return_value=subgroups
         ), patch(
-            "autofeedsync.interactive.fetch_mikan_feed_items", return_value=feed_items
+            "mikancli.interactive.fetch_mikan_feed_items", return_value=feed_items
         ), patch(
-            "autofeedsync.interactive.select_option", side_effect=fake_select_option
+            "mikancli.interactive.select_option", side_effect=fake_select_option
         ), patch(
-            "autofeedsync.cli.select_option", side_effect=fake_select_option
+            "mikancli.cli.select_option", side_effect=fake_select_option
         ), patch(
-            "autofeedsync.cli.prompt_text",
+            "mikancli.cli.prompt_text",
             side_effect=["", ""],
         ), patch(
-            "autofeedsync.cli.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("autofeedsync.cli.confirm_choice", return_value=False):
+            "mikancli.cli.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.confirm_choice", return_value=False):
             _build_interactive_draft(
                 args,
                 config=AppConfig(),
@@ -241,8 +241,8 @@ class InteractiveCliTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("autofeedsync.interactive.search_mikan_bangumi", return_value=candidates), patch(
-            "autofeedsync.interactive.fetch_mikan_subgroups", return_value=subgroups
+        with patch("mikancli.interactive.search_mikan_bangumi", return_value=candidates), patch(
+            "mikancli.interactive.fetch_mikan_subgroups", return_value=subgroups
         ):
             selected_bangumi, selected_subgroup, notes = resolve_mikan_selection(
                 SearchRequest(keyword="\u836f\u5c4b\u5c11\u5973\u7684\u5462\u5583"),

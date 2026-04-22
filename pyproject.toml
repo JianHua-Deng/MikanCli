@@ -1,5 +1,5 @@
 [project]
-name = "autofeedsync"
+name = "mikancli"
 version = "0.1.0"
 description = "CLI foundation for building qBittorrent RSS rules from anime search input."
 readme = "README.md"
@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [project.scripts]
-autofeedsync = "autofeedsync.cli:main"
+mikancli = "mikancli.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

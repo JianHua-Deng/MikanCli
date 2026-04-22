@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-from autofeedsync.normalize import collapse_spaces
+from mikancli.normalize import collapse_spaces
 
 T = TypeVar("T")
 

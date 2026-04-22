@@ -1,4 +1,4 @@
-"""AutoFeedSync package."""
+"""MikanCli package."""
 
 __all__ = [
     "__version__",

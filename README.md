@@ -1,6 +1,6 @@
-# AutoFeedSync
+# MikanCli
 
-AutoFeedSync is a Python CLI for turning an anime search keyword into a qBittorrent RSS feed and download-rule setup workflow.
+MikanCli is a Python CLI for turning an anime search keyword into a qBittorrent RSS feed and download-rule setup workflow.
 
 ## Current increment
 
@@ -26,18 +26,19 @@ Internally, the project is now split more cleanly by responsibility:
 ## Usage
 
 ```bash
-python -m autofeedsync "solo leveling" --include HEVC --exclude 720p
+python -m mikancli "solo leveling" --include HEVC --exclude 720p
 ```
 
 You can also run it with no extra arguments and let the script guide you:
 
 ```bash
-python -m autofeedsync
+python -m mikancli
 ```
 
-On first run, AutoFeedSync will automatically install any missing project dependencies before continuing.
+On first run, MikanCli will automatically install any missing project dependencies before continuing.
 
-If `--save-path` is omitted, AutoFeedSync first checks for a local default in `.autofeedsync.json`.
+If `--save-path` is omitted, MikanCli first checks for a local default in `.mikancli.json`.
+If `.mikancli.json` does not exist yet, it falls back to `.autofeedsync.json`.
 In a normal interactive run, the guided prompts now use `InquirerPy`, so list selections stay in place instead of printing a new block of text on every key press.
 
 - use the saved default folder
@@ -45,7 +46,7 @@ In a normal interactive run, the guided prompts now use `InquirerPy`, so list se
 - browse for a folder
 - type a folder path manually
 
-If the chosen folder is not already the saved default, AutoFeedSync asks whether it should be saved for future runs.
+If the chosen folder is not already the saved default, MikanCli asks whether it should be saved for future runs.
 
 Current guided flow:
 

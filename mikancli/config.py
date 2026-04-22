@@ -5,10 +5,11 @@ import os
 import sys
 from pathlib import Path
 
-from autofeedsync.models import AppConfig
-from autofeedsync.normalize import collapse_spaces
+from mikancli.models import AppConfig
+from mikancli.normalize import collapse_spaces
 
-CONFIG_FILENAME = ".autofeedsync.json"
+CONFIG_FILENAME = ".mikancli.json"
+LEGACY_CONFIG_FILENAMES = (".autofeedsync.json",)
 WINDOWS_DOWNLOADS_GUID = "{374DE290-123F-4565-9164-39C4925E467B}"
 
 
@@ -18,10 +19,17 @@ def get_config_path(base_dir: Path | None = None) -> Path:
 
 
 def load_config(config_path: Path) -> AppConfig:
-    if not config_path.exists():
-        return AppConfig()
+    target_path = config_path
+    if not target_path.exists():
+        for legacy_filename in LEGACY_CONFIG_FILENAMES:
+            legacy_path = config_path.with_name(legacy_filename)
+            if legacy_path.exists():
+                target_path = legacy_path
+                break
+        else:
+            return AppConfig()
 
-    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    payload = json.loads(target_path.read_text(encoding="utf-8"))
     default_save_path = payload.get("default_save_path")
 
     if default_save_path is not None:

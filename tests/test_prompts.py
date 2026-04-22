@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from autofeedsync.prompts import confirm_choice, prompt_text, select_option
+from mikancli.prompts import confirm_choice, prompt_text, select_option
 
 
 class PromptWrapperTests(unittest.TestCase):
@@ -14,7 +14,7 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.select.return_value = prompt
 
-        with patch("autofeedsync.prompts._get_inquirer", return_value=fake_inquirer):
+        with patch("mikancli.prompts._get_inquirer", return_value=fake_inquirer):
             selected = select_option("Choose", [("one", "One")], default="one")
 
         self.assertEqual(selected, "one")
@@ -28,7 +28,7 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.text.return_value = prompt
 
-        with patch("autofeedsync.prompts._get_inquirer", return_value=fake_inquirer):
+        with patch("mikancli.prompts._get_inquirer", return_value=fake_inquirer):
             entered = prompt_text("Enter keyword")
 
         self.assertEqual(entered, "solo leveling")
@@ -37,7 +37,7 @@ class PromptWrapperTests(unittest.TestCase):
     def test_confirm_choice_uses_select_style_yes_no(self) -> None:
         from unittest.mock import patch
 
-        with patch("autofeedsync.prompts.select_option", return_value="yes") as select_mock:
+        with patch("mikancli.prompts.select_option", return_value="yes") as select_mock:
             confirmed = confirm_choice("Save?", default=True)
 
         self.assertTrue(confirmed)

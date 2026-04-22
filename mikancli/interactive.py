@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from autofeedsync.display import build_feed_preview_text
-from autofeedsync.input_helpers import prompt_required_text
-from autofeedsync.mikan import (
+from mikancli.display import build_feed_preview_text
+from mikancli.input_helpers import prompt_required_text
+from mikancli.mikan import (
     MikanLookupError,
     fetch_mikan_feed_items,
     fetch_mikan_subgroups,
     search_mikan_bangumi,
 )
-from autofeedsync.models import MikanBangumi, MikanSubgroup, SearchRequest
-from autofeedsync.normalize import collapse_spaces
-from autofeedsync.prompts import select_option
+from mikancli.models import MikanBangumi, MikanSubgroup, SearchRequest
+from mikancli.normalize import collapse_spaces
+from mikancli.prompts import select_option
 
 SEARCH_AGAIN = "__search_again__"
 BACK_TO_CANDIDATES = "__back_to_candidates__"

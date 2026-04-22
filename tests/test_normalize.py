@@ -1,6 +1,6 @@
 import unittest
 
-from autofeedsync.normalize import normalize_keyword, sanitize_folder_name
+from mikancli.normalize import normalize_keyword, sanitize_folder_name
 
 
 class NormalizeTests(unittest.TestCase):

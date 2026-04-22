@@ -9,12 +9,12 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
 
-from autofeedsync.models import MikanBangumi, MikanFeedItem, MikanSubgroup
-from autofeedsync.normalize import collapse_spaces
+from mikancli.models import MikanBangumi, MikanFeedItem, MikanSubgroup
+from mikancli.normalize import collapse_spaces
 
 BASE_URL = "https://mikanani.me"
 SEARCH_PATH = "/Home/Search?searchstr="
-USER_AGENT = "AutoFeedSync/0.1 (+https://mikanani.me)"
+USER_AGENT = "MikanCli/0.1 (+https://mikanani.me)"
 TORRENT_NAMESPACE = {"mikan": "https://mikanani.me/0.1/"}
 
 

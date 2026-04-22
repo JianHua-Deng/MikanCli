@@ -1,6 +1,6 @@
 import unittest
 
-from autofeedsync.mikan import (
+from mikancli.mikan import (
     build_bangumi_feed_url,
     build_bangumi_page_url,
     build_search_url,

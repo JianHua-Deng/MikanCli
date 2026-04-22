@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from autofeedsync.models import MikanBangumi, MikanSubgroup, RuleDraft, SearchRequest
-from autofeedsync.normalize import collapse_spaces, normalize_keyword
+from mikancli.models import MikanBangumi, MikanSubgroup, RuleDraft, SearchRequest
+from mikancli.normalize import collapse_spaces, normalize_keyword
 
 
 def _dedupe_nonempty(values: list[str]) -> tuple[str, ...]:

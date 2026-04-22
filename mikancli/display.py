@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from autofeedsync.models import MikanFeedItem, MikanSubgroup, RuleDraft
+from mikancli.models import MikanFeedItem, MikanSubgroup, RuleDraft
 
 
 def print_text_summary(draft: RuleDraft) -> int:

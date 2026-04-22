@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from autofeedsync.normalize import collapse_spaces
-from autofeedsync.prompts import prompt_text
+from mikancli.normalize import collapse_spaces
+from mikancli.prompts import prompt_text
 
 
 def prompt_required_text(prompt: str) -> str:

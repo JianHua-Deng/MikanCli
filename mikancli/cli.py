@@ -4,26 +4,26 @@ import argparse
 import json
 from pathlib import Path
 
-from autofeedsync.bootstrap import ensure_runtime_dependencies
-from autofeedsync.config import (
+from mikancli.bootstrap import ensure_runtime_dependencies
+from mikancli.config import (
     get_config_path,
     get_system_downloads_path,
     load_config,
     pick_directory,
     save_config,
 )
-from autofeedsync.display import print_text_summary
-from autofeedsync.input_helpers import parse_word_list
-from autofeedsync.interactive import resolve_mikan_selection, run_interactive_selection
-from autofeedsync.models import AppConfig, RuleDraft, SearchRequest
-from autofeedsync.normalize import collapse_spaces
-from autofeedsync.prompts import confirm_choice, prompt_text, select_option
-from autofeedsync.rules import build_rule_draft
+from mikancli.display import print_text_summary
+from mikancli.input_helpers import parse_word_list
+from mikancli.interactive import resolve_mikan_selection, run_interactive_selection
+from mikancli.models import AppConfig, RuleDraft, SearchRequest
+from mikancli.normalize import collapse_spaces
+from mikancli.prompts import confirm_choice, prompt_text, select_option
+from mikancli.rules import build_rule_draft
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="autofeedsync",
+        prog="mikancli",
         description=(
             "Search Mikan for an anime, inspect subgroup RSS contents, and preview "
             "the qBittorrent rule inputs."
