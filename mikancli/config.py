@@ -5,8 +5,8 @@ import os
 import sys
 from pathlib import Path
 
-from mikancli.models import AppConfig
-from mikancli.normalize import collapse_spaces
+from mikancli.core.models import AppConfig
+from mikancli.core.normalize import collapse_spaces
 
 CONFIG_FILENAME = ".mikancli.json"
 LEGACY_CONFIG_FILENAMES = (".autofeedsync.json",)

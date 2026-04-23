@@ -18,10 +18,10 @@ draft rule details. qBittorrent submission is still not implemented.
 
 Internally, the project is now split more cleanly by responsibility:
 
-- `cli.py` keeps the entrypoint and CLI assembly
-- `interactive.py` handles Bangumi/subgroup navigation
-- `display.py` handles text rendering
-- `input_helpers.py` handles reusable text and word-list input parsing
+- `mikancli/cli/` contains CLI entrypoint, prompts, and interactive navigation
+- `mikancli/core/` contains models, normalization helpers, and rule-building logic
+- `mikancli/integrations/` contains external service adapters such as Mikan
+- `config.py`, `display.py`, and `bootstrap.py` stay at the package root as shared support modules
 
 ## Usage
 

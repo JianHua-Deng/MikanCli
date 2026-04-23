@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from mikancli.prompts import EXIT_OPTION, ExitRequested, confirm_choice, prompt_text, select_option
+from mikancli.cli.prompts import EXIT_OPTION, ExitRequested, confirm_choice, prompt_text, select_option
 
 
 class PromptWrapperTests(unittest.TestCase):
@@ -14,7 +14,7 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.select.return_value = prompt
 
-        with patch("mikancli.prompts._get_inquirer", return_value=fake_inquirer):
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
             selected = select_option("Choose", [("one", "One")], default="one")
 
         self.assertEqual(selected, "one")
@@ -28,7 +28,7 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.select.return_value = prompt
 
-        with patch("mikancli.prompts._get_inquirer", return_value=fake_inquirer):
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
             with self.assertRaises(ExitRequested):
                 select_option("Choose", [("one", "One")], default="one", allow_exit=True)
 
@@ -40,7 +40,7 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.text.return_value = prompt
 
-        with patch("mikancli.prompts._get_inquirer", return_value=fake_inquirer):
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
             entered = prompt_text("Enter keyword")
 
         self.assertEqual(entered, "solo leveling")
@@ -54,14 +54,14 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.text.return_value = prompt
 
-        with patch("mikancli.prompts._get_inquirer", return_value=fake_inquirer):
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
             with self.assertRaises(ExitRequested):
                 prompt_text("Enter keyword", allow_exit=True)
 
     def test_confirm_choice_uses_select_style_yes_no(self) -> None:
         from unittest.mock import patch
 
-        with patch("mikancli.prompts.select_option", return_value="yes") as select_mock:
+        with patch("mikancli.cli.prompts.select_option", return_value="yes") as select_mock:
             confirmed = confirm_choice("Save?", default=True)
 
         self.assertTrue(confirmed)
@@ -75,6 +75,6 @@ class PromptWrapperTests(unittest.TestCase):
     def test_confirm_choice_can_raise_exit_requested(self) -> None:
         from unittest.mock import patch
 
-        with patch("mikancli.prompts.select_option", side_effect=ExitRequested):
+        with patch("mikancli.cli.prompts.select_option", side_effect=ExitRequested):
             with self.assertRaises(ExitRequested):
                 confirm_choice("Save?", default=True, allow_exit=True)

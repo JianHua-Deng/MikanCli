@@ -6,22 +6,22 @@ import unittest
 from io import StringIO
 from pathlib import Path
 
-from mikancli.cli import (
+from mikancli.cli.app import (
     _build_interactive_draft,
     build_request_from_args,
     main,
     resolve_mikan_selection,
 )
-from mikancli.interactive import run_interactive_selection
+from mikancli.cli.interactive import run_interactive_selection
 from mikancli.config import load_config
-from mikancli.models import (
+from mikancli.core.models import (
     AppConfig,
     MikanBangumi,
     MikanFeedItem,
     MikanSubgroup,
     SearchRequest,
 )
-from mikancli.prompts import ExitRequested
+from mikancli.cli.prompts import ExitRequested
 
 TEST_TMP_ROOT = Path(__file__).resolve().parent / ".tmp_cli"
 
@@ -109,22 +109,22 @@ class InteractiveCliTests(unittest.TestCase):
         from unittest.mock import patch
 
         config_path = self.temp_dir / ".mikancli.json"
-        with patch("mikancli.interactive.search_mikan_bangumi", return_value=candidates), patch(
-            "mikancli.interactive.fetch_mikan_subgroups", return_value=subgroups
+        with patch("mikancli.cli.interactive.search_mikan_bangumi", return_value=candidates), patch(
+            "mikancli.cli.interactive.fetch_mikan_subgroups", return_value=subgroups
         ), patch(
-            "mikancli.interactive.fetch_mikan_feed_items", return_value=feed_items
+            "mikancli.cli.interactive.fetch_mikan_feed_items", return_value=feed_items
         ), patch(
-            "mikancli.interactive.select_option",
+            "mikancli.cli.interactive.select_option",
             side_effect=[0, 0, "yes"],
         ), patch(
-            "mikancli.cli.select_option",
+            "mikancli.cli.app.select_option",
             return_value="downloads",
         ), patch(
-            "mikancli.cli.prompt_text",
+            "mikancli.cli.app.prompt_text",
             side_effect=["HEVC", "720p"],
         ), patch(
-            "mikancli.cli.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.confirm_choice", return_value=True):
+            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.app.confirm_choice", return_value=True):
             draft = _build_interactive_draft(
                 args,
                 config=AppConfig(),
@@ -187,20 +187,20 @@ class InteractiveCliTests(unittest.TestCase):
         from unittest.mock import patch
 
         config_path = self.temp_dir / ".mikancli.json"
-        with patch("mikancli.interactive.search_mikan_bangumi", return_value=candidates), patch(
-            "mikancli.interactive.fetch_mikan_subgroups", return_value=subgroups
+        with patch("mikancli.cli.interactive.search_mikan_bangumi", return_value=candidates), patch(
+            "mikancli.cli.interactive.fetch_mikan_subgroups", return_value=subgroups
         ), patch(
-            "mikancli.interactive.fetch_mikan_feed_items", return_value=feed_items
+            "mikancli.cli.interactive.fetch_mikan_feed_items", return_value=feed_items
         ), patch(
-            "mikancli.interactive.select_option", side_effect=fake_select_option
+            "mikancli.cli.interactive.select_option", side_effect=fake_select_option
         ), patch(
-            "mikancli.cli.select_option", side_effect=fake_select_option
+            "mikancli.cli.app.select_option", side_effect=fake_select_option
         ), patch(
-            "mikancli.cli.prompt_text",
+            "mikancli.cli.app.prompt_text",
             side_effect=["", ""],
         ), patch(
-            "mikancli.cli.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.confirm_choice", return_value=False):
+            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.app.confirm_choice", return_value=False):
             _build_interactive_draft(
                 args,
                 config=AppConfig(),
@@ -245,8 +245,8 @@ class InteractiveCliTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.interactive.search_mikan_bangumi", return_value=candidates), patch(
-            "mikancli.interactive.fetch_mikan_subgroups", return_value=subgroups
+        with patch("mikancli.cli.interactive.search_mikan_bangumi", return_value=candidates), patch(
+            "mikancli.cli.interactive.fetch_mikan_subgroups", return_value=subgroups
         ):
             selected_bangumi, selected_subgroup, notes = resolve_mikan_selection(
                 SearchRequest(keyword="\u836f\u5c4b\u5c11\u5973\u7684\u5462\u5583"),
@@ -261,10 +261,10 @@ class InteractiveCliTests(unittest.TestCase):
 
         stdout = StringIO()
 
-        with patch("mikancli.cli.ensure_runtime_dependencies"), patch(
-            "mikancli.cli.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.load_config", return_value=AppConfig()), patch(
-            "mikancli.cli.run_interactive_selection", side_effect=ExitRequested
+        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
+            "mikancli.cli.app.run_interactive_selection", side_effect=ExitRequested
         ), patch("sys.stdout", new=stdout):
             exit_code = main([])
 
@@ -275,7 +275,7 @@ class InteractiveCliTests(unittest.TestCase):
         from unittest.mock import patch
 
         with patch(
-            "mikancli.interactive.prompt_required_text",
+            "mikancli.cli.interactive.prompt_required_text",
             side_effect=ExitRequested,
         ) as prompt_mock:
             with self.assertRaises(ExitRequested):

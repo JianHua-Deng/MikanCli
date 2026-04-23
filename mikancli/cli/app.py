@@ -5,6 +5,9 @@ import json
 from pathlib import Path
 
 from mikancli.bootstrap import ensure_runtime_dependencies
+from mikancli.cli.input_helpers import parse_word_list
+from mikancli.cli.interactive import resolve_mikan_selection, run_interactive_selection
+from mikancli.cli.prompts import ExitRequested, confirm_choice, prompt_text, select_option
 from mikancli.config import (
     get_config_path,
     get_system_downloads_path,
@@ -12,13 +15,10 @@ from mikancli.config import (
     pick_directory,
     save_config,
 )
+from mikancli.core.models import AppConfig, RuleDraft, SearchRequest
+from mikancli.core.normalize import collapse_spaces
+from mikancli.core.rules import build_rule_draft
 from mikancli.display import print_text_summary
-from mikancli.input_helpers import parse_word_list
-from mikancli.interactive import resolve_mikan_selection, run_interactive_selection
-from mikancli.models import AppConfig, RuleDraft, SearchRequest
-from mikancli.normalize import collapse_spaces
-from mikancli.prompts import ExitRequested, confirm_choice, prompt_text, select_option
-from mikancli.rules import build_rule_draft
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -86,6 +86,7 @@ def _prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
 
     if config.default_save_path:
         menu_options.append(("saved-default", f"Use saved default: {config.default_save_path}"))
+
     menu_options.append(("downloads", f"Use Downloads folder: {downloads_path}"))
     menu_options.append(("browse", "Browse for folder"))
     menu_options.append(("manual", "Type folder path manually"))

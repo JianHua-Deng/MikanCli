@@ -4,10 +4,10 @@ import shutil
 import unittest
 from pathlib import Path
 
-from mikancli.cli import _prompt_for_save_path, resolve_save_path
+from mikancli.cli.app import _prompt_for_save_path, resolve_save_path
 from mikancli.config import get_config_path, get_system_downloads_path, load_config
-from mikancli.models import AppConfig
-from mikancli.prompts import ExitRequested
+from mikancli.core.models import AppConfig
+from mikancli.cli.prompts import ExitRequested
 
 TEST_TMP_ROOT = Path(__file__).resolve().parent / ".tmp"
 
@@ -62,7 +62,7 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.get_system_downloads_path", return_value="D:\\Downloads"):
+        with patch("mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"):
             resolved = resolve_save_path(
                 None,
                 AppConfig(),
@@ -77,7 +77,7 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli._prompt_for_save_path", return_value="D:\\Anime\\Library"):
+        with patch("mikancli.cli.app._prompt_for_save_path", return_value="D:\\Anime\\Library"):
             resolved = resolve_save_path(
                 None,
                 AppConfig(),
@@ -92,9 +92,9 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.select_option", return_value="downloads"), patch(
-            "mikancli.cli.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.confirm_choice", return_value=True):
+        with patch("mikancli.cli.app.select_option", return_value="downloads"), patch(
+            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.app.confirm_choice", return_value=True):
             resolved = _prompt_for_save_path(
                 AppConfig(),
                 config_path=config_path,
@@ -108,10 +108,10 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.select_option", return_value="browse"), patch(
-            "mikancli.cli.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.pick_directory", return_value="D:\\Anime\\Picked"), patch(
-            "mikancli.cli.confirm_choice", return_value=False
+        with patch("mikancli.cli.app.select_option", return_value="browse"), patch(
+            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.app.pick_directory", return_value="D:\\Anime\\Picked"), patch(
+            "mikancli.cli.app.confirm_choice", return_value=False
         ):
             resolved = _prompt_for_save_path(
                 AppConfig(),
@@ -126,7 +126,7 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.select_option", return_value="saved-default"):
+        with patch("mikancli.cli.app.select_option", return_value="saved-default"):
             resolved = _prompt_for_save_path(
                 AppConfig(default_save_path="D:\\Anime\\Default"),
                 config_path=config_path,
@@ -140,7 +140,7 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.select_option", side_effect=ExitRequested):
+        with patch("mikancli.cli.app.select_option", side_effect=ExitRequested):
             with self.assertRaises(ExitRequested):
                 _prompt_for_save_path(
                     AppConfig(default_save_path="D:\\Anime\\Default"),

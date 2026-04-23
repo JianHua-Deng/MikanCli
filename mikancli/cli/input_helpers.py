@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from mikancli.normalize import collapse_spaces
-from mikancli.prompts import prompt_text
+from mikancli.cli.prompts import prompt_text
+from mikancli.core.normalize import collapse_spaces
 
 
 def prompt_required_text(prompt: str) -> str:

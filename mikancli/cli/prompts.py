@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-from mikancli.normalize import collapse_spaces
+from mikancli.core.normalize import collapse_spaces
 
 T = TypeVar("T")
 EXIT_OPTION = "__exit_cli__"

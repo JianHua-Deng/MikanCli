@@ -9,8 +9,8 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
 
-from mikancli.models import MikanBangumi, MikanFeedItem, MikanSubgroup
-from mikancli.normalize import collapse_spaces
+from mikancli.core.models import MikanBangumi, MikanFeedItem, MikanSubgroup
+from mikancli.core.normalize import collapse_spaces
 
 BASE_URL = "https://mikanani.me"
 SEARCH_PATH = "/Home/Search?searchstr="

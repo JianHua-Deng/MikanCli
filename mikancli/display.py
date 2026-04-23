@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from mikancli.models import MikanFeedItem, MikanSubgroup, RuleDraft
+from mikancli.core.models import MikanFeedItem, MikanSubgroup, RuleDraft
 
 
 def print_text_summary(draft: RuleDraft) -> int:

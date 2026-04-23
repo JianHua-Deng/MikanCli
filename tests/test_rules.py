@@ -1,7 +1,7 @@
 import unittest
 
-from mikancli.models import MikanBangumi, MikanSubgroup, SearchRequest
-from mikancli.rules import build_rule_draft
+from mikancli.core.models import MikanBangumi, MikanSubgroup, SearchRequest
+from mikancli.core.rules import build_rule_draft
 
 
 class RuleDraftTests(unittest.TestCase):

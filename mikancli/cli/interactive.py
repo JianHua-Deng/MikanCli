@@ -1,16 +1,16 @@
 from __future__ import annotations
 
+from mikancli.cli.input_helpers import prompt_required_text
+from mikancli.cli.prompts import select_option
+from mikancli.core.models import MikanBangumi, MikanSubgroup, SearchRequest
+from mikancli.core.normalize import collapse_spaces
 from mikancli.display import build_feed_preview_text
-from mikancli.input_helpers import prompt_required_text
-from mikancli.mikan import (
+from mikancli.integrations.mikan import (
     MikanLookupError,
     fetch_mikan_feed_items,
     fetch_mikan_subgroups,
     search_mikan_bangumi,
 )
-from mikancli.models import MikanBangumi, MikanSubgroup, SearchRequest
-from mikancli.normalize import collapse_spaces
-from mikancli.prompts import select_option
 
 SEARCH_AGAIN = "__search_again__"
 BACK_TO_CANDIDATES = "__back_to_candidates__"
