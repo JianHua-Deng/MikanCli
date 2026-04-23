@@ -3,13 +3,16 @@ from __future__ import annotations
 import argparse
 import shutil
 import unittest
+from io import StringIO
 from pathlib import Path
 
 from mikancli.cli import (
     _build_interactive_draft,
     build_request_from_args,
+    main,
     resolve_mikan_selection,
 )
+from mikancli.interactive import run_interactive_selection
 from mikancli.config import load_config
 from mikancli.models import (
     AppConfig,
@@ -18,6 +21,7 @@ from mikancli.models import (
     MikanSubgroup,
     SearchRequest,
 )
+from mikancli.prompts import ExitRequested
 
 TEST_TMP_ROOT = Path(__file__).resolve().parent / ".tmp_cli"
 
@@ -168,7 +172,7 @@ class InteractiveCliTests(unittest.TestCase):
 
         captured_messages: list[str] = []
 
-        def fake_select_option(message, options, default=None):
+        def fake_select_option(message, options, default=None, allow_exit=False):
             captured_messages.append(message)
             if message.startswith("Choose the Mikan entry"):
                 return 0
@@ -251,6 +255,35 @@ class InteractiveCliTests(unittest.TestCase):
         self.assertEqual(selected_bangumi, candidates[0])
         self.assertEqual(selected_subgroup, subgroups[0])
         self.assertEqual(notes, ("qBittorrent submission not implemented yet.",))
+
+    def test_main_exits_cleanly_when_user_chooses_exit(self) -> None:
+        from unittest.mock import patch
+
+        stdout = StringIO()
+
+        with patch("mikancli.cli.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.load_config", return_value=AppConfig()), patch(
+            "mikancli.cli.run_interactive_selection", side_effect=ExitRequested
+        ), patch("sys.stdout", new=stdout):
+            exit_code = main([])
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("Exited MikanCli.", stdout.getvalue())
+
+    def test_initial_search_prompt_mentions_exit(self) -> None:
+        from unittest.mock import patch
+
+        with patch(
+            "mikancli.interactive.prompt_required_text",
+            side_effect=ExitRequested,
+        ) as prompt_mock:
+            with self.assertRaises(ExitRequested):
+                run_interactive_selection(initial_keyword=None)
+
+        prompt_mock.assert_called_once_with(
+            "Enter anime title or search keyword (or type 'exit' to quit): "
+        )
 
 
 if __name__ == "__main__":

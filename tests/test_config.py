@@ -7,6 +7,7 @@ from pathlib import Path
 from mikancli.cli import _prompt_for_save_path, resolve_save_path
 from mikancli.config import get_config_path, get_system_downloads_path, load_config
 from mikancli.models import AppConfig
+from mikancli.prompts import ExitRequested
 
 TEST_TMP_ROOT = Path(__file__).resolve().parent / ".tmp"
 
@@ -133,6 +134,18 @@ class ConfigTests(unittest.TestCase):
 
         self.assertEqual(resolved, "D:\\Anime\\Default")
         self.assertFalse(config_path.exists())
+
+    def test_prompt_for_save_path_can_exit_from_menu(self) -> None:
+        config_path = self.temp_dir / ".mikancli.json"
+
+        from unittest.mock import patch
+
+        with patch("mikancli.cli.select_option", side_effect=ExitRequested):
+            with self.assertRaises(ExitRequested):
+                _prompt_for_save_path(
+                    AppConfig(default_save_path="D:\\Anime\\Default"),
+                    config_path=config_path,
+                )
 
     def test_load_config_falls_back_to_legacy_autofeedsync_filename(self) -> None:
         legacy_path = self.temp_dir / ".autofeedsync.json"

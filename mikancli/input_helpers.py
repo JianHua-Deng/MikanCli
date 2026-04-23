@@ -6,7 +6,7 @@ from mikancli.prompts import prompt_text
 
 def prompt_required_text(prompt: str) -> str:
     while True:
-        entered = collapse_spaces(prompt_text(prompt))
+        entered = collapse_spaces(prompt_text(prompt, allow_exit=True))
         if entered:
             return entered
         print("A value is required.")
@@ -32,7 +32,7 @@ def parse_word_list(value: str) -> tuple[str, ...]:
 
 
 def prompt_word_list(prompt: str) -> tuple[str, ...]:
-    entered = collapse_spaces(prompt_text(prompt))
+    entered = collapse_spaces(prompt_text(prompt, allow_exit=True))
     if not entered:
         return ()
 

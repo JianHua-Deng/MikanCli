@@ -17,7 +17,7 @@ from mikancli.input_helpers import parse_word_list
 from mikancli.interactive import resolve_mikan_selection, run_interactive_selection
 from mikancli.models import AppConfig, RuleDraft, SearchRequest
 from mikancli.normalize import collapse_spaces
-from mikancli.prompts import confirm_choice, prompt_text, select_option
+from mikancli.prompts import ExitRequested, confirm_choice, prompt_text, select_option
 from mikancli.rules import build_rule_draft
 
 
@@ -61,16 +61,19 @@ def _should_save_as_default(selected_path: str, config: AppConfig) -> bool:
     return confirm_choice(
         f"Save '{selected_path}' as the default download folder for future runs?",
         default=True,
+        allow_exit=True,
     )
 
 
 def _prompt_for_manual_save_path() -> str | None:
-    entered = collapse_spaces(prompt_text("Enter a download folder path"))
+    entered = collapse_spaces(
+        prompt_text("Enter a download folder path", allow_exit=True)
+    )
     return entered or None
 
 
 def _prompt_word_list(prompt: str) -> tuple[str, ...]:
-    entered = collapse_spaces(prompt_text(prompt))
+    entered = collapse_spaces(prompt_text(prompt, allow_exit=True))
     if not entered:
         return ()
 
@@ -92,6 +95,7 @@ def _prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
             "Choose a download folder option",
             menu_options,
             default=menu_options[0][0],
+            allow_exit=True,
         )
 
         if selected_key == "saved-default":
@@ -221,9 +225,14 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(draft.to_dict(), ensure_ascii=False, indent=2))
         return 0
 
-    draft = _build_interactive_draft(
-        args,
-        config=config,
-        config_path=config_path,
-    )
+    try:
+        draft = _build_interactive_draft(
+            args,
+            config=config,
+            config_path=config_path,
+        )
+    except ExitRequested:
+        print("Exited MikanCli.")
+        return 0
+
     return print_text_summary(draft)

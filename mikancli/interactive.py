@@ -19,6 +19,11 @@ CONFIRM_SUBGROUP = "__confirm_subgroup__"
 REJECT_SUBGROUP = "__reject_subgroup__"
 
 
+def _search_prompt(*, retry: bool = False) -> str:
+    prefix = "Enter another anime title or search keyword" if retry else "Enter anime title or search keyword"
+    return f"{prefix} (or type 'exit' to quit): "
+
+
 def select_candidate_or_search_again(
     candidates: tuple[MikanBangumi, ...],
     *,
@@ -34,6 +39,7 @@ def select_candidate_or_search_again(
         f"Choose the Mikan entry for '{keyword}'",
         options,
         default=0,
+        allow_exit=True,
     )
     if selected == SEARCH_AGAIN:
         return SEARCH_AGAIN
@@ -60,6 +66,7 @@ def select_subgroup_or_navigate(
         f"Choose the subgroup for '{bangumi_title}'",
         options,
         default=0,
+        allow_exit=True,
     )
     if selected == BACK_TO_CANDIDATES:
         return BACK_TO_CANDIDATES
@@ -77,6 +84,7 @@ def confirm_subgroup_selection(preview_text: str) -> str:
             (BACK_TO_SUBGROUPS, "Back to subgroup list"),
         ],
         default=CONFIRM_SUBGROUP,
+        allow_exit=True,
     )
 
 
@@ -128,24 +136,24 @@ def run_interactive_selection(
 ) -> tuple[MikanBangumi, MikanSubgroup]:
     keyword = collapse_spaces(initial_keyword or "")
     if not keyword:
-        keyword = prompt_required_text("Enter anime title or search keyword: ")
+        keyword = prompt_required_text(_search_prompt())
 
     while True:
         try:
             candidates = search_mikan_bangumi(keyword)
         except MikanLookupError as exc:
             print(str(exc))
-            keyword = prompt_required_text("Enter another anime title or search keyword: ")
+            keyword = prompt_required_text(_search_prompt(retry=True))
             continue
 
         if not candidates:
             print(f"No Mikan results found for '{keyword}'.")
-            keyword = prompt_required_text("Enter another anime title or search keyword: ")
+            keyword = prompt_required_text(_search_prompt(retry=True))
             continue
 
         selected_candidate = select_candidate_or_search_again(candidates, keyword=keyword)
         if selected_candidate == SEARCH_AGAIN:
-            keyword = prompt_required_text("Enter another anime title or search keyword: ")
+            keyword = prompt_required_text(_search_prompt(retry=True))
             continue
 
         bangumi = selected_candidate
@@ -169,7 +177,7 @@ def run_interactive_selection(
             if selected_subgroup == BACK_TO_CANDIDATES:
                 break
             if selected_subgroup == SEARCH_AGAIN:
-                keyword = prompt_required_text("Enter another anime title or search keyword: ")
+                keyword = prompt_required_text(_search_prompt(retry=True))
                 break
 
             subgroup = selected_subgroup
@@ -185,7 +193,7 @@ def run_interactive_selection(
             if decision == BACK_TO_SUBGROUPS:
                 continue
             if decision == REJECT_SUBGROUP:
-                keyword = prompt_required_text("Enter another anime title or search keyword: ")
+                keyword = prompt_required_text(_search_prompt(retry=True))
                 break
 
             return bangumi, subgroup

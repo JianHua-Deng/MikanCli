@@ -40,6 +40,8 @@ On first run, MikanCli will automatically install any missing project dependenci
 If `--save-path` is omitted, MikanCli first checks for a local default in `.mikancli.json`.
 If `.mikancli.json` does not exist yet, it falls back to `.autofeedsync.json`.
 In a normal interactive run, the guided prompts now use `InquirerPy`, so list selections stay in place instead of printing a new block of text on every key press.
+Every interactive menu now includes an `Exit MikanCli` option, and text prompts accept `exit` or `quit` to stop the tool cleanly.
+The first search prompt now says that explicitly, so the quit path is visible before any lookup starts.
 
 - use the saved default folder
 - use the system Downloads folder
@@ -60,6 +62,7 @@ Current guided flow:
 - optionally ask for include words
 - optionally ask for exclude words
 - let you choose the download folder from a menu
+- allow quitting cleanly from any interactive menu or prompt
 - print the resolved Mikan page URL, subgroup, and subgroup RSS feed URL with the draft rule summary
 
 ## Packaging note
