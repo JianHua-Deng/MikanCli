@@ -61,3 +61,11 @@ Current guided flow:
 - optionally ask for exclude words
 - let you choose the download folder from a menu
 - print the resolved Mikan page URL, subgroup, and subgroup RSS feed URL with the draft rule summary
+
+## Packaging note
+
+Planned improvement:
+
+- make `mikancli` accessible from any terminal location so users do not need to `cd` into the project folder first
+- likely support a normal installed CLI workflow where the user can open a terminal and run `mikancli` directly
+- later consider a more user-friendly distribution path such as `pipx`, PyPI packaging, or a Windows executable for non-technical users
