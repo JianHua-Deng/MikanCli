@@ -31,6 +31,9 @@ from mikancli.integrations.qbittorrent import (
     normalize_qbittorrent_url,
 )
 
+STARTUP_ACTION_SEARCH = "search"
+STARTUP_ACTION_QBITTORRENT = "qbittorrent"
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -94,6 +97,18 @@ def _prompt_word_list(prompt: str) -> tuple[str, ...]:
         return ()
 
     return parse_word_list(entered)
+
+
+def _prompt_startup_action() -> str:
+    return select_option(
+        "Choose what you want to do",
+        [
+            (STARTUP_ACTION_SEARCH, "Search anime"),
+            (STARTUP_ACTION_QBITTORRENT, "Modify qBittorrent configurations"),
+        ],
+        default=STARTUP_ACTION_SEARCH,
+        allow_exit=True,
+    )
 
 
 def _setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
@@ -189,6 +204,21 @@ def _maybe_run_qbittorrent_setup(config: AppConfig, config_path: Path) -> int:
         )
         if continue_without_setup:
             return 0
+
+
+def _run_qbittorrent_configuration_route(config: AppConfig, config_path: Path) -> int:
+    while True:
+        exit_code = _setup_qbittorrent(config, config_path)
+        if exit_code == 0:
+            return 0
+
+        retry_setup = confirm_choice(
+            "Retry qBittorrent setup?",
+            default=True,
+            allow_exit=True,
+        )
+        if not retry_setup:
+            return 1
 
 
 def _prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
@@ -353,6 +383,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     try:
+        if args.keyword is None:
+            startup_action = _prompt_startup_action()
+            if startup_action == STARTUP_ACTION_QBITTORRENT:
+                return _run_qbittorrent_configuration_route(config, config_path)
+
         setup_exit_code = _maybe_run_qbittorrent_setup(config, config_path)
         if setup_exit_code != 0:
             return setup_exit_code

@@ -266,7 +266,7 @@ class InteractiveCliTests(unittest.TestCase):
         with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
             "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
-            "mikancli.cli.app.confirm_choice", side_effect=ExitRequested
+            "mikancli.cli.app.select_option", side_effect=ExitRequested
         ), patch("sys.stdout", new=stdout):
             exit_code = main([])
 
@@ -330,14 +330,16 @@ class InteractiveCliTests(unittest.TestCase):
         self.assertFalse(config_path.exists())
         self.assertIn("bad credentials", stdout.getvalue())
 
-    def test_main_prompts_for_qbittorrent_setup_on_interactive_start_when_missing(self) -> None:
+    def test_main_shows_startup_menu_and_search_route_can_continue_without_qbittorrent_setup(self) -> None:
         from unittest.mock import patch
 
         draft = object()
 
         with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
             "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
+        ), patch("mikancli.cli.app.select_option", return_value="search") as select_mock, patch(
+            "mikancli.cli.app.load_config", return_value=AppConfig()
+        ), patch(
             "mikancli.cli.app.confirm_choice",
             return_value=False,
         ) as confirm_mock, patch(
@@ -350,6 +352,15 @@ class InteractiveCliTests(unittest.TestCase):
             exit_code = main([])
 
         self.assertEqual(exit_code, 0)
+        select_mock.assert_called_once_with(
+            "Choose what you want to do",
+            [
+                ("search", "Search anime"),
+                ("qbittorrent", "Modify qBittorrent configurations"),
+            ],
+            default="search",
+            allow_exit=True,
+        )
         confirm_mock.assert_called_once_with(
             "qBittorrent is not set up yet. Set up qBittorrent WebUI now?",
             default=True,
@@ -357,14 +368,35 @@ class InteractiveCliTests(unittest.TestCase):
         )
         build_mock.assert_called_once()
 
-    def test_main_can_launch_qbittorrent_setup_from_interactive_start(self) -> None:
+    def test_main_can_launch_qbittorrent_configuration_route_from_startup_menu(self) -> None:
+        from unittest.mock import patch
+
+        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.app.select_option", return_value="qbittorrent"), patch(
+            "mikancli.cli.app.load_config", return_value=AppConfig()
+        ), patch(
+            "mikancli.cli.app._run_qbittorrent_configuration_route",
+            return_value=0,
+        ) as route_mock, patch(
+            "mikancli.cli.app._build_interactive_draft",
+        ) as build_mock:
+            exit_code = main([])
+
+        self.assertEqual(exit_code, 0)
+        route_mock.assert_called_once()
+        build_mock.assert_not_called()
+
+    def test_main_search_route_can_launch_qbittorrent_setup_from_interactive_start(self) -> None:
         from unittest.mock import patch
 
         draft = object()
 
         with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
             "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
+        ), patch("mikancli.cli.app.select_option", return_value="search"), patch(
+            "mikancli.cli.app.load_config", return_value=AppConfig()
+        ), patch(
             "mikancli.cli.app.confirm_choice",
             return_value=True,
         ), patch(
@@ -390,7 +422,9 @@ class InteractiveCliTests(unittest.TestCase):
 
         with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
             "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
+        ), patch("mikancli.cli.app.select_option", return_value="search"), patch(
+            "mikancli.cli.app.load_config", return_value=AppConfig()
+        ), patch(
             "mikancli.cli.app.confirm_choice",
             side_effect=[True, False],
         ) as confirm_mock, patch(
@@ -409,6 +443,46 @@ class InteractiveCliTests(unittest.TestCase):
         self.assertEqual(setup_mock.call_count, 2)
         self.assertEqual(confirm_mock.call_count, 2)
         build_mock.assert_called_once()
+
+    def test_qbittorrent_configuration_route_retries_after_failed_setup_when_user_chooses_retry(self) -> None:
+        from unittest.mock import patch
+
+        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.app.select_option", return_value="qbittorrent"), patch(
+            "mikancli.cli.app.load_config", return_value=AppConfig()
+        ), patch(
+            "mikancli.cli.app.confirm_choice",
+            return_value=True,
+        ), patch(
+            "mikancli.cli.app._setup_qbittorrent",
+            side_effect=[1, 0],
+        ) as setup_mock, patch(
+            "mikancli.cli.app._build_interactive_draft",
+        ) as build_mock:
+            exit_code = main([])
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(setup_mock.call_count, 2)
+        build_mock.assert_not_called()
+
+    def test_qbittorrent_configuration_route_returns_error_when_user_stops_retrying(self) -> None:
+        from unittest.mock import patch
+
+        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.app.select_option", return_value="qbittorrent"), patch(
+            "mikancli.cli.app.load_config", return_value=AppConfig()
+        ), patch(
+            "mikancli.cli.app.confirm_choice",
+            return_value=False,
+        ), patch(
+            "mikancli.cli.app._setup_qbittorrent",
+            return_value=1,
+        ):
+            exit_code = main([])
+
+        self.assertEqual(exit_code, 1)
 
     def test_initial_search_prompt_mentions_exit(self) -> None:
         from unittest.mock import patch

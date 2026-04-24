@@ -42,8 +42,12 @@ To set up qBittorrent WebUI access for future increments:
 python -m mikancli --setup-qbittorrent
 ```
 
-In the normal interactive flow, MikanCli now also asks on startup whether you
-want to set up qBittorrent if no qBittorrent WebUI configuration has been saved yet.
+When you run `python -m mikancli` with no extra arguments, the first menu now lets you choose between:
+
+- `Search anime`
+- `Modify qBittorrent configurations`
+
+If you choose `Search anime` and qBittorrent is not configured yet, MikanCli can still guide you into qBittorrent setup before continuing.
 
 On first run, MikanCli will automatically install any missing project dependencies before continuing.
 
