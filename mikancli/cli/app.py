@@ -99,6 +99,23 @@ def _prompt_word_list(prompt: str) -> tuple[str, ...]:
     return parse_word_list(entered)
 
 
+def _prompt_for_content_folder_name(default_name: str) -> str:
+    entered = collapse_spaces(
+        prompt_text(
+            "Enter the folder name for downloaded content (press Enter to use the default title from Mikan)",
+            default=default_name,
+            allow_exit=True,
+        )
+    )
+    return entered or default_name
+
+
+def _build_content_save_path(base_path: str | None, folder_name: str) -> str | None:
+    if not base_path:
+        return None
+    return str(Path(base_path) / folder_name)
+
+
 def _prompt_startup_action() -> str:
     return select_option(
         "Choose what you want to do",
@@ -332,12 +349,14 @@ def _build_interactive_draft(
         prompt_for_default=True,
         config_path=config_path,
     )
+    content_folder_name = _prompt_for_content_folder_name(bangumi.title)
+    final_save_path = _build_content_save_path(save_path, content_folder_name)
 
     request = SearchRequest(
         keyword=bangumi.title,
         include_words=include_words,
         exclude_words=exclude_words,
-        save_path=save_path,
+        save_path=final_save_path,
     )
     return build_rule_draft(
         request,

@@ -123,7 +123,7 @@ class InteractiveCliTests(unittest.TestCase):
             return_value="downloads",
         ), patch(
             "mikancli.cli.app.prompt_text",
-            side_effect=["HEVC", "720p"],
+            side_effect=["HEVC", "720p", ""],
         ), patch(
             "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
         ), patch("mikancli.cli.app.confirm_choice", return_value=True):
@@ -137,8 +137,69 @@ class InteractiveCliTests(unittest.TestCase):
         self.assertEqual(draft.feed_url, subgroups[0].feed_url)
         self.assertEqual(draft.must_contain, ("HEVC",))
         self.assertEqual(draft.must_not_contain, ("720p",))
-        self.assertEqual(draft.save_path, "D:\\Downloads")
+        self.assertEqual(
+            draft.save_path,
+            "D:\\Downloads\\我独自升级 第二季 -起于暗影-",
+        )
         self.assertEqual(load_config(config_path).default_save_path, "D:\\Downloads")
+
+    def test_build_interactive_draft_allows_custom_content_folder_name(self) -> None:
+        args = argparse.Namespace(
+            keyword="solo leveling",
+            include=[],
+            exclude=[],
+            save_path=None,
+            json=False,
+        )
+        candidates = (
+            MikanBangumi(
+                bangumi_id=3560,
+                title="\u6211\u72ec\u81ea\u5347\u7ea7 \u7b2c\u4e8c\u5b63 -\u8d77\u4e8e\u6697\u5f71-",
+                page_url="https://mikanani.me/Home/Bangumi/3560",
+                feed_url="https://mikanani.me/RSS/Bangumi?bangumiId=3560",
+            ),
+        )
+        subgroups = (
+            MikanSubgroup(
+                subgroup_id=1230,
+                title="Prejudice-Studio",
+                feed_url="https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230",
+                publish_group_url="https://mikanani.me/Home/PublishGroup/1003",
+            ),
+        )
+        feed_items = (
+            MikanFeedItem(
+                title="Episode 01",
+                content_length=1024,
+                published_at="2025-11-13T19:15:26",
+            ),
+        )
+
+        from unittest.mock import patch
+
+        with patch("mikancli.cli.interactive.search_mikan_bangumi", return_value=candidates), patch(
+            "mikancli.cli.interactive.fetch_mikan_subgroups", return_value=subgroups
+        ), patch(
+            "mikancli.cli.interactive.fetch_mikan_feed_items", return_value=feed_items
+        ), patch(
+            "mikancli.cli.interactive.select_option",
+            side_effect=[0, 0, "yes"],
+        ), patch(
+            "mikancli.cli.app.select_option",
+            return_value="downloads",
+        ), patch(
+            "mikancli.cli.app.prompt_text",
+            side_effect=["", "", "Solo Leveling S2"],
+        ), patch(
+            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.app.confirm_choice", return_value=False):
+            draft = _build_interactive_draft(
+                args,
+                config=AppConfig(),
+                config_path=self.temp_dir / ".mikancli.json",
+            )
+
+        self.assertEqual(draft.save_path, "D:\\Downloads\\Solo Leveling S2")
 
     def test_confirm_prompt_places_feed_preview_under_question(self) -> None:
         args = argparse.Namespace(
@@ -199,7 +260,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.app.select_option", side_effect=fake_select_option
         ), patch(
             "mikancli.cli.app.prompt_text",
-            side_effect=["", ""],
+            side_effect=["", "", ""],
         ), patch(
             "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
         ), patch("mikancli.cli.app.confirm_choice", return_value=False):

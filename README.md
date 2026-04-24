@@ -75,7 +75,8 @@ Current guided flow:
 - let you confirm, go back to subgroup selection, or search again
 - optionally ask for include words
 - optionally ask for exclude words
-- let you choose the download folder from a menu
+- let you choose the base download folder from a menu
+- ask for the content folder name inside that base folder, defaulting to the selected Bangumi title
 - allow quitting cleanly from any interactive menu or prompt
 - print the resolved Mikan page URL, subgroup, and subgroup RSS feed URL with the draft rule summary
 
