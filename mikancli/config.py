@@ -9,7 +9,6 @@ from mikancli.core.models import AppConfig
 from mikancli.core.normalize import collapse_spaces
 
 CONFIG_FILENAME = ".mikancli.json"
-LEGACY_CONFIG_FILENAMES = (".autofeedsync.json",)
 WINDOWS_DOWNLOADS_GUID = "{374DE290-123F-4565-9164-39C4925E467B}"
 
 
@@ -22,11 +21,6 @@ def _resolve_existing_config_path(config_path: Path) -> Path | None:
     target_path = config_path
     if target_path.exists():
         return target_path
-
-    for legacy_filename in LEGACY_CONFIG_FILENAMES:
-        legacy_path = config_path.with_name(legacy_filename)
-        if legacy_path.exists():
-            return legacy_path
 
     return None
 

@@ -52,7 +52,6 @@ If you choose `Search anime` and qBittorrent is not configured yet, MikanCli can
 On first run, MikanCli will automatically install any missing project dependencies before continuing.
 
 If `--save-path` is omitted, MikanCli first checks for a local default in `.mikancli.json`.
-If `.mikancli.json` does not exist yet, it falls back to `.autofeedsync.json`.
 In a normal interactive run, the guided prompts now use `InquirerPy`, so list selections stay in place instead of printing a new block of text on every key press.
 Every interactive menu now includes an `Exit MikanCli` option, and text prompts accept `exit` or `quit` to stop the tool cleanly.
 The first search prompt now says that explicitly, so the quit path is visible before any lookup starts.

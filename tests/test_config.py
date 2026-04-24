@@ -221,16 +221,5 @@ class ConfigTests(unittest.TestCase):
                     config_path=config_path,
                 )
 
-    def test_load_config_falls_back_to_legacy_autofeedsync_filename(self) -> None:
-        legacy_path = self.temp_dir / ".autofeedsync.json"
-        legacy_path.write_text(
-            '{\n  "default_save_path": "D:\\\\Anime\\\\Legacy"\n}\n',
-            encoding="utf-8",
-        )
-
-        config = load_config(self.temp_dir / ".mikancli.json")
-
-        self.assertEqual(config.default_save_path, "D:\\Anime\\Legacy")
-
     def test_get_system_downloads_path_has_nonempty_fallback(self) -> None:
         self.assertTrue(get_system_downloads_path())
