@@ -18,28 +18,66 @@ def get_config_path(base_dir: Path | None = None) -> Path:
     return root / CONFIG_FILENAME
 
 
-def load_config(config_path: Path) -> AppConfig:
+def _resolve_existing_config_path(config_path: Path) -> Path | None:
     target_path = config_path
-    if not target_path.exists():
-        for legacy_filename in LEGACY_CONFIG_FILENAMES:
-            legacy_path = config_path.with_name(legacy_filename)
-            if legacy_path.exists():
-                target_path = legacy_path
-                break
-        else:
-            return AppConfig()
+    if target_path.exists():
+        return target_path
+
+    for legacy_filename in LEGACY_CONFIG_FILENAMES:
+        legacy_path = config_path.with_name(legacy_filename)
+        if legacy_path.exists():
+            return legacy_path
+
+    return None
+
+
+def _load_config_payload(config_path: Path) -> dict[str, object]:
+    target_path = _resolve_existing_config_path(config_path)
+    if target_path is None:
+        return {}
 
     payload = json.loads(target_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        return {}
+
+    return payload
+
+
+def load_config(config_path: Path) -> AppConfig:
+    payload = _load_config_payload(config_path)
+
     default_save_path = payload.get("default_save_path")
+    qbittorrent_url = payload.get("qbittorrent_url")
+    qbittorrent_username = payload.get("qbittorrent_username")
+    qbittorrent_password = payload.get("qbittorrent_password")
 
     if default_save_path is not None:
         default_save_path = collapse_spaces(str(default_save_path)) or None
+    if qbittorrent_url is not None:
+        qbittorrent_url = collapse_spaces(str(qbittorrent_url)) or None
+    if qbittorrent_username is not None:
+        qbittorrent_username = collapse_spaces(str(qbittorrent_username)) or None
+    if qbittorrent_password is not None:
+        qbittorrent_password = str(qbittorrent_password)
 
-    return AppConfig(default_save_path=default_save_path)
+    return AppConfig(
+        default_save_path=default_save_path,
+        qbittorrent_url=qbittorrent_url,
+        qbittorrent_username=qbittorrent_username,
+        qbittorrent_password=qbittorrent_password,
+    )
 
 
 def save_config(config_path: Path, config: AppConfig) -> None:
-    payload = {"default_save_path": config.default_save_path}
+    payload = _load_config_payload(config_path)
+    payload.update(
+        {
+            "default_save_path": config.default_save_path,
+            "qbittorrent_url": config.qbittorrent_url,
+            "qbittorrent_username": config.qbittorrent_username,
+            "qbittorrent_password": config.qbittorrent_password,
+        }
+    )
     config_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 

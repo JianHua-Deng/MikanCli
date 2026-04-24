@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 from mikancli.cli.app import _prompt_for_save_path, resolve_save_path
-from mikancli.config import get_config_path, get_system_downloads_path, load_config
+from mikancli.config import get_config_path, get_system_downloads_path, load_config, save_config
 from mikancli.core.models import AppConfig
 from mikancli.cli.prompts import ExitRequested
 
@@ -33,6 +33,57 @@ class ConfigTests(unittest.TestCase):
             get_config_path(self.temp_dir),
             self.temp_dir / ".mikancli.json",
         )
+
+    def test_load_config_reads_qbittorrent_fields(self) -> None:
+        config_path = self.temp_dir / ".mikancli.json"
+        config_path.write_text(
+            (
+                "{\n"
+                '  "default_save_path": "D:\\\\Anime",\n'
+                '  "qbittorrent_url": " localhost:8080/ ",\n'
+                '  "qbittorrent_username": " admin ",\n'
+                '  "qbittorrent_password": "secret"\n'
+                "}\n"
+            ),
+            encoding="utf-8",
+        )
+
+        config = load_config(config_path)
+
+        self.assertEqual(config.default_save_path, "D:\\Anime")
+        self.assertEqual(config.qbittorrent_url, "localhost:8080/")
+        self.assertEqual(config.qbittorrent_username, "admin")
+        self.assertEqual(config.qbittorrent_password, "secret")
+
+    def test_save_config_preserves_unknown_keys(self) -> None:
+        config_path = self.temp_dir / ".mikancli.json"
+        config_path.write_text(
+            (
+                "{\n"
+                '  "default_save_path": "D:\\\\Old",\n'
+                '  "extra_key": "keep me"\n'
+                "}\n"
+            ),
+            encoding="utf-8",
+        )
+
+        save_config(
+            config_path,
+            AppConfig(
+                default_save_path="D:\\Anime",
+                qbittorrent_url="http://localhost:8080",
+                qbittorrent_username="admin",
+                qbittorrent_password="secret",
+            ),
+        )
+
+        payload = config_path.read_text(encoding="utf-8")
+        self.assertIn('"extra_key": "keep me"', payload)
+        config = load_config(config_path)
+        self.assertEqual(config.default_save_path, "D:\\Anime")
+        self.assertEqual(config.qbittorrent_url, "http://localhost:8080")
+        self.assertEqual(config.qbittorrent_username, "admin")
+        self.assertEqual(config.qbittorrent_password, "secret")
 
     def test_resolve_save_path_uses_cli_value_without_writing_config(self) -> None:
         config_path = self.temp_dir / ".mikancli.json"
@@ -102,6 +153,29 @@ class ConfigTests(unittest.TestCase):
 
         self.assertEqual(resolved, "D:\\Downloads")
         self.assertEqual(load_config(config_path).default_save_path, "D:\\Downloads")
+
+    def test_prompt_for_save_path_preserves_existing_qbittorrent_fields(self) -> None:
+        config_path = self.temp_dir / ".mikancli.json"
+
+        from unittest.mock import patch
+
+        with patch("mikancli.cli.app.select_option", return_value="downloads"), patch(
+            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.app.confirm_choice", return_value=True):
+            _prompt_for_save_path(
+                AppConfig(
+                    qbittorrent_url="http://localhost:8080",
+                    qbittorrent_username="admin",
+                    qbittorrent_password="secret",
+                ),
+                config_path=config_path,
+            )
+
+        config = load_config(config_path)
+        self.assertEqual(config.default_save_path, "D:\\Downloads")
+        self.assertEqual(config.qbittorrent_url, "http://localhost:8080")
+        self.assertEqual(config.qbittorrent_username, "admin")
+        self.assertEqual(config.qbittorrent_password, "secret")
 
     def test_prompt_for_save_path_can_browse_without_saving_default(self) -> None:
         config_path = self.temp_dir / ".mikancli.json"

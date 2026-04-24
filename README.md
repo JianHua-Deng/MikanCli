@@ -14,7 +14,8 @@ The repository currently contains the first small slice of the project:
 
 This increment now searches Mikan, lets you select the Bangumi and subgroup,
 resolves the subgroup-specific RSS feed, and prints that feed alongside the
-draft rule details. qBittorrent submission is still not implemented.
+draft rule details. qBittorrent feed and rule submission are still not
+implemented, but qBittorrent WebUI setup verification is now available.
 
 Internally, the project is now split more cleanly by responsibility:
 
@@ -34,6 +35,15 @@ You can also run it with no extra arguments and let the script guide you:
 ```bash
 python -m mikancli
 ```
+
+To set up qBittorrent WebUI access for future increments:
+
+```bash
+python -m mikancli --setup-qbittorrent
+```
+
+In the normal interactive flow, MikanCli now also asks on startup whether you
+want to set up qBittorrent if no qBittorrent WebUI configuration has been saved yet.
 
 On first run, MikanCli will automatically install any missing project dependencies before continuing.
 
@@ -64,6 +74,31 @@ Current guided flow:
 - let you choose the download folder from a menu
 - allow quitting cleanly from any interactive menu or prompt
 - print the resolved Mikan page URL, subgroup, and subgroup RSS feed URL with the draft rule summary
+
+## qBittorrent setup
+
+Before MikanCli can talk to qBittorrent, do a one-time setup inside qBittorrent:
+
+1. Open qBittorrent settings.
+2. Enable WebUI / remote control.
+3. Check the WebUI address, username, and password there.
+
+Then run:
+
+```bash
+python -m mikancli --setup-qbittorrent
+```
+
+Setup notes:
+
+- if you press Enter for the URL, MikanCli uses `http://localhost:8080`
+- you can enter `localhost:8080` and MikanCli will normalize it automatically
+- username and password may be left blank for the first test if your local qBittorrent allows it
+
+Troubleshooting:
+
+- if MikanCli says it could not reach qBittorrent, WebUI may be disabled or using a different port
+- if MikanCli says the credentials were rejected, re-check the WebUI username/password in qBittorrent settings
 
 ## Packaging note
 

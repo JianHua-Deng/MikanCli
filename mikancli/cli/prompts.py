@@ -69,6 +69,24 @@ def prompt_text(
     return entered
 
 
+def prompt_password(
+    message: str,
+    *,
+    allow_exit: bool = False,
+) -> str:
+    inquirer = _get_inquirer()
+    prompt_factory = getattr(inquirer, "secret", None)
+    if prompt_factory is not None:
+        prompt = prompt_factory(message=message)
+    else:  # pragma: no cover - fallback for alternate InquirerPy versions
+        prompt = inquirer.text(message=message, secret=True)
+
+    entered = prompt.execute()
+    if allow_exit and entered.strip().casefold() in EXIT_TEXT_VALUES:
+        raise ExitRequested()
+    return entered
+
+
 def confirm_choice(
     message: str,
     *,

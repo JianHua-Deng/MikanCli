@@ -19,9 +19,11 @@ from mikancli.core.models import (
     MikanBangumi,
     MikanFeedItem,
     MikanSubgroup,
+    QBittorrentSettings,
     SearchRequest,
 )
 from mikancli.cli.prompts import ExitRequested
+from mikancli.integrations.qbittorrent import QBittorrentError
 
 TEST_TMP_ROOT = Path(__file__).resolve().parent / ".tmp_cli"
 
@@ -264,12 +266,149 @@ class InteractiveCliTests(unittest.TestCase):
         with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
             "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
-            "mikancli.cli.app.run_interactive_selection", side_effect=ExitRequested
+            "mikancli.cli.app.confirm_choice", side_effect=ExitRequested
         ), patch("sys.stdout", new=stdout):
             exit_code = main([])
 
         self.assertEqual(exit_code, 0)
         self.assertIn("Exited MikanCli.", stdout.getvalue())
+
+    def test_main_setup_qbittorrent_defaults_to_localhost_and_saves_on_success(self) -> None:
+        from unittest.mock import patch
+
+        config_path = self.temp_dir / ".mikancli.json"
+        stdout = StringIO()
+
+        def fake_check_connection(settings: QBittorrentSettings) -> str:
+            self.assertEqual(settings.url, "http://localhost:8080")
+            self.assertIsNone(settings.username)
+            self.assertIsNone(settings.password)
+            return "5.0.0"
+
+        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.app.get_config_path", return_value=config_path
+        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
+            "mikancli.cli.app.prompt_text",
+            side_effect=["", ""],
+        ), patch(
+            "mikancli.cli.app.prompt_password",
+            return_value="",
+        ), patch(
+            "mikancli.cli.app.check_connection",
+            side_effect=fake_check_connection,
+        ), patch("sys.stdout", new=stdout):
+            exit_code = main(["--setup-qbittorrent"])
+
+        self.assertEqual(exit_code, 0)
+        saved_config = load_config(config_path)
+        self.assertEqual(saved_config.qbittorrent_url, "http://localhost:8080")
+        self.assertIsNone(saved_config.qbittorrent_username)
+        self.assertIsNone(saved_config.qbittorrent_password)
+        self.assertIn("qBittorrent connection verified successfully", stdout.getvalue())
+
+    def test_main_setup_qbittorrent_does_not_save_on_failed_verification(self) -> None:
+        from unittest.mock import patch
+
+        config_path = self.temp_dir / ".mikancli.json"
+        stdout = StringIO()
+
+        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.app.get_config_path", return_value=config_path
+        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
+            "mikancli.cli.app.prompt_text",
+            side_effect=["localhost:9090", "admin"],
+        ), patch(
+            "mikancli.cli.app.prompt_password",
+            return_value="wrong",
+        ), patch(
+            "mikancli.cli.app.check_connection",
+            side_effect=QBittorrentError("bad credentials"),
+        ), patch("sys.stdout", new=stdout):
+            exit_code = main(["--setup-qbittorrent"])
+
+        self.assertEqual(exit_code, 1)
+        self.assertFalse(config_path.exists())
+        self.assertIn("bad credentials", stdout.getvalue())
+
+    def test_main_prompts_for_qbittorrent_setup_on_interactive_start_when_missing(self) -> None:
+        from unittest.mock import patch
+
+        draft = object()
+
+        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
+            "mikancli.cli.app.confirm_choice",
+            return_value=False,
+        ) as confirm_mock, patch(
+            "mikancli.cli.app._build_interactive_draft",
+            return_value=draft,
+        ) as build_mock, patch(
+            "mikancli.cli.app.print_text_summary",
+            return_value=0,
+        ):
+            exit_code = main([])
+
+        self.assertEqual(exit_code, 0)
+        confirm_mock.assert_called_once_with(
+            "qBittorrent is not set up yet. Set up qBittorrent WebUI now?",
+            default=True,
+            allow_exit=True,
+        )
+        build_mock.assert_called_once()
+
+    def test_main_can_launch_qbittorrent_setup_from_interactive_start(self) -> None:
+        from unittest.mock import patch
+
+        draft = object()
+
+        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
+            "mikancli.cli.app.confirm_choice",
+            return_value=True,
+        ), patch(
+            "mikancli.cli.app._setup_qbittorrent",
+            return_value=0,
+        ) as setup_mock, patch(
+            "mikancli.cli.app._build_interactive_draft",
+            return_value=draft,
+        ) as build_mock, patch(
+            "mikancli.cli.app.print_text_summary",
+            return_value=0,
+        ):
+            exit_code = main([])
+
+        self.assertEqual(exit_code, 0)
+        setup_mock.assert_called_once()
+        build_mock.assert_called_once()
+
+    def test_main_retries_qbittorrent_setup_after_failed_attempt_when_user_does_not_skip(self) -> None:
+        from unittest.mock import patch
+
+        draft = object()
+
+        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
+            "mikancli.cli.app.confirm_choice",
+            side_effect=[True, False],
+        ) as confirm_mock, patch(
+            "mikancli.cli.app._setup_qbittorrent",
+            side_effect=[1, 0],
+        ) as setup_mock, patch(
+            "mikancli.cli.app._build_interactive_draft",
+            return_value=draft,
+        ) as build_mock, patch(
+            "mikancli.cli.app.print_text_summary",
+            return_value=0,
+        ):
+            exit_code = main([])
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(setup_mock.call_count, 2)
+        self.assertEqual(confirm_mock.call_count, 2)
+        build_mock.assert_called_once()
 
     def test_initial_search_prompt_mentions_exit(self) -> None:
         from unittest.mock import patch

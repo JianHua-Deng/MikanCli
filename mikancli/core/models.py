@@ -6,6 +6,16 @@ from dataclasses import asdict, dataclass
 @dataclass(frozen=True)
 class AppConfig:
     default_save_path: str | None = None
+    qbittorrent_url: str | None = None
+    qbittorrent_username: str | None = None
+    qbittorrent_password: str | None = None
+
+
+@dataclass(frozen=True)
+class QBittorrentSettings:
+    url: str
+    username: str | None = None
+    password: str | None = None
 
 
 @dataclass(frozen=True)

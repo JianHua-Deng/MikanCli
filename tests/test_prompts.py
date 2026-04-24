@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import unittest
 
-from mikancli.cli.prompts import EXIT_OPTION, ExitRequested, confirm_choice, prompt_text, select_option
+from mikancli.cli.prompts import (
+    EXIT_OPTION,
+    ExitRequested,
+    confirm_choice,
+    prompt_password,
+    prompt_text,
+    select_option,
+)
 
 
 class PromptWrapperTests(unittest.TestCase):
@@ -57,6 +64,32 @@ class PromptWrapperTests(unittest.TestCase):
         with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
             with self.assertRaises(ExitRequested):
                 prompt_text("Enter keyword", allow_exit=True)
+
+    def test_prompt_password_uses_inquirer_secret(self) -> None:
+        from unittest.mock import Mock, patch
+
+        prompt = Mock()
+        prompt.execute.return_value = "secret"
+        fake_inquirer = Mock()
+        fake_inquirer.secret.return_value = prompt
+
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
+            entered = prompt_password("Enter password")
+
+        self.assertEqual(entered, "secret")
+        fake_inquirer.secret.assert_called_once()
+
+    def test_prompt_password_can_raise_exit_requested(self) -> None:
+        from unittest.mock import Mock, patch
+
+        prompt = Mock()
+        prompt.execute.return_value = "exit"
+        fake_inquirer = Mock()
+        fake_inquirer.secret.return_value = prompt
+
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
+            with self.assertRaises(ExitRequested):
+                prompt_password("Enter password", allow_exit=True)
 
     def test_confirm_choice_uses_select_style_yes_no(self) -> None:
         from unittest.mock import patch
