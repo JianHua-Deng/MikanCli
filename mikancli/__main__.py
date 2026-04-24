@@ -1,4 +1,4 @@
-from mikancli.cli.app import main
+from mikancli.cli.entrypoint import main
 
 
 if __name__ == "__main__":

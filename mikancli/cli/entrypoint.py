@@ -5,10 +5,9 @@ import json
 from pathlib import Path
 
 from mikancli.bootstrap import ensure_runtime_dependencies
-from mikancli.cli.input_helpers import parse_word_list
-from mikancli.cli.interactive import resolve_mikan_selection, run_interactive_selection
+from mikancli.cli.input_parsing import parse_word_list
 from mikancli.cli.prompts import ExitRequested, prompt_text, select_option
-from mikancli.cli.qbittorrent_setup import (
+from mikancli.cli.qbittorrent_flow import (
     _prompt_for_qbittorrent_setup_if_needed,
     _run_qbittorrent_configuration_route,
     _setup_qbittorrent,
@@ -19,6 +18,7 @@ from mikancli.cli.save_path_flow import (
     _prompt_for_save_path,
     resolve_save_path,
 )
+from mikancli.cli.search_flow import resolve_mikan_selection, run_interactive_selection
 from mikancli.config import get_config_path, load_config
 from mikancli.core.models import AppConfig, RuleDraft, SearchRequest
 from mikancli.core.normalize import collapse_spaces

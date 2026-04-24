@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from mikancli.cli.input_helpers import prompt_required_text
+from mikancli.cli.input_parsing import prompt_required_text
 from mikancli.cli.prompts import select_option
 from mikancli.core.models import MikanBangumi, MikanSubgroup, SearchRequest
 from mikancli.core.normalize import collapse_spaces

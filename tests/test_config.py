@@ -4,7 +4,7 @@ import shutil
 import unittest
 from pathlib import Path
 
-from mikancli.cli.app import _prompt_for_save_path, resolve_save_path
+from mikancli.cli.save_path_flow import _prompt_for_save_path, resolve_save_path
 from mikancli.config import get_config_path, get_system_downloads_path, load_config, save_config
 from mikancli.core.models import AppConfig
 from mikancli.cli.prompts import ExitRequested

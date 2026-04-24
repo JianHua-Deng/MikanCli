@@ -16,7 +16,7 @@ from mikancli.integrations.qbittorrent import (
 def _setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     print()
     print("----- qBittorrent setup instructions -----")
-    print("1. Open qBittorrent settings.")
+    print("1. Don't forget to have Qbitorrent installed. Once you do, open qBittorrent settings.")
     print("2. Enable WebUI / remote control if it is not enabled yet.")
     print("3. Copy the WebUI address, username, and password from qBittorrent.")
     print("4. Input those values into the prompts below.")
@@ -37,7 +37,7 @@ def _setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     )
 
     print()
-    print("Bypass authentication for clients on localhost? If you have this enabled in qBittorrent settings, you can just press Enter for the next two prompts.")
+    print('If you have "Bypass authentication for clients on localhost" enabled in qBittorrent settings, you can just press Enter for the next two prompts.')
     username = (
         collapse_spaces(
             prompt_text(

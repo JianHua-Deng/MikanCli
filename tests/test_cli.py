@@ -6,13 +6,13 @@ import unittest
 from io import StringIO
 from pathlib import Path
 
-from mikancli.cli.app import (
+from mikancli.cli.entrypoint import (
     _build_interactive_draft,
     build_request_from_args,
     main,
     resolve_mikan_selection,
 )
-from mikancli.cli.interactive import run_interactive_selection
+from mikancli.cli.search_flow import run_interactive_selection
 from mikancli.config import load_config
 from mikancli.core.models import (
     AppConfig,
@@ -111,18 +111,18 @@ class InteractiveCliTests(unittest.TestCase):
         from unittest.mock import patch
 
         config_path = self.temp_dir / ".mikancli.json"
-        with patch("mikancli.cli.interactive.search_mikan_bangumi", return_value=candidates), patch(
-            "mikancli.cli.interactive.fetch_mikan_subgroups", return_value=subgroups
+        with patch("mikancli.cli.search_flow.search_mikan_bangumi", return_value=candidates), patch(
+            "mikancli.cli.search_flow.fetch_mikan_subgroups", return_value=subgroups
         ), patch(
-            "mikancli.cli.interactive.fetch_mikan_feed_items", return_value=feed_items
+            "mikancli.cli.search_flow.fetch_mikan_feed_items", return_value=feed_items
         ), patch(
-            "mikancli.cli.interactive.select_option",
+            "mikancli.cli.search_flow.select_option",
             side_effect=[0, 0, "yes"],
         ), patch(
             "mikancli.cli.save_path_flow.select_option",
             return_value="downloads",
         ), patch(
-            "mikancli.cli.app.prompt_text",
+            "mikancli.cli.entrypoint.prompt_text",
             side_effect=["HEVC", "720p"],
         ), patch(
             "mikancli.cli.save_path_flow.prompt_text",
@@ -180,18 +180,18 @@ class InteractiveCliTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.interactive.search_mikan_bangumi", return_value=candidates), patch(
-            "mikancli.cli.interactive.fetch_mikan_subgroups", return_value=subgroups
+        with patch("mikancli.cli.search_flow.search_mikan_bangumi", return_value=candidates), patch(
+            "mikancli.cli.search_flow.fetch_mikan_subgroups", return_value=subgroups
         ), patch(
-            "mikancli.cli.interactive.fetch_mikan_feed_items", return_value=feed_items
+            "mikancli.cli.search_flow.fetch_mikan_feed_items", return_value=feed_items
         ), patch(
-            "mikancli.cli.interactive.select_option",
+            "mikancli.cli.search_flow.select_option",
             side_effect=[0, 0, "yes"],
         ), patch(
             "mikancli.cli.save_path_flow.select_option",
             return_value="downloads",
         ), patch(
-            "mikancli.cli.app.prompt_text",
+            "mikancli.cli.entrypoint.prompt_text",
             side_effect=["", ""],
         ), patch(
             "mikancli.cli.save_path_flow.prompt_text",
@@ -256,16 +256,16 @@ class InteractiveCliTests(unittest.TestCase):
         from unittest.mock import patch
 
         config_path = self.temp_dir / ".mikancli.json"
-        with patch("mikancli.cli.interactive.search_mikan_bangumi", return_value=candidates), patch(
-            "mikancli.cli.interactive.fetch_mikan_subgroups", return_value=subgroups
+        with patch("mikancli.cli.search_flow.search_mikan_bangumi", return_value=candidates), patch(
+            "mikancli.cli.search_flow.fetch_mikan_subgroups", return_value=subgroups
         ), patch(
-            "mikancli.cli.interactive.fetch_mikan_feed_items", return_value=feed_items
+            "mikancli.cli.search_flow.fetch_mikan_feed_items", return_value=feed_items
         ), patch(
-            "mikancli.cli.interactive.select_option", side_effect=fake_select_option
+            "mikancli.cli.search_flow.select_option", side_effect=fake_select_option
         ), patch(
             "mikancli.cli.save_path_flow.select_option", side_effect=fake_select_option
         ), patch(
-            "mikancli.cli.app.prompt_text",
+            "mikancli.cli.entrypoint.prompt_text",
             side_effect=["", ""],
         ), patch(
             "mikancli.cli.save_path_flow.prompt_text",
@@ -317,8 +317,8 @@ class InteractiveCliTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.interactive.search_mikan_bangumi", return_value=candidates), patch(
-            "mikancli.cli.interactive.fetch_mikan_subgroups", return_value=subgroups
+        with patch("mikancli.cli.search_flow.search_mikan_bangumi", return_value=candidates), patch(
+            "mikancli.cli.search_flow.fetch_mikan_subgroups", return_value=subgroups
         ):
             selected_bangumi, selected_subgroup, notes = resolve_mikan_selection(
                 SearchRequest(keyword="\u836f\u5c4b\u5c11\u5973\u7684\u5462\u5583"),
@@ -333,10 +333,10 @@ class InteractiveCliTests(unittest.TestCase):
 
         stdout = StringIO()
 
-        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
-            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
-            "mikancli.cli.app.select_option", side_effect=ExitRequested
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.entrypoint.load_config", return_value=AppConfig()), patch(
+            "mikancli.cli.entrypoint.select_option", side_effect=ExitRequested
         ), patch("sys.stdout", new=stdout):
             exit_code = main([])
 
@@ -355,16 +355,16 @@ class InteractiveCliTests(unittest.TestCase):
             self.assertIsNone(settings.password)
             return "5.0.0"
 
-        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
-            "mikancli.cli.app.get_config_path", return_value=config_path
-        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
-            "mikancli.cli.qbittorrent_setup.prompt_text",
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=config_path
+        ), patch("mikancli.cli.entrypoint.load_config", return_value=AppConfig()), patch(
+            "mikancli.cli.qbittorrent_flow.prompt_text",
             side_effect=["", ""],
         ), patch(
-            "mikancli.cli.qbittorrent_setup.prompt_password",
+            "mikancli.cli.qbittorrent_flow.prompt_password",
             return_value="",
         ), patch(
-            "mikancli.cli.qbittorrent_setup.check_connection",
+            "mikancli.cli.qbittorrent_flow.check_connection",
             side_effect=fake_check_connection,
         ), patch("sys.stdout", new=stdout):
             exit_code = main(["--setup-qbittorrent"])
@@ -382,16 +382,16 @@ class InteractiveCliTests(unittest.TestCase):
         config_path = self.temp_dir / ".mikancli.json"
         stdout = StringIO()
 
-        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
-            "mikancli.cli.app.get_config_path", return_value=config_path
-        ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
-            "mikancli.cli.qbittorrent_setup.prompt_text",
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=config_path
+        ), patch("mikancli.cli.entrypoint.load_config", return_value=AppConfig()), patch(
+            "mikancli.cli.qbittorrent_flow.prompt_text",
             side_effect=["localhost:9090", "admin"],
         ), patch(
-            "mikancli.cli.qbittorrent_setup.prompt_password",
+            "mikancli.cli.qbittorrent_flow.prompt_password",
             return_value="wrong",
         ), patch(
-            "mikancli.cli.qbittorrent_setup.check_connection",
+            "mikancli.cli.qbittorrent_flow.check_connection",
             side_effect=QBittorrentError("bad credentials"),
         ), patch("sys.stdout", new=stdout):
             exit_code = main(["--setup-qbittorrent"])
@@ -405,18 +405,18 @@ class InteractiveCliTests(unittest.TestCase):
 
         draft = object()
 
-        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
-            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.app.select_option", return_value="search") as select_mock, patch(
-            "mikancli.cli.app.load_config", return_value=AppConfig()
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.entrypoint.select_option", return_value="search") as select_mock, patch(
+            "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.qbittorrent_setup.confirm_choice",
+            "mikancli.cli.qbittorrent_flow.confirm_choice",
             return_value=False,
         ) as confirm_mock, patch(
-            "mikancli.cli.app._build_interactive_draft",
+            "mikancli.cli.entrypoint._build_interactive_draft",
             return_value=draft,
         ) as build_mock, patch(
-            "mikancli.cli.app.print_text_summary",
+            "mikancli.cli.entrypoint.print_text_summary",
             return_value=0,
         ):
             exit_code = main([])
@@ -441,15 +441,15 @@ class InteractiveCliTests(unittest.TestCase):
     def test_main_can_launch_qbittorrent_configuration_route_from_startup_menu(self) -> None:
         from unittest.mock import patch
 
-        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
-            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.app.select_option", return_value="qbittorrent"), patch(
-            "mikancli.cli.app.load_config", return_value=AppConfig()
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.entrypoint.select_option", return_value="qbittorrent"), patch(
+            "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.app._run_qbittorrent_configuration_route",
+            "mikancli.cli.entrypoint._run_qbittorrent_configuration_route",
             return_value=0,
         ) as route_mock, patch(
-            "mikancli.cli.app._build_interactive_draft",
+            "mikancli.cli.entrypoint._build_interactive_draft",
         ) as build_mock:
             exit_code = main([])
 
@@ -462,21 +462,21 @@ class InteractiveCliTests(unittest.TestCase):
 
         draft = object()
 
-        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
-            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.app.select_option", return_value="search"), patch(
-            "mikancli.cli.app.load_config", return_value=AppConfig()
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.entrypoint.select_option", return_value="search"), patch(
+            "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.qbittorrent_setup.confirm_choice",
+            "mikancli.cli.qbittorrent_flow.confirm_choice",
             return_value=True,
         ), patch(
-            "mikancli.cli.qbittorrent_setup._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_flow._setup_qbittorrent",
             return_value=0,
         ) as setup_mock, patch(
-            "mikancli.cli.app._build_interactive_draft",
+            "mikancli.cli.entrypoint._build_interactive_draft",
             return_value=draft,
         ) as build_mock, patch(
-            "mikancli.cli.app.print_text_summary",
+            "mikancli.cli.entrypoint.print_text_summary",
             return_value=0,
         ):
             exit_code = main([])
@@ -490,21 +490,21 @@ class InteractiveCliTests(unittest.TestCase):
 
         draft = object()
 
-        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
-            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.app.select_option", return_value="search"), patch(
-            "mikancli.cli.app.load_config", return_value=AppConfig()
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.entrypoint.select_option", return_value="search"), patch(
+            "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.qbittorrent_setup.confirm_choice",
+            "mikancli.cli.qbittorrent_flow.confirm_choice",
             side_effect=[True, False],
         ) as confirm_mock, patch(
-            "mikancli.cli.qbittorrent_setup._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_flow._setup_qbittorrent",
             side_effect=[1, 0],
         ) as setup_mock, patch(
-            "mikancli.cli.app._build_interactive_draft",
+            "mikancli.cli.entrypoint._build_interactive_draft",
             return_value=draft,
         ) as build_mock, patch(
-            "mikancli.cli.app.print_text_summary",
+            "mikancli.cli.entrypoint.print_text_summary",
             return_value=0,
         ):
             exit_code = main([])
@@ -517,18 +517,18 @@ class InteractiveCliTests(unittest.TestCase):
     def test_qbittorrent_configuration_route_retries_after_failed_setup_when_user_chooses_retry(self) -> None:
         from unittest.mock import patch
 
-        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
-            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.app.select_option", return_value="qbittorrent"), patch(
-            "mikancli.cli.app.load_config", return_value=AppConfig()
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.entrypoint.select_option", return_value="qbittorrent"), patch(
+            "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.qbittorrent_setup.confirm_choice",
+            "mikancli.cli.qbittorrent_flow.confirm_choice",
             return_value=True,
         ), patch(
-            "mikancli.cli.qbittorrent_setup._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_flow._setup_qbittorrent",
             side_effect=[1, 0],
         ) as setup_mock, patch(
-            "mikancli.cli.app._build_interactive_draft",
+            "mikancli.cli.entrypoint._build_interactive_draft",
         ) as build_mock:
             exit_code = main([])
 
@@ -539,15 +539,15 @@ class InteractiveCliTests(unittest.TestCase):
     def test_qbittorrent_configuration_route_returns_error_when_user_stops_retrying(self) -> None:
         from unittest.mock import patch
 
-        with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
-            "mikancli.cli.app.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.app.select_option", return_value="qbittorrent"), patch(
-            "mikancli.cli.app.load_config", return_value=AppConfig()
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.entrypoint.select_option", return_value="qbittorrent"), patch(
+            "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.qbittorrent_setup.confirm_choice",
+            "mikancli.cli.qbittorrent_flow.confirm_choice",
             return_value=False,
         ), patch(
-            "mikancli.cli.qbittorrent_setup._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_flow._setup_qbittorrent",
             return_value=1,
         ):
             exit_code = main([])
@@ -558,7 +558,7 @@ class InteractiveCliTests(unittest.TestCase):
         from unittest.mock import patch
 
         with patch(
-            "mikancli.cli.interactive.prompt_required_text",
+            "mikancli.cli.search_flow.prompt_required_text",
             side_effect=ExitRequested,
         ) as prompt_mock:
             with self.assertRaises(ExitRequested):

@@ -1,3 +1,3 @@
-from mikancli.cli.app import main
+from mikancli.cli.entrypoint import main
 
 __all__ = ["main"]

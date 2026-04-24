@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mikancli = "mikancli.cli.app:main"
+mikancli = "mikancli.cli.entrypoint:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
