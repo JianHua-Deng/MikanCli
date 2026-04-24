@@ -113,7 +113,7 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"):
+        with patch("mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"):
             resolved = resolve_save_path(
                 None,
                 AppConfig(),
@@ -128,7 +128,7 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.app._prompt_for_save_path", return_value="D:\\Anime\\Library"):
+        with patch("mikancli.cli.save_path_flow._prompt_for_save_path", return_value="D:\\Anime\\Library"):
             resolved = resolve_save_path(
                 None,
                 AppConfig(),
@@ -143,9 +143,9 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.app.select_option", return_value="downloads"), patch(
-            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.app.confirm_choice", return_value=True):
+        with patch("mikancli.cli.save_path_flow.select_option", return_value="downloads"), patch(
+            "mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=True):
             resolved = _prompt_for_save_path(
                 AppConfig(),
                 config_path=config_path,
@@ -159,9 +159,9 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.app.select_option", return_value="downloads"), patch(
-            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.app.confirm_choice", return_value=True):
+        with patch("mikancli.cli.save_path_flow.select_option", return_value="downloads"), patch(
+            "mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=True):
             _prompt_for_save_path(
                 AppConfig(
                     qbittorrent_url="http://localhost:8080",
@@ -182,10 +182,10 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.app.select_option", return_value="browse"), patch(
-            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.app.pick_directory", return_value="D:\\Anime\\Picked"), patch(
-            "mikancli.cli.app.confirm_choice", return_value=False
+        with patch("mikancli.cli.save_path_flow.select_option", return_value="browse"), patch(
+            "mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.save_path_flow.pick_directory", return_value="D:\\Anime\\Picked"), patch(
+            "mikancli.cli.save_path_flow.confirm_choice", return_value=False
         ):
             resolved = _prompt_for_save_path(
                 AppConfig(),
@@ -200,7 +200,7 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.app.select_option", return_value="saved-default"):
+        with patch("mikancli.cli.save_path_flow.select_option", return_value="saved-default"):
             resolved = _prompt_for_save_path(
                 AppConfig(default_save_path="D:\\Anime\\Default"),
                 config_path=config_path,
@@ -214,7 +214,7 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.app.select_option", side_effect=ExitRequested):
+        with patch("mikancli.cli.save_path_flow.select_option", side_effect=ExitRequested):
             with self.assertRaises(ExitRequested):
                 _prompt_for_save_path(
                     AppConfig(default_save_path="D:\\Anime\\Default"),

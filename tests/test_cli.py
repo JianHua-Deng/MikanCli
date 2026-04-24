@@ -119,14 +119,17 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.interactive.select_option",
             side_effect=[0, 0, "yes"],
         ), patch(
-            "mikancli.cli.app.select_option",
+            "mikancli.cli.save_path_flow.select_option",
             return_value="downloads",
         ), patch(
             "mikancli.cli.app.prompt_text",
-            side_effect=["HEVC", "720p", ""],
+            side_effect=["HEVC", "720p"],
         ), patch(
-            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.app.confirm_choice", return_value=True):
+            "mikancli.cli.save_path_flow.prompt_text",
+            side_effect=[""],
+        ), patch(
+            "mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=True):
             draft = _build_interactive_draft(
                 args,
                 config=AppConfig(),
@@ -185,14 +188,17 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.interactive.select_option",
             side_effect=[0, 0, "yes"],
         ), patch(
-            "mikancli.cli.app.select_option",
+            "mikancli.cli.save_path_flow.select_option",
             return_value="downloads",
         ), patch(
             "mikancli.cli.app.prompt_text",
-            side_effect=["", "", "Solo Leveling S2"],
+            side_effect=["", ""],
         ), patch(
-            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.app.confirm_choice", return_value=False):
+            "mikancli.cli.save_path_flow.prompt_text",
+            side_effect=["Solo Leveling S2"],
+        ), patch(
+            "mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=False):
             draft = _build_interactive_draft(
                 args,
                 config=AppConfig(),
@@ -257,13 +263,16 @@ class InteractiveCliTests(unittest.TestCase):
         ), patch(
             "mikancli.cli.interactive.select_option", side_effect=fake_select_option
         ), patch(
-            "mikancli.cli.app.select_option", side_effect=fake_select_option
+            "mikancli.cli.save_path_flow.select_option", side_effect=fake_select_option
         ), patch(
             "mikancli.cli.app.prompt_text",
-            side_effect=["", "", ""],
+            side_effect=["", ""],
         ), patch(
-            "mikancli.cli.app.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.app.confirm_choice", return_value=False):
+            "mikancli.cli.save_path_flow.prompt_text",
+            side_effect=[""],
+        ), patch(
+            "mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"
+        ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=False):
             _build_interactive_draft(
                 args,
                 config=AppConfig(),
@@ -349,13 +358,13 @@ class InteractiveCliTests(unittest.TestCase):
         with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
             "mikancli.cli.app.get_config_path", return_value=config_path
         ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
-            "mikancli.cli.app.prompt_text",
+            "mikancli.cli.qbittorrent_setup.prompt_text",
             side_effect=["", ""],
         ), patch(
-            "mikancli.cli.app.prompt_password",
+            "mikancli.cli.qbittorrent_setup.prompt_password",
             return_value="",
         ), patch(
-            "mikancli.cli.app.check_connection",
+            "mikancli.cli.qbittorrent_setup.check_connection",
             side_effect=fake_check_connection,
         ), patch("sys.stdout", new=stdout):
             exit_code = main(["--setup-qbittorrent"])
@@ -376,13 +385,13 @@ class InteractiveCliTests(unittest.TestCase):
         with patch("mikancli.cli.app.ensure_runtime_dependencies"), patch(
             "mikancli.cli.app.get_config_path", return_value=config_path
         ), patch("mikancli.cli.app.load_config", return_value=AppConfig()), patch(
-            "mikancli.cli.app.prompt_text",
+            "mikancli.cli.qbittorrent_setup.prompt_text",
             side_effect=["localhost:9090", "admin"],
         ), patch(
-            "mikancli.cli.app.prompt_password",
+            "mikancli.cli.qbittorrent_setup.prompt_password",
             return_value="wrong",
         ), patch(
-            "mikancli.cli.app.check_connection",
+            "mikancli.cli.qbittorrent_setup.check_connection",
             side_effect=QBittorrentError("bad credentials"),
         ), patch("sys.stdout", new=stdout):
             exit_code = main(["--setup-qbittorrent"])
@@ -401,7 +410,7 @@ class InteractiveCliTests(unittest.TestCase):
         ), patch("mikancli.cli.app.select_option", return_value="search") as select_mock, patch(
             "mikancli.cli.app.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.app.confirm_choice",
+            "mikancli.cli.qbittorrent_setup.confirm_choice",
             return_value=False,
         ) as confirm_mock, patch(
             "mikancli.cli.app._build_interactive_draft",
@@ -458,10 +467,10 @@ class InteractiveCliTests(unittest.TestCase):
         ), patch("mikancli.cli.app.select_option", return_value="search"), patch(
             "mikancli.cli.app.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.app.confirm_choice",
+            "mikancli.cli.qbittorrent_setup.confirm_choice",
             return_value=True,
         ), patch(
-            "mikancli.cli.app._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_setup._setup_qbittorrent",
             return_value=0,
         ) as setup_mock, patch(
             "mikancli.cli.app._build_interactive_draft",
@@ -486,10 +495,10 @@ class InteractiveCliTests(unittest.TestCase):
         ), patch("mikancli.cli.app.select_option", return_value="search"), patch(
             "mikancli.cli.app.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.app.confirm_choice",
+            "mikancli.cli.qbittorrent_setup.confirm_choice",
             side_effect=[True, False],
         ) as confirm_mock, patch(
-            "mikancli.cli.app._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_setup._setup_qbittorrent",
             side_effect=[1, 0],
         ) as setup_mock, patch(
             "mikancli.cli.app._build_interactive_draft",
@@ -513,10 +522,10 @@ class InteractiveCliTests(unittest.TestCase):
         ), patch("mikancli.cli.app.select_option", return_value="qbittorrent"), patch(
             "mikancli.cli.app.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.app.confirm_choice",
+            "mikancli.cli.qbittorrent_setup.confirm_choice",
             return_value=True,
         ), patch(
-            "mikancli.cli.app._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_setup._setup_qbittorrent",
             side_effect=[1, 0],
         ) as setup_mock, patch(
             "mikancli.cli.app._build_interactive_draft",
@@ -535,10 +544,10 @@ class InteractiveCliTests(unittest.TestCase):
         ), patch("mikancli.cli.app.select_option", return_value="qbittorrent"), patch(
             "mikancli.cli.app.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.app.confirm_choice",
+            "mikancli.cli.qbittorrent_setup.confirm_choice",
             return_value=False,
         ), patch(
-            "mikancli.cli.app._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_setup._setup_qbittorrent",
             return_value=1,
         ):
             exit_code = main([])
