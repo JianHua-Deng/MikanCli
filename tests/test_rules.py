@@ -5,7 +5,7 @@ from mikancli.core.rules import build_rule_draft
 
 
 class RuleDraftTests(unittest.TestCase):
-    def test_build_rule_draft_uses_selected_subgroup_and_include_words(self) -> None:
+    def test_build_rule_draft_uses_only_user_include_words(self) -> None:
         draft = build_rule_draft(
             SearchRequest(
                 keyword="  Solo Leveling  ",
@@ -31,7 +31,7 @@ class RuleDraftTests(unittest.TestCase):
         self.assertEqual(draft.keyword, "Solo Leveling")
         self.assertEqual(draft.normalized_keyword, "solo leveling")
         self.assertEqual(draft.rule_name, "Solo Leveling")
-        self.assertEqual(draft.must_contain, ("LoliHouse", "HEVC", "10-bit"))
+        self.assertEqual(draft.must_contain, ("HEVC", "10-bit"))
         self.assertEqual(draft.must_not_contain, ("720p",))
         self.assertEqual(draft.mikan_subgroup, "LoliHouse")
         self.assertEqual(

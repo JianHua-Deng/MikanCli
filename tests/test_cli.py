@@ -133,7 +133,7 @@ class InteractiveCliTests(unittest.TestCase):
 
         self.assertEqual(draft.mikan_subgroup, "Prejudice-Studio")
         self.assertEqual(draft.feed_url, subgroups[0].feed_url)
-        self.assertEqual(draft.must_contain, ("Prejudice-Studio", "HEVC"))
+        self.assertEqual(draft.must_contain, ("HEVC",))
         self.assertEqual(draft.must_not_contain, ("720p",))
         self.assertEqual(draft.save_path, "D:\\Downloads")
         self.assertEqual(load_config(config_path).default_save_path, "D:\\Downloads")

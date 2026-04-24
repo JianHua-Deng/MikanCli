@@ -32,12 +32,7 @@ def build_rule_draft(
 ) -> RuleDraft:
     collapsed_keyword = collapse_spaces(request.keyword)
 
-    must_contain = _dedupe_nonempty(
-        [
-            subgroup.title if subgroup else "",
-            *request.include_words,
-        ]
-    )
+    must_contain = _dedupe_nonempty(list(request.include_words))
     must_not_contain = _dedupe_nonempty(list(request.exclude_words))
 
     return RuleDraft(
