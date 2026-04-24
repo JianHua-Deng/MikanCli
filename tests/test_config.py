@@ -42,7 +42,9 @@ class ConfigTests(unittest.TestCase):
                 '  "default_save_path": "D:\\\\Anime",\n'
                 '  "qbittorrent_url": " localhost:8080/ ",\n'
                 '  "qbittorrent_username": " admin ",\n'
-                '  "qbittorrent_password": "secret"\n'
+                '  "qbittorrent_password": "secret",\n'
+                '  "qbittorrent_category": " Anime ",\n'
+                '  "qbittorrent_add_paused": true\n'
                 "}\n"
             ),
             encoding="utf-8",
@@ -54,6 +56,8 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.qbittorrent_url, "localhost:8080/")
         self.assertEqual(config.qbittorrent_username, "admin")
         self.assertEqual(config.qbittorrent_password, "secret")
+        self.assertEqual(config.qbittorrent_category, "Anime")
+        self.assertTrue(config.qbittorrent_add_paused)
 
     def test_save_config_preserves_unknown_keys(self) -> None:
         config_path = self.temp_dir / ".mikancli.json"
@@ -74,6 +78,8 @@ class ConfigTests(unittest.TestCase):
                 qbittorrent_url="http://localhost:8080",
                 qbittorrent_username="admin",
                 qbittorrent_password="secret",
+                qbittorrent_category="Anime",
+                qbittorrent_add_paused=True,
             ),
         )
 
@@ -84,6 +90,8 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.qbittorrent_url, "http://localhost:8080")
         self.assertEqual(config.qbittorrent_username, "admin")
         self.assertEqual(config.qbittorrent_password, "secret")
+        self.assertEqual(config.qbittorrent_category, "Anime")
+        self.assertTrue(config.qbittorrent_add_paused)
 
     def test_resolve_save_path_uses_cli_value_without_writing_config(self) -> None:
         config_path = self.temp_dir / ".mikancli.json"
@@ -167,6 +175,8 @@ class ConfigTests(unittest.TestCase):
                     qbittorrent_url="http://localhost:8080",
                     qbittorrent_username="admin",
                     qbittorrent_password="secret",
+                    qbittorrent_category="Anime",
+                    qbittorrent_add_paused=True,
                 ),
                 config_path=config_path,
             )
@@ -176,6 +186,8 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.qbittorrent_url, "http://localhost:8080")
         self.assertEqual(config.qbittorrent_username, "admin")
         self.assertEqual(config.qbittorrent_password, "secret")
+        self.assertEqual(config.qbittorrent_category, "Anime")
+        self.assertTrue(config.qbittorrent_add_paused)
 
     def test_prompt_for_save_path_can_browse_without_saving_default(self) -> None:
         config_path = self.temp_dir / ".mikancli.json"

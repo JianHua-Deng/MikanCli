@@ -37,6 +37,20 @@ def _load_config_payload(config_path: Path) -> dict[str, object]:
     return payload
 
 
+def _coerce_bool(value: object, *, default: bool = False) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        cleaned = collapse_spaces(value).casefold()
+        if cleaned in {"true", "yes", "1", "on"}:
+            return True
+        if cleaned in {"false", "no", "0", "off", ""}:
+            return False
+    if value is None:
+        return default
+    return bool(value)
+
+
 def load_config(config_path: Path) -> AppConfig:
     payload = _load_config_payload(config_path)
 
@@ -44,6 +58,8 @@ def load_config(config_path: Path) -> AppConfig:
     qbittorrent_url = payload.get("qbittorrent_url")
     qbittorrent_username = payload.get("qbittorrent_username")
     qbittorrent_password = payload.get("qbittorrent_password")
+    qbittorrent_category = payload.get("qbittorrent_category")
+    qbittorrent_add_paused = payload.get("qbittorrent_add_paused")
 
     if default_save_path is not None:
         default_save_path = collapse_spaces(str(default_save_path)) or None
@@ -53,12 +69,16 @@ def load_config(config_path: Path) -> AppConfig:
         qbittorrent_username = collapse_spaces(str(qbittorrent_username)) or None
     if qbittorrent_password is not None:
         qbittorrent_password = str(qbittorrent_password)
+    if qbittorrent_category is not None:
+        qbittorrent_category = collapse_spaces(str(qbittorrent_category)) or None
 
     return AppConfig(
         default_save_path=default_save_path,
         qbittorrent_url=qbittorrent_url,
         qbittorrent_username=qbittorrent_username,
         qbittorrent_password=qbittorrent_password,
+        qbittorrent_category=qbittorrent_category,
+        qbittorrent_add_paused=_coerce_bool(qbittorrent_add_paused),
     )
 
 
@@ -70,6 +90,8 @@ def save_config(config_path: Path, config: AppConfig) -> None:
             "qbittorrent_url": config.qbittorrent_url,
             "qbittorrent_username": config.qbittorrent_username,
             "qbittorrent_password": config.qbittorrent_password,
+            "qbittorrent_category": config.qbittorrent_category,
+            "qbittorrent_add_paused": config.qbittorrent_add_paused,
         }
     )
     config_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")

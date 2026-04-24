@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import json
+import re
 from dataclasses import dataclass
 from http.cookiejar import CookieJar
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import HTTPCookieProcessor, Request, build_opener
 
-from mikancli.core.models import QBittorrentSettings
+from mikancli.core.models import QBittorrentSettings, RuleDraft
 from mikancli.core.normalize import collapse_spaces
 
 
@@ -51,6 +53,46 @@ class QBittorrentClient:
             raise QBittorrentError("qBittorrent returned an empty version response.")
         return version
 
+    def add_feed(self, feed_url: str, *, path: str | None = None) -> None:
+        cleaned_feed_url = collapse_spaces(feed_url)
+        if not cleaned_feed_url:
+            raise QBittorrentError(
+                "RSS feed URL is required before submitting to qBittorrent."
+            )
+
+        payload = {"url": cleaned_feed_url}
+        cleaned_path = collapse_spaces(path or "")
+        if cleaned_path:
+            payload["path"] = cleaned_path
+
+        self._open(
+            "/api/v2/rss/addFeed",
+            data=urlencode(payload).encode("utf-8"),
+            content_type="application/x-www-form-urlencoded",
+        )
+
+    def set_auto_downloading_rule(
+        self,
+        rule_name: str,
+        rule_definition: dict[str, object],
+    ) -> None:
+        cleaned_rule_name = collapse_spaces(rule_name)
+        if not cleaned_rule_name:
+            raise QBittorrentError(
+                "RSS rule name is required before submitting to qBittorrent."
+            )
+
+        self._open(
+            "/api/v2/rss/setRule",
+            data=urlencode(
+                {
+                    "ruleName": cleaned_rule_name,
+                    "ruleDef": json.dumps(rule_definition, ensure_ascii=False),
+                }
+            ).encode("utf-8"),
+            content_type="application/x-www-form-urlencoded",
+        )
+
     def _open(
         self,
         path: str,
@@ -94,6 +136,60 @@ def normalize_qbittorrent_url(url: str) -> str:
     return cleaned.rstrip("/")
 
 
+def build_qbittorrent_rule_definition(
+    draft: RuleDraft,
+    *,
+    add_paused: bool = False,
+    assigned_category: str | None = None,
+) -> dict[str, object]:
+    if not draft.feed_url:
+        raise QBittorrentError(
+            "RSS feed URL is required before building a qBittorrent rule."
+        )
+
+    must_contain = _build_required_terms_regex(draft.must_contain)
+    must_not_contain = _build_rejected_terms_regex(draft.must_not_contain)
+
+    return {
+        "enabled": True,
+        "mustContain": must_contain,
+        "mustNotContain": must_not_contain,
+        "useRegex": bool(must_contain or must_not_contain),
+        "episodeFilter": "",
+        "smartFilter": False,
+        "previouslyMatchedEpisodes": [],
+        "affectedFeeds": [draft.feed_url],
+        "ignoreDays": 0,
+        "lastMatch": "",
+        "addPaused": add_paused,
+        "assignedCategory": collapse_spaces(assigned_category or ""),
+        "savePath": draft.save_path or "",
+    }
+
+
+def _build_required_terms_regex(terms: tuple[str, ...]) -> str:
+    cleaned_terms = _clean_rule_terms(terms)
+    if not cleaned_terms:
+        return ""
+    return "".join(f"(?=.*{re.escape(term)})" for term in cleaned_terms) + ".*"
+
+
+def _build_rejected_terms_regex(terms: tuple[str, ...]) -> str:
+    cleaned_terms = _clean_rule_terms(terms)
+    if not cleaned_terms:
+        return ""
+    return "|".join(re.escape(term) for term in cleaned_terms)
+
+
+def _clean_rule_terms(terms: tuple[str, ...]) -> tuple[str, ...]:
+    cleaned_terms: list[str] = []
+    for term in terms:
+        cleaned = collapse_spaces(term)
+        if cleaned:
+            cleaned_terms.append(cleaned)
+    return tuple(cleaned_terms)
+
+
 def check_connection(settings: QBittorrentSettings) -> str:
     client = QBittorrentClient(settings)
     has_credentials = bool(settings.username or settings.password)
@@ -119,3 +215,24 @@ def check_connection(settings: QBittorrentSettings) -> str:
                 "and try again."
             ) from exc
         raise
+
+
+def submit_rule_draft(
+    settings: QBittorrentSettings,
+    draft: RuleDraft,
+    *,
+    add_paused: bool = False,
+    assigned_category: str | None = None,
+    feed_path: str | None = None,
+) -> None:
+    client = QBittorrentClient(settings)
+    if settings.username or settings.password:
+        client.login()
+
+    rule_definition = build_qbittorrent_rule_definition(
+        draft,
+        add_paused=add_paused,
+        assigned_category=assigned_category,
+    )
+    client.add_feed(draft.feed_url or "", path=feed_path)
+    client.set_auto_downloading_rule(draft.rule_name, rule_definition)

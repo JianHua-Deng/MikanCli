@@ -4,12 +4,13 @@ from pathlib import Path
 
 from mikancli.cli.prompts import confirm_choice, prompt_password, prompt_text
 from mikancli.config import save_config
-from mikancli.core.models import AppConfig, QBittorrentSettings
+from mikancli.core.models import AppConfig, QBittorrentSettings, RuleDraft
 from mikancli.core.normalize import collapse_spaces
 from mikancli.integrations.qbittorrent import (
     QBittorrentError,
     check_connection,
     normalize_qbittorrent_url,
+    submit_rule_draft,
 )
 
 
@@ -73,6 +74,8 @@ def _setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
             qbittorrent_url=normalize_qbittorrent_url(entered_url),
             qbittorrent_username=username,
             qbittorrent_password=password,
+            qbittorrent_category=config.qbittorrent_category,
+            qbittorrent_add_paused=config.qbittorrent_add_paused,
         ),
     )
     print(
@@ -124,3 +127,40 @@ def _run_qbittorrent_configuration_route(config: AppConfig, config_path: Path) -
         )
         if not retry_setup:
             return 1
+
+
+def _prompt_to_submit_rule_to_qbittorrent(
+    config: AppConfig,
+    draft: RuleDraft,
+) -> int:
+    if not config.qbittorrent_url:
+        return 0
+
+    should_submit = confirm_choice(
+        "Submit this RSS feed and download rule to qBittorrent now?",
+        default=True,
+        allow_exit=True,
+    )
+    if not should_submit:
+        return 0
+
+    settings = QBittorrentSettings(
+        url=config.qbittorrent_url,
+        username=config.qbittorrent_username,
+        password=config.qbittorrent_password,
+    )
+
+    try:
+        print("Submitting RSS feed and download rule to qBittorrent...")
+        submit_rule_draft(
+            settings,
+            draft,
+            add_paused=config.qbittorrent_add_paused,
+            assigned_category=config.qbittorrent_category,
+        )
+    except QBittorrentError as exc:
+        print(str(exc))
+        return 1
+
+    print("qBittorrent feed and download rule submitted successfully.")
+    return 0

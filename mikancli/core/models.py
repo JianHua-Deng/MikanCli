@@ -9,6 +9,8 @@ class AppConfig:
     qbittorrent_url: str | None = None
     qbittorrent_username: str | None = None
     qbittorrent_password: str | None = None
+    qbittorrent_category: str | None = None
+    qbittorrent_add_paused: bool = False
 
 
 @dataclass(frozen=True)

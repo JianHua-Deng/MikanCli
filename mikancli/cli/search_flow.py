@@ -17,6 +17,7 @@ BACK_TO_CANDIDATES = "__back_to_candidates__"
 BACK_TO_SUBGROUPS = "__back_to_subgroups__"
 CONFIRM_SUBGROUP = "__confirm_subgroup__"
 REJECT_SUBGROUP = "__reject_subgroup__"
+JSON_PREVIEW_NOTE = "JSON mode only prints the draft; interactive mode can submit it to qBittorrent."
 
 
 def _search_prompt(*, retry: bool = False) -> str:
@@ -94,7 +95,7 @@ def resolve_mikan_selection(
     try:
         candidates = search_mikan_bangumi(request.keyword)
     except MikanLookupError as exc:
-        return None, None, (str(exc), "qBittorrent submission not implemented yet.")
+        return None, None, (str(exc), JSON_PREVIEW_NOTE)
 
     if not candidates:
         return (
@@ -102,7 +103,7 @@ def resolve_mikan_selection(
             None,
             (
                 "No matching Mikan Bangumi entry was found for the keyword.",
-                "qBittorrent submission not implemented yet.",
+                JSON_PREVIEW_NOTE,
             ),
         )
 
@@ -114,7 +115,7 @@ def resolve_mikan_selection(
         return (
             selected_bangumi,
             None,
-            (str(exc), "qBittorrent submission not implemented yet."),
+            (str(exc), JSON_PREVIEW_NOTE),
         )
 
     if not subgroups:
@@ -123,11 +124,11 @@ def resolve_mikan_selection(
             None,
             (
                 "No subgroup-specific RSS feed was found for the selected Bangumi.",
-                "qBittorrent submission not implemented yet.",
+                JSON_PREVIEW_NOTE,
             ),
         )
 
-    return selected_bangumi, subgroups[0], ("qBittorrent submission not implemented yet.",)
+    return selected_bangumi, subgroups[0], (JSON_PREVIEW_NOTE,)
 
 
 def run_interactive_selection(

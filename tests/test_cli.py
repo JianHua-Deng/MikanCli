@@ -20,6 +20,7 @@ from mikancli.core.models import (
     MikanFeedItem,
     MikanSubgroup,
     QBittorrentSettings,
+    RuleDraft,
     SearchRequest,
 )
 from mikancli.cli.prompts import ExitRequested
@@ -326,7 +327,10 @@ class InteractiveCliTests(unittest.TestCase):
 
         self.assertEqual(selected_bangumi, candidates[0])
         self.assertEqual(selected_subgroup, subgroups[0])
-        self.assertEqual(notes, ("qBittorrent submission not implemented yet.",))
+        self.assertEqual(
+            notes,
+            ("JSON mode only prints the draft; interactive mode can submit it to qBittorrent.",),
+        )
 
     def test_main_exits_cleanly_when_user_chooses_exit(self) -> None:
         from unittest.mock import patch
@@ -484,6 +488,126 @@ class InteractiveCliTests(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         setup_mock.assert_called_once()
         build_mock.assert_called_once()
+
+    def test_main_search_route_can_submit_confirmed_draft_to_qbittorrent(self) -> None:
+        from unittest.mock import patch
+
+        draft = RuleDraft(
+            keyword="Solo Leveling",
+            normalized_keyword="solo leveling",
+            rule_name="Solo Leveling",
+            must_contain=("HEVC",),
+            must_not_contain=("720p",),
+            feed_url="https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230",
+            save_path="D:\\Anime\\Solo Leveling",
+        )
+        config = AppConfig(
+            qbittorrent_url="http://localhost:8080",
+            qbittorrent_username="admin",
+            qbittorrent_password="secret",
+            qbittorrent_category="Anime",
+            qbittorrent_add_paused=True,
+        )
+
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.entrypoint.select_option", return_value="search"), patch(
+            "mikancli.cli.entrypoint.load_config", return_value=config
+        ), patch(
+            "mikancli.cli.entrypoint._build_interactive_draft",
+            return_value=draft,
+        ), patch(
+            "mikancli.cli.entrypoint.print_text_summary",
+            return_value=0,
+        ), patch(
+            "mikancli.cli.qbittorrent_flow.confirm_choice",
+            return_value=True,
+        ), patch(
+            "mikancli.cli.qbittorrent_flow.submit_rule_draft",
+        ) as submit_mock, patch("sys.stdout", new=StringIO()):
+            exit_code = main([])
+
+        self.assertEqual(exit_code, 0)
+        submit_mock.assert_called_once_with(
+            QBittorrentSettings(
+                url="http://localhost:8080",
+                username="admin",
+                password="secret",
+            ),
+            draft,
+            add_paused=True,
+            assigned_category="Anime",
+        )
+
+    def test_main_search_route_can_skip_qbittorrent_submission(self) -> None:
+        from unittest.mock import patch
+
+        draft = RuleDraft(
+            keyword="Solo Leveling",
+            normalized_keyword="solo leveling",
+            rule_name="Solo Leveling",
+            must_contain=(),
+            must_not_contain=(),
+            feed_url="https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230",
+        )
+
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.entrypoint.select_option", return_value="search"), patch(
+            "mikancli.cli.entrypoint.load_config",
+            return_value=AppConfig(qbittorrent_url="http://localhost:8080"),
+        ), patch(
+            "mikancli.cli.entrypoint._build_interactive_draft",
+            return_value=draft,
+        ), patch(
+            "mikancli.cli.entrypoint.print_text_summary",
+            return_value=0,
+        ), patch(
+            "mikancli.cli.qbittorrent_flow.confirm_choice",
+            return_value=False,
+        ), patch(
+            "mikancli.cli.qbittorrent_flow.submit_rule_draft",
+        ) as submit_mock, patch("sys.stdout", new=StringIO()):
+            exit_code = main([])
+
+        self.assertEqual(exit_code, 0)
+        submit_mock.assert_not_called()
+
+    def test_main_exits_cleanly_from_qbittorrent_submission_prompt(self) -> None:
+        from unittest.mock import patch
+
+        draft = RuleDraft(
+            keyword="Solo Leveling",
+            normalized_keyword="solo leveling",
+            rule_name="Solo Leveling",
+            must_contain=(),
+            must_not_contain=(),
+            feed_url="https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230",
+        )
+        stdout = StringIO()
+
+        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+            "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
+        ), patch("mikancli.cli.entrypoint.select_option", return_value="search"), patch(
+            "mikancli.cli.entrypoint.load_config",
+            return_value=AppConfig(qbittorrent_url="http://localhost:8080"),
+        ), patch(
+            "mikancli.cli.entrypoint._build_interactive_draft",
+            return_value=draft,
+        ), patch(
+            "mikancli.cli.entrypoint.print_text_summary",
+            return_value=0,
+        ), patch(
+            "mikancli.cli.qbittorrent_flow.confirm_choice",
+            side_effect=ExitRequested,
+        ), patch(
+            "mikancli.cli.qbittorrent_flow.submit_rule_draft",
+        ) as submit_mock, patch("sys.stdout", new=stdout):
+            exit_code = main([])
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("Exited MikanCli.", stdout.getvalue())
+        submit_mock.assert_not_called()
 
     def test_main_retries_qbittorrent_setup_after_failed_attempt_when_user_does_not_skip(self) -> None:
         from unittest.mock import patch

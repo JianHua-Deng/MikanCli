@@ -49,5 +49,5 @@ def build_rule_draft(
         mikan_publish_group_url=subgroup.publish_group_url if subgroup else None,
         feed_url=subgroup.feed_url if subgroup else (bangumi.feed_url if bangumi else None),
         save_path=request.save_path,
-        notes=notes or ("qBittorrent submission not implemented yet.",),
+        notes=notes or ("qBittorrent submission has not been requested.",),
     )

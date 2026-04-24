@@ -25,7 +25,7 @@ class RuleDraftTests(unittest.TestCase):
                 feed_url="https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=370",
                 publish_group_url="https://mikanani.me/Home/PublishGroup/223",
             ),
-            notes=("qBittorrent submission not implemented yet.",),
+            notes=("qBittorrent submission has not been requested.",),
         )
 
         self.assertEqual(draft.keyword, "Solo Leveling")

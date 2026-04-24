@@ -92,6 +92,8 @@ def _prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
                     qbittorrent_url=config.qbittorrent_url,
                     qbittorrent_username=config.qbittorrent_username,
                     qbittorrent_password=config.qbittorrent_password,
+                    qbittorrent_category=config.qbittorrent_category,
+                    qbittorrent_add_paused=config.qbittorrent_add_paused,
                 ),
             )
 

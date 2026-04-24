@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+import json
 import unittest
 from urllib.error import HTTPError, URLError
+from urllib.parse import parse_qs
 
-from mikancli.core.models import QBittorrentSettings
+from mikancli.core.models import QBittorrentSettings, RuleDraft
 from mikancli.integrations.qbittorrent import (
+    QBittorrentClient,
     QBittorrentError,
+    build_qbittorrent_rule_definition,
     check_connection,
     normalize_qbittorrent_url,
+    submit_rule_draft,
 )
 
 
@@ -119,6 +124,134 @@ class QBittorrentIntegrationTests(unittest.TestCase):
                         password="wrong",
                     )
                 )
+
+    def test_add_feed_posts_feed_url_and_path_to_rss_endpoint(self) -> None:
+        opener = _FakeOpener([_FakeResponse("")])
+        client = QBittorrentClient(
+            QBittorrentSettings(url="localhost:8080"),
+            opener=opener,
+        )
+
+        client.add_feed(
+            " https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230 ",
+            path=" Mikan\\Solo Leveling ",
+        )
+
+        self.assertEqual(len(opener.requests), 1)
+        request = opener.requests[0]
+        self.assertTrue(request.full_url.endswith("/api/v2/rss/addFeed"))
+        self.assertEqual(
+            request.headers["Content-type"],
+            "application/x-www-form-urlencoded",
+        )
+        body = parse_qs(request.data.decode("utf-8"))
+        self.assertEqual(
+            body["url"],
+            ["https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230"],
+        )
+        self.assertEqual(body["path"], ["Mikan\\Solo Leveling"])
+
+    def test_build_qbittorrent_rule_definition_maps_draft_to_webui_shape(self) -> None:
+        rule_definition = build_qbittorrent_rule_definition(
+            RuleDraft(
+                keyword="Solo Leveling",
+                normalized_keyword="solo leveling",
+                rule_name="Solo Leveling",
+                must_contain=("HEVC", "1080p"),
+                must_not_contain=("720p",),
+                feed_url="https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230",
+                save_path="D:\\Anime\\Solo Leveling",
+            ),
+            add_paused=True,
+            assigned_category=" Anime ",
+        )
+
+        self.assertEqual(
+            rule_definition,
+            {
+                "enabled": True,
+                "mustContain": "(?=.*HEVC)(?=.*1080p).*",
+                "mustNotContain": "720p",
+                "useRegex": True,
+                "episodeFilter": "",
+                "smartFilter": False,
+                "previouslyMatchedEpisodes": [],
+                "affectedFeeds": [
+                    "https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230"
+                ],
+                "ignoreDays": 0,
+                "lastMatch": "",
+                "addPaused": True,
+                "assignedCategory": "Anime",
+                "savePath": "D:\\Anime\\Solo Leveling",
+            },
+        )
+
+    def test_set_auto_downloading_rule_posts_json_encoded_rule_definition(self) -> None:
+        opener = _FakeOpener([_FakeResponse("")])
+        client = QBittorrentClient(
+            QBittorrentSettings(url="http://localhost:8080"),
+            opener=opener,
+        )
+        rule_definition = {
+            "enabled": True,
+            "mustContain": "HEVC",
+            "mustNotContain": "",
+            "useRegex": False,
+            "episodeFilter": "",
+            "smartFilter": False,
+            "previouslyMatchedEpisodes": [],
+            "affectedFeeds": ["https://example.test/feed.xml"],
+            "ignoreDays": 0,
+            "lastMatch": "",
+            "addPaused": False,
+            "assignedCategory": "",
+            "savePath": "D:\\Anime",
+        }
+
+        client.set_auto_downloading_rule(" Solo Leveling ", rule_definition)
+
+        self.assertEqual(len(opener.requests), 1)
+        request = opener.requests[0]
+        self.assertTrue(request.full_url.endswith("/api/v2/rss/setRule"))
+        body = parse_qs(request.data.decode("utf-8"))
+        self.assertEqual(body["ruleName"], ["Solo Leveling"])
+        self.assertEqual(json.loads(body["ruleDef"][0]), rule_definition)
+
+    def test_submit_rule_draft_logs_in_adds_feed_then_sets_rule(self) -> None:
+        from unittest.mock import patch
+
+        opener = _FakeOpener(
+            [
+                _FakeResponse("Ok."),
+                _FakeResponse(""),
+                _FakeResponse(""),
+            ]
+        )
+
+        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+            submit_rule_draft(
+                QBittorrentSettings(
+                    url="localhost:8080",
+                    username="admin",
+                    password="secret",
+                ),
+                RuleDraft(
+                    keyword="Solo Leveling",
+                    normalized_keyword="solo leveling",
+                    rule_name="Solo Leveling",
+                    must_contain=("HEVC",),
+                    must_not_contain=("720p",),
+                    feed_url="https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230",
+                    save_path="D:\\Anime\\Solo Leveling",
+                ),
+                feed_path="Mikan\\Solo Leveling",
+            )
+
+        self.assertEqual(len(opener.requests), 3)
+        self.assertTrue(opener.requests[0].full_url.endswith("/api/v2/auth/login"))
+        self.assertTrue(opener.requests[1].full_url.endswith("/api/v2/rss/addFeed"))
+        self.assertTrue(opener.requests[2].full_url.endswith("/api/v2/rss/setRule"))
 
 
 if __name__ == "__main__":

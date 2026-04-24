@@ -9,13 +9,14 @@ The repository currently contains the first small slice of the project:
 - a Python CLI scaffold
 - keyword normalization
 - Mikan Bangumi search, subgroup discovery, and subgroup RSS feed resolution
-- draft qBittorrent rule construction
+- draft qBittorrent rule construction and interactive qBittorrent submission
 - focused tests for the pure logic
 
 This increment now searches Mikan, lets you select the Bangumi and subgroup,
 resolves the subgroup-specific RSS feed, and prints that feed alongside the
-draft rule details. qBittorrent feed and rule submission are still not
-implemented, but qBittorrent WebUI setup verification is now available.
+draft rule details. In interactive search mode, MikanCli can now submit the
+RSS feed and auto-download rule to qBittorrent after you confirm the draft.
+qBittorrent WebUI setup verification is also available.
 
 Internally, the project is now split more cleanly by responsibility:
 
@@ -78,6 +79,7 @@ Current guided flow:
 - ask for the content folder name inside that base folder, defaulting to the selected Bangumi title
 - allow quitting cleanly from any interactive menu or prompt
 - print the resolved Mikan page URL, subgroup, and subgroup RSS feed URL with the draft rule summary
+- ask whether to submit the RSS feed and download rule to qBittorrent when WebUI access is configured
 
 ## qBittorrent setup
 

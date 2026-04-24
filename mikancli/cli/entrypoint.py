@@ -9,6 +9,7 @@ from mikancli.cli.input_parsing import parse_word_list
 from mikancli.cli.prompts import ExitRequested, prompt_text, select_option
 from mikancli.cli.qbittorrent_flow import (
     _prompt_for_qbittorrent_setup_if_needed,
+    _prompt_to_submit_rule_to_qbittorrent,
     _run_qbittorrent_configuration_route,
     _setup_qbittorrent,
 )
@@ -34,7 +35,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="mikancli",
         description=(
             "Search Mikan for an anime, inspect subgroup RSS contents, and preview "
-            "the qBittorrent rule inputs."
+            "or submit qBittorrent RSS rule inputs."
         ),
     )
     parser.add_argument("keyword", nargs="?", help="Anime title or search phrase.")
@@ -52,7 +53,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--save-path",
-        help="Optional save path to attach to the future qBittorrent rule.",
+        help="Optional save path to attach to the qBittorrent rule.",
     )
     parser.add_argument(
         "--json",
@@ -144,7 +145,7 @@ def _build_interactive_draft(
         request,
         bangumi=bangumi,
         subgroup=subgroup,
-        notes=("qBittorrent submission not implemented yet.",),
+        notes=("Review the draft before submitting it to qBittorrent.",),
     )
 
 
@@ -195,6 +196,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         if setup_exit_code != 0:
             return setup_exit_code
+        config = load_config(config_path)
         draft = _build_interactive_draft(
             args,
             config=config,
@@ -204,4 +206,11 @@ def main(argv: list[str] | None = None) -> int:
         print("Exited MikanCli.")
         return 0
 
-    return print_text_summary(draft)
+    summary_exit_code = print_text_summary(draft)
+    if summary_exit_code != 0:
+        return summary_exit_code
+    try:
+        return _prompt_to_submit_rule_to_qbittorrent(config, draft)
+    except ExitRequested:
+        print("Exited MikanCli.")
+        return 0
