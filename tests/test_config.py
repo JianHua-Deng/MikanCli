@@ -4,7 +4,12 @@ import shutil
 import unittest
 from pathlib import Path
 
-from mikancli.cli.save_path_flow import _prompt_for_save_path, resolve_save_path
+from mikancli.cli.save_path_flow import (
+    _build_content_save_path,
+    _prompt_for_content_folder_name,
+    _prompt_for_save_path,
+    resolve_save_path,
+)
 from mikancli.config import get_config_path, get_system_downloads_path, load_config, save_config
 from mikancli.core.models import AppConfig
 from mikancli.cli.prompts import ExitRequested
@@ -232,6 +237,20 @@ class ConfigTests(unittest.TestCase):
                     AppConfig(default_save_path="D:\\Anime\\Default"),
                     config_path=config_path,
                 )
+
+    def test_prompt_for_content_folder_name_sanitizes_default_mikan_title(self) -> None:
+        from unittest.mock import patch
+
+        with patch("mikancli.cli.save_path_flow.prompt_text", return_value=""):
+            folder_name = _prompt_for_content_folder_name("Re: Zero?")
+
+        self.assertEqual(folder_name, "Re Zero")
+
+    def test_build_content_save_path_sanitizes_manual_folder_name(self) -> None:
+        self.assertEqual(
+            _build_content_save_path("D:\\Anime", "Re: Zero?"),
+            "D:\\Anime\\Re Zero",
+        )
 
     def test_get_system_downloads_path_has_nonempty_fallback(self) -> None:
         self.assertTrue(get_system_downloads_path())

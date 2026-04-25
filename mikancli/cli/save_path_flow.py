@@ -9,7 +9,7 @@ from mikancli.config import (
     save_config,
 )
 from mikancli.core.models import AppConfig
-from mikancli.core.normalize import collapse_spaces
+from mikancli.core.normalize import collapse_spaces, sanitize_folder_name
 
 
 def _should_save_as_default(selected_path: str, config: AppConfig) -> bool:
@@ -31,20 +31,22 @@ def _prompt_for_manual_save_path() -> str | None:
 
 
 def _prompt_for_content_folder_name(default_name: str) -> str:
+    safe_default_name = sanitize_folder_name(default_name)
     entered = collapse_spaces(
         prompt_text(
             "Enter the folder name for downloaded content (press Enter to use the default title from Mikan)",
-            default=default_name,
+            default=safe_default_name,
             allow_exit=True,
         )
     )
-    return entered or default_name
+    return sanitize_folder_name(entered or safe_default_name) or "MikanCli Download"
 
 
 def _build_content_save_path(base_path: str | None, folder_name: str) -> str | None:
     if not base_path:
         return None
-    return str(Path(base_path) / folder_name)
+    safe_folder_name = sanitize_folder_name(folder_name) or "MikanCli Download"
+    return str(Path(base_path) / safe_folder_name)
 
 
 def _prompt_for_save_path(config: AppConfig, config_path: Path) -> str:

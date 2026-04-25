@@ -136,6 +136,12 @@ class QBittorrentClient:
             ),
         )
 
+    def has_feed_url(self, feed_url: str) -> bool:
+        cleaned_feed_url = collapse_spaces(feed_url)
+        if not cleaned_feed_url:
+            return False
+        return _nested_value_contains(self.get_rss_items(), cleaned_feed_url)
+
     def _open(
         self,
         path: str,
@@ -320,7 +326,11 @@ def submit_rule_draft(
         add_paused=add_paused,
         assigned_category=assigned_category,
     )
-    client.add_feed(draft.feed_url or "", path=feed_path or _build_default_feed_path(draft))
+    if not client.has_feed_url(draft.feed_url or ""):
+        client.add_feed(
+            draft.feed_url or "",
+            path=feed_path or _build_default_feed_path(draft),
+        )
     client.set_auto_downloading_rule(draft.rule_name, rule_definition)
     result = client.verify_rule_draft(draft)
     if not result.verified:

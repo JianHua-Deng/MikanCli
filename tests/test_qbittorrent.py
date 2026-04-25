@@ -228,6 +228,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
         opener = _FakeOpener(
             [
                 _FakeResponse("Ok."),
+                _FakeResponse("{}"),
                 _FakeResponse(""),
                 _FakeResponse(""),
                 _FakeResponse(
@@ -275,14 +276,19 @@ class QBittorrentIntegrationTests(unittest.TestCase):
         self.assertTrue(result.verified)
         self.assertTrue(result.feed_verified)
         self.assertTrue(result.rule_verified)
-        self.assertEqual(len(opener.requests), 5)
+        self.assertEqual(len(opener.requests), 6)
         self.assertTrue(opener.requests[0].full_url.endswith("/api/v2/auth/login"))
-        self.assertTrue(opener.requests[1].full_url.endswith("/api/v2/rss/addFeed"))
-        self.assertTrue(opener.requests[2].full_url.endswith("/api/v2/rss/setRule"))
         self.assertTrue(
-            opener.requests[3].full_url.endswith("/api/v2/rss/items?withData=false")
+            opener.requests[1].full_url.endswith("/api/v2/rss/items?withData=false")
         )
-        self.assertTrue(opener.requests[4].full_url.endswith("/api/v2/rss/rules"))
+        self.assertTrue(opener.requests[2].full_url.endswith("/api/v2/rss/addFeed"))
+        self.assertTrue(
+            opener.requests[3].full_url.endswith("/api/v2/rss/setRule")
+        )
+        self.assertTrue(
+            opener.requests[4].full_url.endswith("/api/v2/rss/items?withData=false")
+        )
+        self.assertTrue(opener.requests[5].full_url.endswith("/api/v2/rss/rules"))
 
     def test_submit_rule_draft_raises_when_read_back_does_not_find_rule(self) -> None:
         from unittest.mock import patch
@@ -291,6 +297,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
         opener = _FakeOpener(
             [
                 _FakeResponse("Ok."),
+                _FakeResponse("{}"),
                 _FakeResponse(""),
                 _FakeResponse(""),
                 _FakeResponse(json.dumps({"Solo Leveling": {"url": feed_url}})),
@@ -324,6 +331,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
         opener = _FakeOpener(
             [
                 _FakeResponse("Ok."),
+                _FakeResponse("{}"),
                 _FakeResponse(""),
                 _FakeResponse(""),
                 _FakeResponse(json.dumps({"Solo Leveling": {"url": feed_url}})),
@@ -347,7 +355,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
             )
 
         login_body = parse_qs(opener.requests[0].data.decode("utf-8"))
-        add_feed_body = parse_qs(opener.requests[1].data.decode("utf-8"))
+        add_feed_body = parse_qs(opener.requests[2].data.decode("utf-8"))
         self.assertTrue(opener.requests[0].full_url.endswith("/api/v2/auth/login"))
         self.assertEqual(login_body, {})
         self.assertEqual(add_feed_body["path"], ["Solo Leveling"])
@@ -359,6 +367,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
         opener = _FakeOpener(
             [
                 _FakeResponse("Ok."),
+                _FakeResponse("{}"),
                 _FakeResponse(""),
                 _FakeResponse(""),
                 _FakeResponse(json.dumps({"Re 从零开始": {"url": feed_url}})),
@@ -379,8 +388,41 @@ class QBittorrentIntegrationTests(unittest.TestCase):
                 ),
             )
 
-        add_feed_body = parse_qs(opener.requests[1].data.decode("utf-8"))
+        add_feed_body = parse_qs(opener.requests[2].data.decode("utf-8"))
         self.assertEqual(add_feed_body["path"], ["Re 从零开始"])
+
+    def test_submit_rule_draft_skips_add_feed_when_feed_already_exists(self) -> None:
+        from unittest.mock import patch
+
+        feed_url = "https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230"
+        existing_feeds = json.dumps({"Solo Leveling": {"url": feed_url}})
+        opener = _FakeOpener(
+            [
+                _FakeResponse("Ok."),
+                _FakeResponse(existing_feeds),
+                _FakeResponse(""),
+                _FakeResponse(existing_feeds),
+                _FakeResponse(json.dumps({"Solo Leveling": {"affectedFeeds": [feed_url]}})),
+            ]
+        )
+
+        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+            result = submit_rule_draft(
+                QBittorrentSettings(url="localhost:8080"),
+                RuleDraft(
+                    keyword="Solo Leveling",
+                    normalized_keyword="solo leveling",
+                    rule_name="Solo Leveling",
+                    must_contain=(),
+                    must_not_contain=(),
+                    feed_url=feed_url,
+                ),
+            )
+
+        self.assertTrue(result.verified)
+        requested_paths = [request.full_url for request in opener.requests]
+        self.assertFalse(any(path.endswith("/api/v2/rss/addFeed") for path in requested_paths))
+        self.assertTrue(any(path.endswith("/api/v2/rss/setRule") for path in requested_paths))
 
     def test_http_error_includes_response_body_when_available(self) -> None:
         response = _FakeResponse("missing url")
