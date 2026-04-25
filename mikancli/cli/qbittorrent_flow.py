@@ -162,5 +162,5 @@ def _prompt_to_submit_rule_to_qbittorrent(
         print(str(exc))
         return 1
 
-    print("qBittorrent feed and download rule submitted successfully.")
+    print("qBittorrent feed and download rule submitted and verified successfully.")
     return 0

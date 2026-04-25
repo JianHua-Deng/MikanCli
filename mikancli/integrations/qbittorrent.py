@@ -16,6 +16,16 @@ class QBittorrentError(Exception):
     """Raised when qBittorrent WebUI setup or verification fails."""
 
 
+@dataclass(frozen=True)
+class QBittorrentSubmissionResult:
+    feed_verified: bool
+    rule_verified: bool
+
+    @property
+    def verified(self) -> bool:
+        return self.feed_verified and self.rule_verified
+
+
 @dataclass
 class QBittorrentClient:
     settings: QBittorrentSettings
@@ -93,6 +103,39 @@ class QBittorrentClient:
             content_type="application/x-www-form-urlencoded",
         )
 
+    def get_rss_items(self) -> dict[str, object]:
+        payload = self._open_json("/api/v2/rss/items?withData=false")
+        if not isinstance(payload, dict):
+            raise QBittorrentError(
+                "qBittorrent returned an invalid RSS items response."
+            )
+        return payload
+
+    def get_auto_downloading_rules(self) -> dict[str, object]:
+        payload = self._open_json("/api/v2/rss/rules")
+        if not isinstance(payload, dict):
+            raise QBittorrentError(
+                "qBittorrent returned an invalid RSS rules response."
+            )
+        return payload
+
+    def verify_rule_draft(self, draft: RuleDraft) -> QBittorrentSubmissionResult:
+        if not draft.feed_url:
+            raise QBittorrentError(
+                "RSS feed URL is required before verifying qBittorrent."
+            )
+
+        rss_items = self.get_rss_items()
+        rules = self.get_auto_downloading_rules()
+        return QBittorrentSubmissionResult(
+            feed_verified=_nested_value_contains(rss_items, draft.feed_url),
+            rule_verified=_rules_contain_rule_for_feed(
+                rules,
+                rule_name=draft.rule_name,
+                feed_url=draft.feed_url,
+            ),
+        )
+
     def _open(
         self,
         path: str,
@@ -125,6 +168,15 @@ class QBittorrentClient:
     def _build_origin_header(self) -> str:
         parts = urlsplit(self.settings.url)
         return f"{parts.scheme}://{parts.netloc}"
+
+    def _open_json(self, path: str) -> object:
+        response_text = self._open(path)
+        try:
+            return json.loads(response_text)
+        except json.JSONDecodeError as exc:
+            raise QBittorrentError(
+                f"qBittorrent returned invalid JSON for {path}."
+            ) from exc
 
 
 def normalize_qbittorrent_url(url: str) -> str:
@@ -190,6 +242,34 @@ def _clean_rule_terms(terms: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(cleaned_terms)
 
 
+def _nested_value_contains(value: object, target: str) -> bool:
+    if isinstance(value, str):
+        return value == target
+    if isinstance(value, dict):
+        for key, nested_value in value.items():
+            if key == target or _nested_value_contains(nested_value, target):
+                return True
+    if isinstance(value, list):
+        return any(_nested_value_contains(item, target) for item in value)
+    return False
+
+
+def _rules_contain_rule_for_feed(
+    rules: dict[str, object],
+    *,
+    rule_name: str,
+    feed_url: str,
+) -> bool:
+    rule = rules.get(collapse_spaces(rule_name))
+    if not isinstance(rule, dict):
+        return False
+
+    affected_feeds = rule.get("affectedFeeds")
+    if not isinstance(affected_feeds, list):
+        return False
+    return feed_url in affected_feeds
+
+
 def check_connection(settings: QBittorrentSettings) -> str:
     client = QBittorrentClient(settings)
     has_credentials = bool(settings.username or settings.password)
@@ -224,7 +304,7 @@ def submit_rule_draft(
     add_paused: bool = False,
     assigned_category: str | None = None,
     feed_path: str | None = None,
-) -> None:
+) -> QBittorrentSubmissionResult:
     client = QBittorrentClient(settings)
     if settings.username or settings.password:
         client.login()
@@ -236,3 +316,16 @@ def submit_rule_draft(
     )
     client.add_feed(draft.feed_url or "", path=feed_path)
     client.set_auto_downloading_rule(draft.rule_name, rule_definition)
+    result = client.verify_rule_draft(draft)
+    if not result.verified:
+        missing_parts = []
+        if not result.feed_verified:
+            missing_parts.append("RSS feed")
+        if not result.rule_verified:
+            missing_parts.append("download rule")
+        raise QBittorrentError(
+            "qBittorrent submission completed, but verification could not find "
+            + " and ".join(missing_parts)
+            + "."
+        )
+    return result

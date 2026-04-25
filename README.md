@@ -16,7 +16,8 @@ This increment now searches Mikan, lets you select the Bangumi and subgroup,
 resolves the subgroup-specific RSS feed, and prints that feed alongside the
 draft rule details. In interactive search mode, MikanCli can now submit the
 RSS feed and auto-download rule to qBittorrent after you confirm the draft.
-qBittorrent WebUI setup verification is also available.
+After submission, it reads qBittorrent back to verify that the feed and rule
+were created. qBittorrent WebUI setup verification is also available.
 
 Internally, the project is now split more cleanly by responsibility:
 
@@ -80,6 +81,7 @@ Current guided flow:
 - allow quitting cleanly from any interactive menu or prompt
 - print the resolved Mikan page URL, subgroup, and subgroup RSS feed URL with the draft rule summary
 - ask whether to submit the RSS feed and download rule to qBittorrent when WebUI access is configured
+- verify submitted qBittorrent feeds and rules by reading them back from the WebUI API
 
 ## qBittorrent setup
 

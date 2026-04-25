@@ -221,16 +221,37 @@ class QBittorrentIntegrationTests(unittest.TestCase):
     def test_submit_rule_draft_logs_in_adds_feed_then_sets_rule(self) -> None:
         from unittest.mock import patch
 
+        feed_url = "https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230"
         opener = _FakeOpener(
             [
                 _FakeResponse("Ok."),
                 _FakeResponse(""),
                 _FakeResponse(""),
+                _FakeResponse(
+                    json.dumps(
+                        {
+                            "Mikan": {
+                                "Solo Leveling": {
+                                    "url": feed_url,
+                                }
+                            }
+                        }
+                    )
+                ),
+                _FakeResponse(
+                    json.dumps(
+                        {
+                            "Solo Leveling": {
+                                "affectedFeeds": [feed_url],
+                            }
+                        }
+                    )
+                ),
             ]
         )
 
         with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
-            submit_rule_draft(
+            result = submit_rule_draft(
                 QBittorrentSettings(
                     url="localhost:8080",
                     username="admin",
@@ -242,16 +263,53 @@ class QBittorrentIntegrationTests(unittest.TestCase):
                     rule_name="Solo Leveling",
                     must_contain=("HEVC",),
                     must_not_contain=("720p",),
-                    feed_url="https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230",
+                    feed_url=feed_url,
                     save_path="D:\\Anime\\Solo Leveling",
                 ),
                 feed_path="Mikan\\Solo Leveling",
             )
 
-        self.assertEqual(len(opener.requests), 3)
+        self.assertTrue(result.verified)
+        self.assertTrue(result.feed_verified)
+        self.assertTrue(result.rule_verified)
+        self.assertEqual(len(opener.requests), 5)
         self.assertTrue(opener.requests[0].full_url.endswith("/api/v2/auth/login"))
         self.assertTrue(opener.requests[1].full_url.endswith("/api/v2/rss/addFeed"))
         self.assertTrue(opener.requests[2].full_url.endswith("/api/v2/rss/setRule"))
+        self.assertTrue(
+            opener.requests[3].full_url.endswith("/api/v2/rss/items?withData=false")
+        )
+        self.assertTrue(opener.requests[4].full_url.endswith("/api/v2/rss/rules"))
+
+    def test_submit_rule_draft_raises_when_read_back_does_not_find_rule(self) -> None:
+        from unittest.mock import patch
+
+        feed_url = "https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230"
+        opener = _FakeOpener(
+            [
+                _FakeResponse(""),
+                _FakeResponse(""),
+                _FakeResponse(json.dumps({"Solo Leveling": {"url": feed_url}})),
+                _FakeResponse(json.dumps({})),
+            ]
+        )
+
+        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+            with self.assertRaisesRegex(
+                QBittorrentError,
+                "verification could not find download rule",
+            ):
+                submit_rule_draft(
+                    QBittorrentSettings(url="localhost:8080"),
+                    RuleDraft(
+                        keyword="Solo Leveling",
+                        normalized_keyword="solo leveling",
+                        rule_name="Solo Leveling",
+                        must_contain=(),
+                        must_not_contain=(),
+                        feed_url=feed_url,
+                    ),
+                )
 
 
 if __name__ == "__main__":
