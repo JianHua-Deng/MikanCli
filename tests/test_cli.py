@@ -442,24 +442,31 @@ class InteractiveCliTests(unittest.TestCase):
         )
         build_mock.assert_called_once()
 
-    def test_main_can_launch_qbittorrent_configuration_route_from_startup_menu(self) -> None:
+    def test_main_returns_to_startup_menu_after_qbittorrent_configuration_route(self) -> None:
         from unittest.mock import patch
+
+        stdout = StringIO()
 
         with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.entrypoint.select_option", return_value="qbittorrent"), patch(
+        ), patch(
+            "mikancli.cli.entrypoint.select_option",
+            side_effect=["qbittorrent", ExitRequested],
+        ) as select_mock, patch(
             "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
         ), patch(
             "mikancli.cli.entrypoint._run_qbittorrent_configuration_route",
             return_value=0,
         ) as route_mock, patch(
             "mikancli.cli.entrypoint._build_interactive_draft",
-        ) as build_mock:
+        ) as build_mock, patch("sys.stdout", new=stdout):
             exit_code = main([])
 
         self.assertEqual(exit_code, 0)
         route_mock.assert_called_once()
+        self.assertEqual(select_mock.call_count, 2)
         build_mock.assert_not_called()
+        self.assertIn("Exited MikanCli.", stdout.getvalue())
 
     def test_main_search_route_can_launch_qbittorrent_setup_from_interactive_start(self) -> None:
         from unittest.mock import patch
@@ -641,9 +648,14 @@ class InteractiveCliTests(unittest.TestCase):
     def test_qbittorrent_configuration_route_retries_after_failed_setup_when_user_chooses_retry(self) -> None:
         from unittest.mock import patch
 
+        stdout = StringIO()
+
         with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
-        ), patch("mikancli.cli.entrypoint.select_option", return_value="qbittorrent"), patch(
+        ), patch(
+            "mikancli.cli.entrypoint.select_option",
+            side_effect=["qbittorrent", ExitRequested],
+        ), patch(
             "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
         ), patch(
             "mikancli.cli.qbittorrent_flow.confirm_choice",
@@ -653,12 +665,13 @@ class InteractiveCliTests(unittest.TestCase):
             side_effect=[1, 0],
         ) as setup_mock, patch(
             "mikancli.cli.entrypoint._build_interactive_draft",
-        ) as build_mock:
+        ) as build_mock, patch("sys.stdout", new=stdout):
             exit_code = main([])
 
         self.assertEqual(exit_code, 0)
         self.assertEqual(setup_mock.call_count, 2)
         build_mock.assert_not_called()
+        self.assertIn("Exited MikanCli.", stdout.getvalue())
 
     def test_qbittorrent_configuration_route_returns_error_when_user_stops_retrying(self) -> None:
         from unittest.mock import patch

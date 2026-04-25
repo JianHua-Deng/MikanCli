@@ -186,9 +186,15 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if args.keyword is None:
-            startup_action = _prompt_startup_action()
-            if startup_action == STARTUP_ACTION_QBITTORRENT:
-                return _run_qbittorrent_configuration_route(config, config_path)
+            while True:
+                startup_action = _prompt_startup_action()
+                if startup_action == STARTUP_ACTION_QBITTORRENT:
+                    setup_exit_code = _run_qbittorrent_configuration_route(config, config_path)
+                    if setup_exit_code != 0:
+                        return setup_exit_code
+                    config = load_config(config_path)
+                    continue
+                break
 
         setup_exit_code = _prompt_for_qbittorrent_setup_if_needed(
             config,
