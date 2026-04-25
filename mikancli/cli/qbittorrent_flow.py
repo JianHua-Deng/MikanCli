@@ -13,6 +13,8 @@ from mikancli.integrations.qbittorrent import (
     submit_rule_draft,
 )
 
+QBITTORRENT_SUBMISSION_SKIPPED = 2
+
 
 def _setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     print()
@@ -126,7 +128,7 @@ def _run_qbittorrent_configuration_route(config: AppConfig, config_path: Path) -
             allow_exit=True,
         )
         if not retry_setup:
-            return 1
+            return 0
 
 
 def _prompt_to_submit_rule_to_qbittorrent(
@@ -142,7 +144,7 @@ def _prompt_to_submit_rule_to_qbittorrent(
         allow_exit=True,
     )
     if not should_submit:
-        return 0
+        return QBITTORRENT_SUBMISSION_SKIPPED
 
     settings = QBittorrentSettings(
         url=config.qbittorrent_url,

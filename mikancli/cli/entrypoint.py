@@ -8,6 +8,7 @@ from mikancli.bootstrap import ensure_runtime_dependencies
 from mikancli.cli.input_parsing import parse_word_list
 from mikancli.cli.prompts import ExitRequested, prompt_text, select_option
 from mikancli.cli.qbittorrent_flow import (
+    QBITTORRENT_SUBMISSION_SKIPPED,
     _prompt_for_qbittorrent_setup_if_needed,
     _prompt_to_submit_rule_to_qbittorrent,
     _run_qbittorrent_configuration_route,
@@ -184,39 +185,48 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(draft.to_dict(), ensure_ascii=False, indent=2))
         return 0
 
-    try:
-        if args.keyword is None:
-            while True:
-                startup_action = _prompt_startup_action()
-                if startup_action == STARTUP_ACTION_QBITTORRENT:
-                    setup_exit_code = _run_qbittorrent_configuration_route(config, config_path)
-                    if setup_exit_code != 0:
-                        return setup_exit_code
-                    config = load_config(config_path)
-                    continue
-                break
+    has_startup_menu = args.keyword is None
 
-        setup_exit_code = _prompt_for_qbittorrent_setup_if_needed(
-            config,
-            config_path,
-        )
-        if setup_exit_code != 0:
-            return setup_exit_code
-        config = load_config(config_path)
-        draft = _build_interactive_draft(
-            args,
-            config=config,
-            config_path=config_path,
-        )
-    except ExitRequested:
-        print("Exited MikanCli.")
-        return 0
+    while True:
+        try:
+            if has_startup_menu:
+                while True:
+                    startup_action = _prompt_startup_action()
+                    if startup_action == STARTUP_ACTION_QBITTORRENT:
+                        setup_exit_code = _run_qbittorrent_configuration_route(config, config_path)
+                        if setup_exit_code != 0:
+                            return setup_exit_code
+                        config = load_config(config_path)
+                        continue
+                    break
 
-    summary_exit_code = print_text_summary(draft)
-    if summary_exit_code != 0:
-        return summary_exit_code
-    try:
-        return _prompt_to_submit_rule_to_qbittorrent(config, draft)
-    except ExitRequested:
-        print("Exited MikanCli.")
-        return 0
+            setup_exit_code = _prompt_for_qbittorrent_setup_if_needed(
+                config,
+                config_path,
+            )
+            if setup_exit_code != 0:
+                return setup_exit_code
+            config = load_config(config_path)
+            draft = _build_interactive_draft(
+                args,
+                config=config,
+                config_path=config_path,
+            )
+        except ExitRequested:
+            print("Exited MikanCli.")
+            return 0
+
+        summary_exit_code = print_text_summary(draft)
+        if summary_exit_code != 0:
+            return summary_exit_code
+        try:
+            submission_exit_code = _prompt_to_submit_rule_to_qbittorrent(config, draft)
+        except ExitRequested:
+            print("Exited MikanCli.")
+            return 0
+
+        if has_startup_menu and submission_exit_code == QBITTORRENT_SUBMISSION_SKIPPED:
+            config = load_config(config_path)
+            continue
+
+        return 0 if submission_exit_code == QBITTORRENT_SUBMISSION_SKIPPED else submission_exit_code
