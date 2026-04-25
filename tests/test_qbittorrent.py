@@ -23,6 +23,9 @@ class _FakeResponse:
     def read(self) -> bytes:
         return self.body.encode("utf-8")
 
+    def close(self) -> None:
+        pass
+
 
 class _FakeOpener:
     def __init__(self, responses: list[object]) -> None:
@@ -287,6 +290,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
         feed_url = "https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230"
         opener = _FakeOpener(
             [
+                _FakeResponse("Ok."),
                 _FakeResponse(""),
                 _FakeResponse(""),
                 _FakeResponse(json.dumps({"Solo Leveling": {"url": feed_url}})),
@@ -310,6 +314,90 @@ class QBittorrentIntegrationTests(unittest.TestCase):
                         feed_url=feed_url,
                     ),
                 )
+
+        self.assertTrue(opener.requests[0].full_url.endswith("/api/v2/auth/login"))
+
+    def test_submit_rule_draft_logs_in_even_when_credentials_are_blank(self) -> None:
+        from unittest.mock import patch
+
+        feed_url = "https://mikanani.me/RSS/Bangumi?bangumiId=3560&subgroupid=1230"
+        opener = _FakeOpener(
+            [
+                _FakeResponse("Ok."),
+                _FakeResponse(""),
+                _FakeResponse(""),
+                _FakeResponse(json.dumps({"Solo Leveling": {"url": feed_url}})),
+                _FakeResponse(
+                    json.dumps({"Solo Leveling": {"affectedFeeds": [feed_url]}})
+                ),
+            ]
+        )
+
+        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+            submit_rule_draft(
+                QBittorrentSettings(url="localhost:8080"),
+                RuleDraft(
+                    keyword="Solo Leveling",
+                    normalized_keyword="solo leveling",
+                    rule_name="Solo Leveling",
+                    must_contain=(),
+                    must_not_contain=(),
+                    feed_url=feed_url,
+                ),
+            )
+
+        login_body = parse_qs(opener.requests[0].data.decode("utf-8"))
+        add_feed_body = parse_qs(opener.requests[1].data.decode("utf-8"))
+        self.assertTrue(opener.requests[0].full_url.endswith("/api/v2/auth/login"))
+        self.assertEqual(login_body, {})
+        self.assertEqual(add_feed_body["path"], ["Solo Leveling"])
+
+    def test_submit_rule_draft_uses_sanitized_rule_name_as_default_feed_path(self) -> None:
+        from unittest.mock import patch
+
+        feed_url = "https://mikanani.me/RSS/Bangumi?bangumiId=3951&subgroupid=583"
+        opener = _FakeOpener(
+            [
+                _FakeResponse("Ok."),
+                _FakeResponse(""),
+                _FakeResponse(""),
+                _FakeResponse(json.dumps({"Re 从零开始": {"url": feed_url}})),
+                _FakeResponse(json.dumps({"Re: 从零开始": {"affectedFeeds": [feed_url]}})),
+            ]
+        )
+
+        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+            submit_rule_draft(
+                QBittorrentSettings(url="localhost:8080"),
+                RuleDraft(
+                    keyword="Re: 从零开始",
+                    normalized_keyword="re: 从零开始",
+                    rule_name="Re: 从零开始",
+                    must_contain=(),
+                    must_not_contain=(),
+                    feed_url=feed_url,
+                ),
+            )
+
+        add_feed_body = parse_qs(opener.requests[1].data.decode("utf-8"))
+        self.assertEqual(add_feed_body["path"], ["Re 从零开始"])
+
+    def test_http_error_includes_response_body_when_available(self) -> None:
+        response = _FakeResponse("missing url")
+        error = HTTPError(
+            "http://localhost:8080/api/v2/rss/addFeed",
+            400,
+            "Bad Request",
+            {},
+            response,
+        )
+        client = QBittorrentClient(
+            QBittorrentSettings(url="localhost:8080"),
+            opener=_FakeOpener([error]),
+        )
+
+        with self.assertRaisesRegex(QBittorrentError, "missing url"):
+            client.add_feed("https://example.test/rss")
 
 
 if __name__ == "__main__":

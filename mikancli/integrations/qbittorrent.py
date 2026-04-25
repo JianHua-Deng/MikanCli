@@ -9,7 +9,7 @@ from urllib.parse import urlencode, urlsplit
 from urllib.request import HTTPCookieProcessor, Request, build_opener
 
 from mikancli.core.models import QBittorrentSettings, RuleDraft
-from mikancli.core.normalize import collapse_spaces
+from mikancli.core.normalize import collapse_spaces, sanitize_folder_name
 
 
 class QBittorrentError(Exception):
@@ -156,8 +156,10 @@ class QBittorrentClient:
             response = self.opener.open(request)
             return response.read().decode("utf-8", errors="replace")
         except HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace").strip()
+            suffix = f" Response: {body}" if body else ""
             raise QBittorrentError(
-                f"qBittorrent request failed with HTTP {exc.code} for {path}."
+                f"qBittorrent request failed with HTTP {exc.code} for {path}.{suffix}"
             ) from exc
         except URLError as exc:
             raise QBittorrentError(
@@ -270,6 +272,11 @@ def _rules_contain_rule_for_feed(
     return feed_url in affected_feeds
 
 
+def _build_default_feed_path(draft: RuleDraft) -> str:
+    cleaned_rule_name = sanitize_folder_name(draft.rule_name)
+    return cleaned_rule_name or "MikanCli Feed"
+
+
 def check_connection(settings: QBittorrentSettings) -> str:
     client = QBittorrentClient(settings)
     has_credentials = bool(settings.username or settings.password)
@@ -306,15 +313,14 @@ def submit_rule_draft(
     feed_path: str | None = None,
 ) -> QBittorrentSubmissionResult:
     client = QBittorrentClient(settings)
-    if settings.username or settings.password:
-        client.login()
+    client.login()
 
     rule_definition = build_qbittorrent_rule_definition(
         draft,
         add_paused=add_paused,
         assigned_category=assigned_category,
     )
-    client.add_feed(draft.feed_url or "", path=feed_path)
+    client.add_feed(draft.feed_url or "", path=feed_path or _build_default_feed_path(draft))
     client.set_auto_downloading_rule(draft.rule_name, rule_definition)
     result = client.verify_rule_draft(draft)
     if not result.verified:
