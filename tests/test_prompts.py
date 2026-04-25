@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import unittest
+from io import StringIO
 
 from mikancli.cli.prompts import (
     EXIT_OPTION,
     ExitRequested,
+    PROMPT_SEPARATOR,
     confirm_choice,
     prompt_password,
     prompt_text,
@@ -21,11 +23,20 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.select.return_value = prompt
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
+        stdout = StringIO()
+
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+            "sys.stdout", new=stdout
+        ):
             selected = select_option("Choose", [("one", "One")], default="one")
 
         self.assertEqual(selected, "one")
+        self.assertEqual(stdout.getvalue(), f"\n{PROMPT_SEPARATOR}\n")
         fake_inquirer.select.assert_called_once()
+        self.assertEqual(
+            fake_inquirer.select.call_args.kwargs["message"],
+            "Choose",
+        )
 
     def test_select_option_can_raise_exit_requested(self) -> None:
         from unittest.mock import Mock, patch
@@ -35,7 +46,9 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.select.return_value = prompt
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+            "sys.stdout", new=StringIO()
+        ):
             with self.assertRaises(ExitRequested):
                 select_option("Choose", [("one", "One")], default="one", allow_exit=True)
 
@@ -47,11 +60,20 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.text.return_value = prompt
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
+        stdout = StringIO()
+
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+            "sys.stdout", new=stdout
+        ):
             entered = prompt_text("Enter keyword")
 
         self.assertEqual(entered, "solo leveling")
+        self.assertEqual(stdout.getvalue(), f"\n{PROMPT_SEPARATOR}\n")
         fake_inquirer.text.assert_called_once()
+        self.assertEqual(
+            fake_inquirer.text.call_args.kwargs["message"],
+            "Enter keyword",
+        )
 
     def test_prompt_text_can_raise_exit_requested(self) -> None:
         from unittest.mock import Mock, patch
@@ -61,7 +83,9 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.text.return_value = prompt
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+            "sys.stdout", new=StringIO()
+        ):
             with self.assertRaises(ExitRequested):
                 prompt_text("Enter keyword", allow_exit=True)
 
@@ -73,11 +97,20 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.secret.return_value = prompt
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
+        stdout = StringIO()
+
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+            "sys.stdout", new=stdout
+        ):
             entered = prompt_password("Enter password")
 
         self.assertEqual(entered, "secret")
+        self.assertEqual(stdout.getvalue(), f"\n{PROMPT_SEPARATOR}\n")
         fake_inquirer.secret.assert_called_once()
+        self.assertEqual(
+            fake_inquirer.secret.call_args.kwargs["message"],
+            "Enter password",
+        )
 
     def test_prompt_password_can_raise_exit_requested(self) -> None:
         from unittest.mock import Mock, patch
@@ -87,7 +120,9 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.secret.return_value = prompt
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer):
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+            "sys.stdout", new=StringIO()
+        ):
             with self.assertRaises(ExitRequested):
                 prompt_password("Enter password", allow_exit=True)
 

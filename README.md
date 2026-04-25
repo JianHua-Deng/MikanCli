@@ -19,7 +19,7 @@ RSS feed and auto-download rule to qBittorrent after you confirm the draft.
 After submission, it reads qBittorrent back to verify that the feed and rule
 were created. qBittorrent WebUI setup verification is also available.
 
-Internally, the project is now split more cleanly by responsibility:
+Internally, the project is split by responsibility:
 
 - `mikancli/cli/` contains CLI entrypoint, prompts, and interactive navigation
 - `mikancli/core/` contains models, normalization helpers, and rule-building logic
