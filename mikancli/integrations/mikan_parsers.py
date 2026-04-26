@@ -119,6 +119,11 @@ class _SearchResultParser(HTMLParser):
 
 
 def parse_search_results(html: str) -> tuple[MikanBangumi, ...]:
+    """
+    Parse a Mikan search results page into unique Bangumi candidates.
+    Returns a tuple of MikanBangumi objects with ids, titles, page URLs, and feed URLs.
+    Example: HTML containing '<a href="/Home/Bangumi/3560">Solo</a>' returns MikanBangumi(bangumi_id=3560, title="Solo", ...).
+    """
     parser = _SearchResultParser()
     parser.feed(html)
     parser.close()
@@ -167,6 +172,11 @@ def _strip_tags(value: str) -> str:
 
 
 def parse_bangumi_subgroups(html: str, *, bangumi_id: int) -> tuple[MikanSubgroup, ...]:
+    """
+    Parse a Bangumi page into subgroup-specific RSS feed choices.
+    Returns only subgroups whose RSS link matches the requested Bangumi id.
+    Example: a subgroup block with id="370" and title "LoliHouse" returns MikanSubgroup(subgroup_id=370, title="LoliHouse", ...).
+    """
     subgroups: list[MikanSubgroup] = []
     seen_ids: set[int] = set()
 
@@ -208,6 +218,11 @@ def parse_bangumi_subgroups(html: str, *, bangumi_id: int) -> tuple[MikanSubgrou
 
 
 def parse_feed_items(xml_text: str) -> tuple[MikanFeedItem, ...]:
+    """
+    Parse Mikan RSS XML into feed item metadata.
+    Returns feed items with title, episode URL, torrent URL, content length, and publish time when available.
+    Example: an RSS item with title "Episode 01" and enclosure length "1024" returns MikanFeedItem(title="Episode 01", content_length=1024, ...).
+    """
     try:
         root = ET.fromstring(xml_text)
     except ET.ParseError as exc:

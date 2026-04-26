@@ -6,6 +6,7 @@ from mikancli.core.models import MikanFeedItem, MikanSubgroup, RuleDraft
 
 
 def print_text_summary(draft: RuleDraft) -> int:
+    """Print a human-readable summary of a rule draft. Returns 0 after writing the summary and any next-step notes to stdout."""
     print()
     print("---- Rule Draft ----")
     print(f"Keyword: {draft.keyword}")
@@ -34,6 +35,7 @@ def print_text_summary(draft: RuleDraft) -> int:
 
 
 def format_size(size_bytes: int | None) -> str:
+    """Format a byte count into a compact display string. Example: format_size(1536) returns "1.5 KB"."""
     if size_bytes is None:
         return "(unknown)"
 
@@ -50,6 +52,7 @@ def format_size(size_bytes: int | None) -> str:
 
 
 def format_timestamp(value: str | None) -> str:
+    """Format an ISO timestamp for feed preview display, leaving unknown formats unchanged. Example: format_timestamp("2025-11-13T19:15:26") returns "2025/11/13 19:15"."""
     if not value:
         return "(unknown)"
 
@@ -63,6 +66,7 @@ def build_feed_preview_text(
     subgroup: MikanSubgroup,
     feed_items: tuple[MikanFeedItem, ...],
 ) -> str:
+    """Build the text shown before the user confirms a subgroup RSS feed. Returns a multi-line preview string containing the feed URL and any recent feed items."""
     lines = [
         f"Subgroup preview: {subgroup.title}",
         f"Feed URL: {subgroup.feed_url}",

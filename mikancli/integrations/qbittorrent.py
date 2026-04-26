@@ -20,6 +20,11 @@ def build_qbittorrent_rule_definition(
     add_paused: bool = False,
     assigned_category: str | None = None,
 ) -> dict[str, object]:
+    """
+    Convert a RuleDraft into the JSON shape qBittorrent expects for an RSS auto-download rule.
+    Returns a dictionary ready to encode as the WebUI ruleDef payload.
+    Example: a draft with feed_url="https://example.test/rss" and must_contain=("HEVC",) returns affectedFeeds=["https://example.test/rss"] and mustContain="(?=.*HEVC).*".
+    """
     if not draft.feed_url:
         raise QBittorrentError(
             "RSS feed URL is required before building a qBittorrent rule."
@@ -70,6 +75,7 @@ def build_rejected_terms_regex(terms: tuple[str, ...]) -> str:
 
 
 def clean_rule_terms(terms: tuple[str, ...]) -> tuple[str, ...]:
+    """Trim rule filter terms and drop empty values before building qBittorrent regex strings. Example: clean_rule_terms((" HEVC ", "")) returns ("HEVC",)."""
     cleaned_terms: list[str] = []
     for term in terms:
         cleaned = collapse_spaces(term)
@@ -79,11 +85,13 @@ def clean_rule_terms(terms: tuple[str, ...]) -> tuple[str, ...]:
 
 
 def build_default_feed_path(draft: RuleDraft) -> str:
+    """Create a safe default qBittorrent RSS feed folder name from the rule name. Example: build_default_feed_path(draft) returns "Re Zero" for a rule named "Re: Zero?"."""
     cleaned_rule_name = sanitize_folder_name(draft.rule_name)
     return cleaned_rule_name or "MikanCli Feed"
 
 
 def check_connection(settings: QBittorrentSettings) -> str:
+    """Verify qBittorrent WebUI access and return the reported version string. Raises QBittorrentError with user-facing guidance when the WebUI is unreachable or authentication fails."""
     client = QBittorrentClient(settings)
     has_credentials = bool(settings.username or settings.password)
 
@@ -118,6 +126,7 @@ def submit_rule_draft(
     assigned_category: str | None = None,
     feed_path: str | None = None,
 ) -> QBittorrentSubmissionResult:
+    """Log in, add the RSS feed if needed, create the qBittorrent rule, and verify both were saved. Returns QBittorrentSubmissionResult, or raises QBittorrentError when submission or verification fails."""
     client = QBittorrentClient(settings)
     client.login()
 

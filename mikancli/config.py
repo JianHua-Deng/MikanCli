@@ -13,6 +13,7 @@ WINDOWS_DOWNLOADS_GUID = "{374DE290-123F-4565-9164-39C4925E467B}"
 
 
 def get_config_path(base_dir: Path | None = None) -> Path:
+    """Return the path to the local MikanCli config file. Example: get_config_path(Path("C:/tmp")) returns Path("C:/tmp/.mikancli.json")."""
     root = base_dir if base_dir is not None else Path.cwd()
     return root / CONFIG_FILENAME
 
@@ -52,6 +53,7 @@ def _coerce_bool(value: object, *, default: bool = False) -> bool:
 
 
 def load_config(config_path: Path) -> AppConfig:
+    """Load app configuration from JSON, coercing known fields into AppConfig. Returns an empty AppConfig when the config file is missing or not a JSON object."""
     payload = _load_config_payload(config_path)
 
     default_save_path = payload.get("default_save_path")
@@ -83,6 +85,7 @@ def load_config(config_path: Path) -> AppConfig:
 
 
 def save_config(config_path: Path, config: AppConfig) -> None:
+    """Write AppConfig fields to the config file while preserving unknown JSON keys. Returns None after writing the merged JSON payload."""
     payload = _load_config_payload(config_path)
     payload.update(
         {
@@ -98,6 +101,7 @@ def save_config(config_path: Path, config: AppConfig) -> None:
 
 
 def get_system_downloads_path() -> str:
+    """Return the user's Downloads folder with a Windows registry lookup when available. Falls back to the home-directory Downloads path when the platform lookup is unavailable."""
     if sys.platform == "win32":
         try:
             import winreg
@@ -116,6 +120,7 @@ def get_system_downloads_path() -> str:
 
 
 def pick_directory(initial_dir: str | None = None) -> str | None:
+    """Open a native folder picker. Returns the selected directory, or None if tkinter is unavailable or the picker is cancelled."""
     try:
         import tkinter as tk
         from tkinter import filedialog

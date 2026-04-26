@@ -74,6 +74,7 @@ def select_option(
     separator_before_values: Iterable[T] = (),
     separator_before_exit: bool = True,
 ) -> T:
+    """Show an InquirerPy selection menu and return the selected option value. Raises ExitRequested when exit is allowed and the user chooses the exit option."""
     inquirer = _get_inquirer()
 
     choices = _build_select_choices(
@@ -103,6 +104,7 @@ def prompt_text(
     default: str | None = None,
     allow_exit: bool = False,
 ) -> str:
+    """Prompt for text, collapse surrounding whitespace, and return the cleaned value. Raises ExitRequested when exit words are allowed and entered."""
     inquirer = _get_inquirer()
 
     prompt = inquirer.text(
@@ -120,6 +122,7 @@ def prompt_password(
     *,
     allow_exit: bool = False,
 ) -> str:
+    """Prompt for hidden password input and return the raw entered value. Raises ExitRequested when exit words are allowed and entered."""
     inquirer = _get_inquirer()
     prompt_factory = getattr(inquirer, "secret", None)
     if prompt_factory is not None:
@@ -139,6 +142,7 @@ def confirm_choice(
     default: bool = True,
     allow_exit: bool = False,
 ) -> bool:
+    """Ask a yes/no question using the same menu style as other prompts. Returns True for Yes and False for No."""
     default_value = "yes" if default else "no"
     selected = select_option(
         message,

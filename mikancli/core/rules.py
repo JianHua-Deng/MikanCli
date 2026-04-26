@@ -30,6 +30,11 @@ def build_rule_draft(
     subgroup: MikanSubgroup | None = None,
     notes: tuple[str, ...] | None = None,
 ) -> RuleDraft:
+    """
+    Build the qBittorrent rule draft from user input and optional Mikan matches.
+    Returns a RuleDraft with cleaned filters, selected Mikan metadata, feed URL, save path, and notes.
+    Example: SearchRequest(keyword=" Solo ", include_words=("HEVC", "")) returns a draft with rule_name="Solo" and must_contain=("HEVC",).
+    """
     collapsed_keyword = collapse_spaces(request.keyword)
 
     must_contain = _dedupe_nonempty(list(request.include_words))

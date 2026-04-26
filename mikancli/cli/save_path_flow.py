@@ -13,6 +13,7 @@ from mikancli.core.normalize import collapse_spaces, sanitize_folder_name
 
 
 def should_save_as_default(selected_path: str, config: AppConfig) -> bool:
+    """Ask whether a selected download folder should become the saved default. Returns False without prompting when the selected path already matches the saved default."""
     if config.default_save_path == selected_path:
         return False
 
@@ -24,6 +25,7 @@ def should_save_as_default(selected_path: str, config: AppConfig) -> bool:
 
 
 def prompt_for_manual_save_path() -> str | None:
+    """Prompt the user to type a download folder path. Returns the cleaned path, or None when the prompt is left blank."""
     entered = collapse_spaces(
         prompt_text("Enter a download folder path", allow_exit=True)
     )
@@ -31,6 +33,7 @@ def prompt_for_manual_save_path() -> str | None:
 
 
 def prompt_for_content_folder_name(default_name: str) -> str:
+    """Prompt for the folder name inside the selected base download folder. Returns a sanitized folder name, falling back to the sanitized default title when left blank."""
     safe_default_name = sanitize_folder_name(default_name)
     entered = collapse_spaces(
         prompt_text(
@@ -43,6 +46,7 @@ def prompt_for_content_folder_name(default_name: str) -> str:
 
 
 def build_content_save_path(base_path: str | None, folder_name: str) -> str | None:
+    """Join a base download path with a safe content folder name. Example: build_content_save_path("D:/Anime", "Re: Zero?") returns "D:/Anime/Re Zero"."""
     if not base_path:
         return None
     safe_folder_name = sanitize_folder_name(folder_name) or "MikanCli Download"
@@ -50,6 +54,7 @@ def build_content_save_path(base_path: str | None, folder_name: str) -> str | No
 
 
 def prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
+    """Guide the user through choosing and optionally saving a base download folder. Returns the chosen folder path and may update the config file."""
     downloads_path = get_system_downloads_path()
     menu_options: list[tuple[str, str]] = []
 
@@ -109,6 +114,7 @@ def resolve_save_path(
     prompt_for_default: bool,
     config_path: Path,
 ) -> str | None:
+    """Resolve the base save path from CLI input, saved config, Downloads, or an interactive prompt. Returns a path string when one is available, otherwise None."""
     if cli_save_path:
         return collapse_spaces(cli_save_path)
 

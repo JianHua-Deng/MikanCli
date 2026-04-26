@@ -25,6 +25,7 @@ Example: before "InquirerPy>=0.3" -> result "InquirerPy".
 
 
 def load_project_dependencies(pyproject_path: Path = PYPROJECT_PATH) -> list[str]:
+    """Read project dependencies from pyproject.toml. Returns dependency strings from the project table, or an empty list when tomllib is unavailable."""
     if tomllib is None:
         return []
 
@@ -35,6 +36,7 @@ def load_project_dependencies(pyproject_path: Path = PYPROJECT_PATH) -> list[str
 
 
 def requirement_to_import_name(requirement: str) -> str:
+    """Convert a package requirement into the module name used for import checks. Example: requirement_to_import_name("rich>=13") returns "rich"."""
     package_name = _REQUIREMENT_SPLIT_RE.split(requirement, maxsplit=1)[0].strip()
     if package_name in IMPORT_NAME_OVERRIDES:
         return IMPORT_NAME_OVERRIDES[package_name]
@@ -42,6 +44,7 @@ def requirement_to_import_name(requirement: str) -> str:
 
 
 def find_missing_dependencies(dependencies: list[str]) -> list[str]:
+    """Return the dependency strings whose import modules are not installed. The return value preserves the original requirement strings so they can be passed directly to pip."""
     missing: list[str] = []
 
     for dependency in dependencies:
@@ -53,6 +56,7 @@ def find_missing_dependencies(dependencies: list[str]) -> list[str]:
 
 
 def install_dependencies(dependencies: list[str]) -> None:
+    """Install missing dependencies with the current Python interpreter. Returns None and lets subprocess errors bubble up when pip fails."""
     if not dependencies:
         return
 
@@ -61,6 +65,7 @@ def install_dependencies(dependencies: list[str]) -> None:
 
 
 def ensure_runtime_dependencies(pyproject_path: Path = PYPROJECT_PATH) -> list[str]:
+    """Install any project dependencies that are missing before interactive code runs. Returns the dependency strings that were installed, or an empty list when nothing was missing."""
     dependencies = load_project_dependencies(pyproject_path)
     missing = find_missing_dependencies(dependencies)
     if not missing:

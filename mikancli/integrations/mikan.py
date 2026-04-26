@@ -25,6 +25,7 @@ class MikanLookupError(RuntimeError):
 
 
 def fetch_html(url: str, *, timeout: float = 15.0) -> str:
+    """Fetch a Mikan page or feed as decoded UTF-8 text. Returns the response body, or raises MikanLookupError for HTTP and network failures."""
     request = Request(url, headers={"User-Agent": USER_AGENT})
 
     try:
@@ -38,6 +39,7 @@ def fetch_html(url: str, *, timeout: float = 15.0) -> str:
 
 
 def search_mikan_bangumi(keyword: str, *, timeout: float = 15.0) -> tuple[MikanBangumi, ...]:
+    """Search Mikan and return matching Bangumi candidates. Returns an empty tuple when the page has no parseable search results."""
     html = fetch_html(build_search_url(keyword), timeout=timeout)
     return parse_search_results(html)
 
@@ -47,6 +49,7 @@ def fetch_mikan_subgroups(
     *,
     timeout: float = 15.0,
 ) -> tuple[MikanSubgroup, ...]:
+    """Fetch subgroup-specific RSS options for a Bangumi id. Returns an empty tuple when the page has no parseable subgroup feeds."""
     html = fetch_html(build_bangumi_page_url(bangumi_id), timeout=timeout)
     return parse_bangumi_subgroups(html, bangumi_id=bangumi_id)
 
@@ -56,11 +59,13 @@ def fetch_mikan_feed_items(
     *,
     timeout: float = 15.0,
 ) -> tuple[MikanFeedItem, ...]:
+    """Fetch and parse recent items from a Mikan RSS feed. Returns an empty tuple when the feed has no parseable items."""
     xml_text = fetch_html(feed_url, timeout=timeout)
     return parse_feed_items(xml_text)
 
 
 def parse_feed_items(xml_text: str) -> tuple[MikanFeedItem, ...]:
+    """Parse Mikan RSS XML and convert parser errors into MikanLookupError. Returns parsed feed items, or an empty tuple for a valid feed with no items."""
     try:
         return parse_mikan_feed_items(xml_text)
     except MikanParseError as exc:

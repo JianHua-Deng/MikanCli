@@ -16,15 +16,17 @@ It is used when creating download folder names so titles from Mikan do not produ
 Example: before 'One Piece: "Egghead"?' -> result "One Piece Egghead".
 """
 
-# Replaces multiple whitespaces or newlines with a single space and trims the edges
 def collapse_spaces(value: str) -> str:
+    """Collapse repeated whitespace and trim the ends of a string. Example: collapse_spaces("  Solo   Leveling  ") returns "Solo Leveling"."""
     return _WHITESPACE_RE.sub(" ", value).strip()
 
-# Cleans up spacing and aggressively lowercases the string for consistent, case-insensitive matching
+
 def normalize_keyword(keyword: str) -> str:
+    """Normalize a search keyword for case-insensitive comparisons. Example: normalize_keyword("  Solo Leveling  ") returns "solo leveling"."""
     return collapse_spaces(keyword).casefold()
 
-# Removes illegal path characters and trailing periods/spaces to ensure safe Windows folder creation
+
 def sanitize_folder_name(value: str) -> str:
+    """Remove unsafe Windows path characters from a folder name. Example: sanitize_folder_name("Re: Zero?") returns "Re Zero"."""
     cleaned = _INVALID_PATH_CHARS_RE.sub("", collapse_spaces(value))
     return cleaned.rstrip(". ")

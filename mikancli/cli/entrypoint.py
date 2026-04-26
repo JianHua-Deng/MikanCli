@@ -31,6 +31,7 @@ STARTUP_ACTION_QBITTORRENT = "qbittorrent"
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Create the command-line parser for MikanCli flags and positional arguments. Returns a configured ArgumentParser; it does not parse arguments by itself."""
     parser = argparse.ArgumentParser(
         prog="mikancli",
         description=(
@@ -86,6 +87,7 @@ def build_request_from_args(
     config: AppConfig,
     config_path: Path,
 ) -> SearchRequest:
+    """Convert parsed JSON-mode CLI arguments into a SearchRequest. Returns the cleaned request or raises ValueError when the required keyword is missing."""
     if not args.keyword:
         raise ValueError("keyword is required when using --json")
 
@@ -142,6 +144,7 @@ def _build_interactive_draft(
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the MikanCli command and return a process exit code. This function may prompt, print output, install missing dependencies, and submit rules to qBittorrent."""
     ensure_runtime_dependencies()
 
     parser = build_parser()

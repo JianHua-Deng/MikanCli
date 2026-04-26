@@ -17,6 +17,7 @@ QBITTORRENT_SUBMISSION_SKIPPED = 2
 
 
 def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
+    """Prompt for qBittorrent WebUI settings, verify the connection, and save them on success. Returns 0 when verification succeeds and 1 when qBittorrent rejects or cannot be reached."""
     print()
     print("----- qBittorrent setup instructions -----")
     print("1. Install qBittorrent and open its settings.")
@@ -91,6 +92,7 @@ def prompt_for_qbittorrent_setup_if_needed(
     config: AppConfig,
     config_path: Path,
 ) -> int:
+    """Offer first-run qBittorrent setup when no WebUI URL is configured. Returns 0 when setup is skipped, already configured, or completed successfully."""
     if config.qbittorrent_url:
         return 0
 
@@ -117,6 +119,7 @@ def prompt_for_qbittorrent_setup_if_needed(
 
 
 def run_qbittorrent_configuration_flow(config: AppConfig, config_path: Path) -> int:
+    """Run the qBittorrent setup route and allow retrying after failed verification. Returns 0 after a successful setup or when the user stops retrying."""
     while True:
         exit_code = setup_qbittorrent(config, config_path)
         if exit_code == 0:
@@ -135,6 +138,7 @@ def prompt_to_submit_rule_to_qbittorrent(
     config: AppConfig,
     draft: RuleDraft,
 ) -> int:
+    """Ask whether to submit a confirmed rule draft to qBittorrent and report the result. Returns 0 on success, 1 on submission failure, or QBITTORRENT_SUBMISSION_SKIPPED when declined."""
     if not config.qbittorrent_url:
         return 0
 
