@@ -5,19 +5,18 @@ import json
 from pathlib import Path
 
 from mikancli.bootstrap import ensure_runtime_dependencies
-from mikancli.cli.input_parsing import parse_word_list
-from mikancli.cli.prompts import ExitRequested, prompt_text, select_option
+from mikancli.cli.input_parsing import prompt_word_list
+from mikancli.cli.prompts import ExitRequested, select_option
 from mikancli.cli.qbittorrent_flow import (
     QBITTORRENT_SUBMISSION_SKIPPED,
-    _prompt_for_qbittorrent_setup_if_needed,
-    _prompt_to_submit_rule_to_qbittorrent,
-    _run_qbittorrent_configuration_route,
-    _setup_qbittorrent,
+    prompt_for_qbittorrent_setup_if_needed,
+    prompt_to_submit_rule_to_qbittorrent,
+    run_qbittorrent_configuration_flow,
+    setup_qbittorrent,
 )
 from mikancli.cli.save_path_flow import (
-    _build_content_save_path,
-    _prompt_for_content_folder_name,
-    _prompt_for_save_path,
+    build_content_save_path,
+    prompt_for_content_folder_name,
     resolve_save_path,
 )
 from mikancli.cli.search_flow import resolve_mikan_selection, run_interactive_selection
@@ -69,14 +68,6 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _prompt_word_list(prompt: str) -> tuple[str, ...]:
-    entered = collapse_spaces(prompt_text(prompt, allow_exit=True))
-    if not entered:
-        return ()
-
-    return parse_word_list(entered)
-
-
 def _prompt_startup_action() -> str:
     return select_option(
         "Choose what you want to do",
@@ -121,10 +112,10 @@ def _build_interactive_draft(
 ) -> RuleDraft:
     bangumi, subgroup = run_interactive_selection(initial_keyword=args.keyword)
 
-    include_words = tuple(args.include) or _prompt_word_list(
+    include_words = tuple(args.include) or prompt_word_list(
         "Enter include words separated by commas, or press Enter to skip: "
     )
-    exclude_words = tuple(args.exclude) or _prompt_word_list(
+    exclude_words = tuple(args.exclude) or prompt_word_list(
         "Enter exclude words separated by commas, or press Enter to skip: "
     )
     save_path = resolve_save_path(
@@ -133,8 +124,8 @@ def _build_interactive_draft(
         prompt_for_default=True,
         config_path=config_path,
     )
-    content_folder_name = _prompt_for_content_folder_name(bangumi.title)
-    final_save_path = _build_content_save_path(save_path, content_folder_name)
+    content_folder_name = prompt_for_content_folder_name(bangumi.title)
+    final_save_path = build_content_save_path(save_path, content_folder_name)
 
     request = SearchRequest(
         keyword=bangumi.title,
@@ -160,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.setup_qbittorrent:
         try:
-            return _setup_qbittorrent(config, config_path)
+            return setup_qbittorrent(config, config_path)
         except ExitRequested:
             print("Exited MikanCli.")
             return 0
@@ -193,14 +184,14 @@ def main(argv: list[str] | None = None) -> int:
                 while True:
                     startup_action = _prompt_startup_action()
                     if startup_action == STARTUP_ACTION_QBITTORRENT:
-                        setup_exit_code = _run_qbittorrent_configuration_route(config, config_path)
+                        setup_exit_code = run_qbittorrent_configuration_flow(config, config_path)
                         if setup_exit_code != 0:
                             return setup_exit_code
                         config = load_config(config_path)
                         continue
                     break
 
-            setup_exit_code = _prompt_for_qbittorrent_setup_if_needed(
+            setup_exit_code = prompt_for_qbittorrent_setup_if_needed(
                 config,
                 config_path,
             )
@@ -220,7 +211,7 @@ def main(argv: list[str] | None = None) -> int:
         if summary_exit_code != 0:
             return summary_exit_code
         try:
-            submission_exit_code = _prompt_to_submit_rule_to_qbittorrent(config, draft)
+            submission_exit_code = prompt_to_submit_rule_to_qbittorrent(config, draft)
         except ExitRequested:
             print("Exited MikanCli.")
             return 0

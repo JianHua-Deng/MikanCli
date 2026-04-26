@@ -16,13 +16,13 @@ from mikancli.integrations.qbittorrent import (
 QBITTORRENT_SUBMISSION_SKIPPED = 2
 
 
-def _setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
+def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     print()
     print("----- qBittorrent setup instructions -----")
-    print("1. Don't forget to have Qbitorrent installed. Once you do, open qBittorrent settings.")
+    print("1. Install qBittorrent and open its settings.")
     print("2. Enable WebUI / remote control if it is not enabled yet.")
     print("3. Copy the WebUI address, username, and password from qBittorrent.")
-    print("4. Input those values into the prompts below.")
+    print("4. Enter those values below.")
     print("5. After successful verification, the values will be saved to the config file for future runs.")
     print("------------------------------------------")
     print()
@@ -31,7 +31,7 @@ def _setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     entered_url = (
         collapse_spaces(
             prompt_text(
-                "Enter qBittorrent WebUI URL (http://localhost:8080 is usually the default URL unless you tweeked it in qBittorrent settings)",
+                "Enter qBittorrent WebUI URL (http://localhost:8080 is the usual default)",
                 default=default_url,
                 allow_exit=True,
             )
@@ -44,7 +44,7 @@ def _setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     username = (
         collapse_spaces(
             prompt_text(
-                "Enter qBittorrent WebUI username ( press Enter to leave blank)",
+                "Enter qBittorrent WebUI username (press Enter to leave blank)",
                 default=config.qbittorrent_username or "",
                 allow_exit=True,
             )
@@ -87,7 +87,7 @@ def _setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     return 0
 
 
-def _prompt_for_qbittorrent_setup_if_needed(
+def prompt_for_qbittorrent_setup_if_needed(
     config: AppConfig,
     config_path: Path,
 ) -> int:
@@ -103,7 +103,7 @@ def _prompt_for_qbittorrent_setup_if_needed(
         return 0
 
     while True:
-        exit_code = _setup_qbittorrent(config, config_path)
+        exit_code = setup_qbittorrent(config, config_path)
         if exit_code == 0:
             return 0
 
@@ -116,9 +116,9 @@ def _prompt_for_qbittorrent_setup_if_needed(
             return 0
 
 
-def _run_qbittorrent_configuration_route(config: AppConfig, config_path: Path) -> int:
+def run_qbittorrent_configuration_flow(config: AppConfig, config_path: Path) -> int:
     while True:
-        exit_code = _setup_qbittorrent(config, config_path)
+        exit_code = setup_qbittorrent(config, config_path)
         if exit_code == 0:
             return 0
 
@@ -131,7 +131,7 @@ def _run_qbittorrent_configuration_route(config: AppConfig, config_path: Path) -
             return 0
 
 
-def _prompt_to_submit_rule_to_qbittorrent(
+def prompt_to_submit_rule_to_qbittorrent(
     config: AppConfig,
     draft: RuleDraft,
 ) -> int:

@@ -4,14 +4,16 @@ import re
 
 _WHITESPACE_RE = re.compile(r"\s+")
 """
-Matches one or more whitespace characters so uneven spacing can be collapsed into a single gap.
-Example: "  Solo \n Leveling  " -> "Solo Leveling"
+Matches one or more whitespace characters, including spaces, tabs, and newlines.
+It is used before trimming text so uneven spacing becomes one readable single-space gap.
+Example: before "  Solo \\n Leveling  " -> result "Solo Leveling".
 """
 
 _INVALID_PATH_CHARS_RE = re.compile(r'[<>:"/\\|?*]')
 """
-Matches Windows-forbidden filename characters so generated folder names stay filesystem-safe.
-Example: 'One Piece: "Egghead"?' -> "One Piece Egghead"
+Matches characters that Windows does not allow in file or folder names.
+It is used when creating download folder names so titles from Mikan do not produce invalid paths.
+Example: before 'One Piece: "Egghead"?' -> result "One Piece Egghead".
 """
 
 # Replaces multiple whitespaces or newlines with a single space and trims the edges

@@ -123,7 +123,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.save_path_flow.select_option",
             return_value="downloads",
         ), patch(
-            "mikancli.cli.entrypoint.prompt_text",
+            "mikancli.cli.input_parsing.prompt_text",
             side_effect=["HEVC", "720p"],
         ), patch(
             "mikancli.cli.save_path_flow.prompt_text",
@@ -145,7 +145,7 @@ class InteractiveCliTests(unittest.TestCase):
         self.assertEqual(draft.must_not_contain, ("720p",))
         self.assertEqual(
             draft.save_path,
-            "D:\\Downloads\\我独自升级 第二季 -起于暗影-",
+            "D:\\Downloads\\\u6211\u72ec\u81ea\u5347\u7ea7 \u7b2c\u4e8c\u5b63 -\u8d77\u4e8e\u6697\u5f71-",
         )
         self.assertEqual(load_config(config_path).default_save_path, "D:\\Downloads")
 
@@ -194,7 +194,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.save_path_flow.select_option",
             return_value="downloads",
         ), patch(
-            "mikancli.cli.entrypoint.prompt_text",
+            "mikancli.cli.input_parsing.prompt_text",
             side_effect=["", ""],
         ), patch(
             "mikancli.cli.save_path_flow.prompt_text",
@@ -279,7 +279,7 @@ class InteractiveCliTests(unittest.TestCase):
         ), patch(
             "mikancli.cli.save_path_flow.select_option", side_effect=fake_select_option
         ), patch(
-            "mikancli.cli.entrypoint.prompt_text",
+            "mikancli.cli.input_parsing.prompt_text",
             side_effect=["", ""],
         ), patch(
             "mikancli.cli.save_path_flow.prompt_text",
@@ -471,7 +471,7 @@ class InteractiveCliTests(unittest.TestCase):
         ) as select_mock, patch(
             "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
         ), patch(
-            "mikancli.cli.entrypoint._run_qbittorrent_configuration_route",
+            "mikancli.cli.entrypoint.run_qbittorrent_configuration_flow",
             return_value=0,
         ) as route_mock, patch(
             "mikancli.cli.entrypoint._build_interactive_draft",
@@ -497,7 +497,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.qbittorrent_flow.confirm_choice",
             return_value=True,
         ), patch(
-            "mikancli.cli.qbittorrent_flow._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_flow.setup_qbittorrent",
             return_value=0,
         ) as setup_mock, patch(
             "mikancli.cli.entrypoint._build_interactive_draft",
@@ -651,7 +651,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.qbittorrent_flow.confirm_choice",
             side_effect=[True, False],
         ) as confirm_mock, patch(
-            "mikancli.cli.qbittorrent_flow._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_flow.setup_qbittorrent",
             side_effect=[1, 0],
         ) as setup_mock, patch(
             "mikancli.cli.entrypoint._build_interactive_draft",
@@ -683,7 +683,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.qbittorrent_flow.confirm_choice",
             return_value=True,
         ), patch(
-            "mikancli.cli.qbittorrent_flow._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_flow.setup_qbittorrent",
             side_effect=[1, 0],
         ) as setup_mock, patch(
             "mikancli.cli.entrypoint._build_interactive_draft",
@@ -711,7 +711,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.qbittorrent_flow.confirm_choice",
             return_value=False,
         ), patch(
-            "mikancli.cli.qbittorrent_flow._setup_qbittorrent",
+            "mikancli.cli.qbittorrent_flow.setup_qbittorrent",
             return_value=1,
         ), patch("sys.stdout", new=stdout):
             exit_code = main([])

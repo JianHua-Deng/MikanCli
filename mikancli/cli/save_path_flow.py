@@ -12,7 +12,7 @@ from mikancli.core.models import AppConfig
 from mikancli.core.normalize import collapse_spaces, sanitize_folder_name
 
 
-def _should_save_as_default(selected_path: str, config: AppConfig) -> bool:
+def should_save_as_default(selected_path: str, config: AppConfig) -> bool:
     if config.default_save_path == selected_path:
         return False
 
@@ -23,14 +23,14 @@ def _should_save_as_default(selected_path: str, config: AppConfig) -> bool:
     )
 
 
-def _prompt_for_manual_save_path() -> str | None:
+def prompt_for_manual_save_path() -> str | None:
     entered = collapse_spaces(
         prompt_text("Enter a download folder path", allow_exit=True)
     )
     return entered or None
 
 
-def _prompt_for_content_folder_name(default_name: str) -> str:
+def prompt_for_content_folder_name(default_name: str) -> str:
     safe_default_name = sanitize_folder_name(default_name)
     entered = collapse_spaces(
         prompt_text(
@@ -42,14 +42,14 @@ def _prompt_for_content_folder_name(default_name: str) -> str:
     return sanitize_folder_name(entered or safe_default_name) or "MikanCli Download"
 
 
-def _build_content_save_path(base_path: str | None, folder_name: str) -> str | None:
+def build_content_save_path(base_path: str | None, folder_name: str) -> str | None:
     if not base_path:
         return None
     safe_folder_name = sanitize_folder_name(folder_name) or "MikanCli Download"
     return str(Path(base_path) / safe_folder_name)
 
 
-def _prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
+def prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
     downloads_path = get_system_downloads_path()
     menu_options: list[tuple[str, str]] = []
 
@@ -81,12 +81,12 @@ def _prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
                 print("No folder was selected. Choose another option.")
                 continue
         else:
-            selected_path = _prompt_for_manual_save_path()
+            selected_path = prompt_for_manual_save_path()
             if not selected_path:
                 print("No path was entered. Choose another option.")
                 continue
 
-        if _should_save_as_default(selected_path, config):
+        if should_save_as_default(selected_path, config):
             save_config(
                 config_path,
                 AppConfig(
@@ -115,4 +115,4 @@ def resolve_save_path(
     if not prompt_for_default:
         return config.default_save_path or get_system_downloads_path()
 
-    return _prompt_for_save_path(config, config_path)
+    return prompt_for_save_path(config, config_path)

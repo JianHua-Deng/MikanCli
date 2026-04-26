@@ -5,9 +5,9 @@ import unittest
 from pathlib import Path
 
 from mikancli.cli.save_path_flow import (
-    _build_content_save_path,
-    _prompt_for_content_folder_name,
-    _prompt_for_save_path,
+    build_content_save_path,
+    prompt_for_content_folder_name,
+    prompt_for_save_path,
     resolve_save_path,
 )
 from mikancli.config import get_config_path, get_system_downloads_path, load_config, save_config
@@ -141,7 +141,7 @@ class ConfigTests(unittest.TestCase):
 
         from unittest.mock import patch
 
-        with patch("mikancli.cli.save_path_flow._prompt_for_save_path", return_value="D:\\Anime\\Library"):
+        with patch("mikancli.cli.save_path_flow.prompt_for_save_path", return_value="D:\\Anime\\Library"):
             resolved = resolve_save_path(
                 None,
                 AppConfig(),
@@ -159,7 +159,7 @@ class ConfigTests(unittest.TestCase):
         with patch("mikancli.cli.save_path_flow.select_option", return_value="downloads"), patch(
             "mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"
         ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=True):
-            resolved = _prompt_for_save_path(
+            resolved = prompt_for_save_path(
                 AppConfig(),
                 config_path=config_path,
             )
@@ -175,7 +175,7 @@ class ConfigTests(unittest.TestCase):
         with patch("mikancli.cli.save_path_flow.select_option", return_value="downloads"), patch(
             "mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"
         ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=True):
-            _prompt_for_save_path(
+            prompt_for_save_path(
                 AppConfig(
                     qbittorrent_url="http://localhost:8080",
                     qbittorrent_username="admin",
@@ -204,7 +204,7 @@ class ConfigTests(unittest.TestCase):
         ), patch("mikancli.cli.save_path_flow.pick_directory", return_value="D:\\Anime\\Picked"), patch(
             "mikancli.cli.save_path_flow.confirm_choice", return_value=False
         ):
-            resolved = _prompt_for_save_path(
+            resolved = prompt_for_save_path(
                 AppConfig(),
                 config_path=config_path,
             )
@@ -218,7 +218,7 @@ class ConfigTests(unittest.TestCase):
         from unittest.mock import patch
 
         with patch("mikancli.cli.save_path_flow.select_option", return_value="saved-default"):
-            resolved = _prompt_for_save_path(
+            resolved = prompt_for_save_path(
                 AppConfig(default_save_path="D:\\Anime\\Default"),
                 config_path=config_path,
             )
@@ -233,7 +233,7 @@ class ConfigTests(unittest.TestCase):
 
         with patch("mikancli.cli.save_path_flow.select_option", side_effect=ExitRequested):
             with self.assertRaises(ExitRequested):
-                _prompt_for_save_path(
+                prompt_for_save_path(
                     AppConfig(default_save_path="D:\\Anime\\Default"),
                     config_path=config_path,
                 )
@@ -242,13 +242,13 @@ class ConfigTests(unittest.TestCase):
         from unittest.mock import patch
 
         with patch("mikancli.cli.save_path_flow.prompt_text", return_value=""):
-            folder_name = _prompt_for_content_folder_name("Re: Zero?")
+            folder_name = prompt_for_content_folder_name("Re: Zero?")
 
         self.assertEqual(folder_name, "Re Zero")
 
     def test_build_content_save_path_sanitizes_manual_folder_name(self) -> None:
         self.assertEqual(
-            _build_content_save_path("D:\\Anime", "Re: Zero?"),
+            build_content_save_path("D:\\Anime", "Re: Zero?"),
             "D:\\Anime\\Re Zero",
         )
 

@@ -52,7 +52,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
 
         opener = _FakeOpener([_FakeResponse("Ok."), _FakeResponse("5.0.0")])
 
-        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+        with patch("mikancli.integrations.qbittorrent_client.build_opener", return_value=opener):
             version = check_connection(
                 QBittorrentSettings(
                     url="localhost:8080",
@@ -71,7 +71,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
 
         opener = _FakeOpener([_FakeResponse("5.0.0")])
 
-        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+        with patch("mikancli.integrations.qbittorrent_client.build_opener", return_value=opener):
             version = check_connection(
                 QBittorrentSettings(
                     url="http://localhost:8080",
@@ -89,7 +89,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
 
         opener = _FakeOpener([URLError("connection refused")])
 
-        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+        with patch("mikancli.integrations.qbittorrent_client.build_opener", return_value=opener):
             with self.assertRaisesRegex(
                 QBittorrentError,
                 "Could not reach qBittorrent WebUI",
@@ -103,7 +103,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
             [HTTPError("http://localhost:8080/api/v2/app/version", 403, "Forbidden", {}, None)]
         )
 
-        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+        with patch("mikancli.integrations.qbittorrent_client.build_opener", return_value=opener):
             with self.assertRaisesRegex(
                 QBittorrentError,
                 "requires a username and password",
@@ -115,7 +115,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
 
         opener = _FakeOpener([_FakeResponse("Fails.")])
 
-        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+        with patch("mikancli.integrations.qbittorrent_client.build_opener", return_value=opener):
             with self.assertRaisesRegex(
                 QBittorrentError,
                 "rejected the WebUI username or password",
@@ -254,7 +254,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
             ]
         )
 
-        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+        with patch("mikancli.integrations.qbittorrent_client.build_opener", return_value=opener):
             result = submit_rule_draft(
                 QBittorrentSettings(
                     url="localhost:8080",
@@ -305,7 +305,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
             ]
         )
 
-        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+        with patch("mikancli.integrations.qbittorrent_client.build_opener", return_value=opener):
             with self.assertRaisesRegex(
                 QBittorrentError,
                 "verification could not find download rule",
@@ -341,7 +341,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
             ]
         )
 
-        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+        with patch("mikancli.integrations.qbittorrent_client.build_opener", return_value=opener):
             submit_rule_draft(
                 QBittorrentSettings(url="localhost:8080"),
                 RuleDraft(
@@ -370,18 +370,18 @@ class QBittorrentIntegrationTests(unittest.TestCase):
                 _FakeResponse("{}"),
                 _FakeResponse(""),
                 _FakeResponse(""),
-                _FakeResponse(json.dumps({"Re 从零开始": {"url": feed_url}})),
-                _FakeResponse(json.dumps({"Re: 从零开始": {"affectedFeeds": [feed_url]}})),
+                _FakeResponse(json.dumps({"Re Zero": {"url": feed_url}})),
+                _FakeResponse(json.dumps({"Re: Zero?": {"affectedFeeds": [feed_url]}})),
             ]
         )
 
-        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+        with patch("mikancli.integrations.qbittorrent_client.build_opener", return_value=opener):
             submit_rule_draft(
                 QBittorrentSettings(url="localhost:8080"),
                 RuleDraft(
-                    keyword="Re: 从零开始",
-                    normalized_keyword="re: 从零开始",
-                    rule_name="Re: 从零开始",
+                    keyword="Re: Zero?",
+                    normalized_keyword="re: zero?",
+                    rule_name="Re: Zero?",
                     must_contain=(),
                     must_not_contain=(),
                     feed_url=feed_url,
@@ -389,7 +389,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
             )
 
         add_feed_body = parse_qs(opener.requests[2].data.decode("utf-8"))
-        self.assertEqual(add_feed_body["path"], ["Re 从零开始"])
+        self.assertEqual(add_feed_body["path"], ["Re Zero"])
 
     def test_submit_rule_draft_skips_add_feed_when_feed_already_exists(self) -> None:
         from unittest.mock import patch
@@ -406,7 +406,7 @@ class QBittorrentIntegrationTests(unittest.TestCase):
             ]
         )
 
-        with patch("mikancli.integrations.qbittorrent.build_opener", return_value=opener):
+        with patch("mikancli.integrations.qbittorrent_client.build_opener", return_value=opener):
             result = submit_rule_draft(
                 QBittorrentSettings(url="localhost:8080"),
                 RuleDraft(

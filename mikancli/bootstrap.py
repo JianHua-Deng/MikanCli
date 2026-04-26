@@ -17,9 +17,10 @@ IMPORT_NAME_OVERRIDES = {
     "InquirerPy": "InquirerPy",
 }
 _REQUIREMENT_SPLIT_RE = re.compile(r"[<>=!~;\[]")
-"""Splits a dependency string before version pins, markers, or extras so only the package name remains.
-
-Example: "InquirerPy>=0.3" -> "InquirerPy"
+"""
+Matches the first character that starts a version pin, environment marker, or extras block in a dependency string.
+It is used to split a package requirement down to the importable package name before checking whether it is installed.
+Example: before "InquirerPy>=0.3" -> result "InquirerPy".
 """
 
 
