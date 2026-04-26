@@ -12,7 +12,7 @@ from mikancli.cli.entrypoint import (
     main,
     resolve_mikan_selection,
 )
-from mikancli.cli.search_flow import run_interactive_selection
+from mikancli.cli.search_flow import CONFIRM_SUBGROUP, run_interactive_selection
 from mikancli.config import load_config
 from mikancli.core.models import (
     AppConfig,
@@ -118,7 +118,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.search_flow.fetch_mikan_feed_items", return_value=feed_items
         ), patch(
             "mikancli.cli.search_flow.select_option",
-            side_effect=[0, 0, "yes"],
+            side_effect=[0, 0, CONFIRM_SUBGROUP],
         ), patch(
             "mikancli.cli.save_path_flow.select_option",
             return_value="downloads",
@@ -130,7 +130,9 @@ class InteractiveCliTests(unittest.TestCase):
             side_effect=[""],
         ), patch(
             "mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=True):
+        ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=True), patch(
+            "sys.stdout", new=StringIO()
+        ):
             draft = _build_interactive_draft(
                 args,
                 config=AppConfig(),
@@ -187,7 +189,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.search_flow.fetch_mikan_feed_items", return_value=feed_items
         ), patch(
             "mikancli.cli.search_flow.select_option",
-            side_effect=[0, 0, "yes"],
+            side_effect=[0, 0, CONFIRM_SUBGROUP],
         ), patch(
             "mikancli.cli.save_path_flow.select_option",
             return_value="downloads",
@@ -199,7 +201,9 @@ class InteractiveCliTests(unittest.TestCase):
             side_effect=["Solo Leveling S2"],
         ), patch(
             "mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=False):
+        ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=False), patch(
+            "sys.stdout", new=StringIO()
+        ):
             draft = _build_interactive_draft(
                 args,
                 config=AppConfig(),
@@ -208,7 +212,7 @@ class InteractiveCliTests(unittest.TestCase):
 
         self.assertEqual(draft.save_path, "D:\\Downloads\\Solo Leveling S2")
 
-    def test_confirm_prompt_places_feed_preview_under_question(self) -> None:
+    def test_confirm_prompt_places_yes_option_next_to_question_after_feed_preview(self) -> None:
         args = argparse.Namespace(
             keyword="solo leveling",
             include=[],
@@ -242,14 +246,21 @@ class InteractiveCliTests(unittest.TestCase):
 
         captured_messages: list[str] = []
 
-        def fake_select_option(message, options, default=None, allow_exit=False):
+        def fake_select_option(
+            message,
+            options,
+            default=None,
+            allow_exit=False,
+            separator_before_values=(),
+            separator_before_exit=True,
+        ):
             captured_messages.append(message)
             if message.startswith("Choose the Mikan entry"):
                 return 0
             if message.startswith("Choose the subgroup"):
                 return 0
             if message.startswith("Use this subgroup feed?"):
-                return "yes"
+                return CONFIRM_SUBGROUP
             if message.startswith("Choose a download folder option"):
                 return "downloads"
             raise AssertionError(f"Unexpected prompt: {message}")
@@ -257,6 +268,8 @@ class InteractiveCliTests(unittest.TestCase):
         from unittest.mock import patch
 
         config_path = self.temp_dir / ".mikancli.json"
+        stdout = StringIO()
+
         with patch("mikancli.cli.search_flow.search_mikan_bangumi", return_value=candidates), patch(
             "mikancli.cli.search_flow.fetch_mikan_subgroups", return_value=subgroups
         ), patch(
@@ -273,7 +286,9 @@ class InteractiveCliTests(unittest.TestCase):
             side_effect=[""],
         ), patch(
             "mikancli.cli.save_path_flow.get_system_downloads_path", return_value="D:\\Downloads"
-        ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=False):
+        ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=False), patch(
+            "sys.stdout", new=stdout
+        ):
             _build_interactive_draft(
                 args,
                 config=AppConfig(),
@@ -283,8 +298,9 @@ class InteractiveCliTests(unittest.TestCase):
         confirm_message = next(
             message for message in captured_messages if message.startswith("Use this subgroup feed?")
         )
-        self.assertTrue(confirm_message.startswith("Use this subgroup feed?\n\nSubgroup preview:"))
-        self.assertIn("1. Episode 01", confirm_message)
+        self.assertEqual(confirm_message, "Use this subgroup feed?")
+        self.assertIn("Subgroup preview:", stdout.getvalue())
+        self.assertIn("1. Episode 01", stdout.getvalue())
 
     def test_resolve_mikan_selection_uses_first_bangumi_and_subgroup_for_json(self) -> None:
         candidates = (

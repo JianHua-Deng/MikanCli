@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TypeVar
+from collections.abc import Iterable
+from typing import Any, TypeVar
 
 from mikancli.core.normalize import collapse_spaces
 
@@ -8,6 +9,7 @@ T = TypeVar("T")
 EXIT_OPTION = "__exit_cli__"
 EXIT_TEXT_VALUES = {"exit", "quit"}
 PROMPT_SEPARATOR = "----------------------------------------"
+MENU_SEPARATOR_LABEL = ""
 
 
 class ExitRequested(Exception):
@@ -30,18 +32,56 @@ def _prepare_prompt_message(message: str) -> str:
     return message.strip("\n")
 
 
+def _get_menu_separator() -> Any | None:
+    try:
+        from InquirerPy.separator import Separator
+    except ImportError:
+        return None
+
+    return Separator(MENU_SEPARATOR_LABEL)
+
+
+def _build_select_choices(
+    options: list[tuple[T, str]],
+    *,
+    allow_exit: bool,
+    separator_before_values: Iterable[T] = (),
+    separator_before_exit: bool = True,
+) -> list[object]:
+    separator_values = set(separator_before_values)
+    separator = _get_menu_separator()
+    choices: list[object] = []
+
+    for value, label in options:
+        if value in separator_values and separator is not None:
+            choices.append(separator)
+        choices.append({"value": value, "name": label})
+
+    if allow_exit:
+        if choices and separator_before_exit and separator is not None:
+            choices.append(separator)
+        choices.append({"value": EXIT_OPTION, "name": "Exit MikanCli"})
+
+    return choices
+
+
 def select_option(
     message: str,
     options: list[tuple[T, str]],
     *,
     default: T | None = None,
     allow_exit: bool = False,
+    separator_before_values: Iterable[T] = (),
+    separator_before_exit: bool = True,
 ) -> T:
     inquirer = _get_inquirer()
 
-    choices = [{"value": value, "name": label} for value, label in options]
-    if allow_exit:
-        choices.append({"value": EXIT_OPTION, "name": "Exit MikanCli"})
+    choices = _build_select_choices(
+        options,
+        allow_exit=allow_exit,
+        separator_before_values=separator_before_values,
+        separator_before_exit=separator_before_exit,
+    )
     prompt = inquirer.select(
         message=_prepare_prompt_message(message),
         choices=choices,

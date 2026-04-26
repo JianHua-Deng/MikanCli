@@ -41,6 +41,8 @@ def select_candidate_or_search_again(
         options,
         default=0,
         allow_exit=True,
+        separator_before_values=(SEARCH_AGAIN,),
+        separator_before_exit=False,
     )
     if selected == SEARCH_AGAIN:
         return SEARCH_AGAIN
@@ -68,6 +70,8 @@ def select_subgroup_or_navigate(
         options,
         default=0,
         allow_exit=True,
+        separator_before_values=(BACK_TO_CANDIDATES,),
+        separator_before_exit=False,
     )
     if selected == BACK_TO_CANDIDATES:
         return BACK_TO_CANDIDATES
@@ -77,8 +81,9 @@ def select_subgroup_or_navigate(
 
 
 def confirm_subgroup_selection(preview_text: str) -> str:
+    print(preview_text)
     return select_option(
-        f"Use this subgroup feed?\n\n{preview_text}",
+        "Use this subgroup feed?",
         [
             (CONFIRM_SUBGROUP, "Yes"),
             (REJECT_SUBGROUP, "No, search with different words"),
@@ -86,6 +91,8 @@ def confirm_subgroup_selection(preview_text: str) -> str:
         ],
         default=CONFIRM_SUBGROUP,
         allow_exit=True,
+        separator_before_values=(BACK_TO_SUBGROUPS,),
+        separator_before_exit=False,
     )
 
 

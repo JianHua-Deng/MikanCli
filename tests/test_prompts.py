@@ -6,6 +6,7 @@ from io import StringIO
 from mikancli.cli.prompts import (
     EXIT_OPTION,
     ExitRequested,
+    MENU_SEPARATOR_LABEL,
     PROMPT_SEPARATOR,
     confirm_choice,
     prompt_password,
@@ -51,6 +52,78 @@ class PromptWrapperTests(unittest.TestCase):
         ):
             with self.assertRaises(ExitRequested):
                 select_option("Choose", [("one", "One")], default="one", allow_exit=True)
+
+    def test_select_option_can_group_navigation_choices_with_exit(self) -> None:
+        from unittest.mock import Mock, patch
+
+        prompt = Mock()
+        prompt.execute.return_value = "search-again"
+        fake_inquirer = Mock()
+        fake_inquirer.select.return_value = prompt
+        separator = object()
+
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+            "mikancli.cli.prompts._get_menu_separator",
+            return_value=separator,
+        ), patch("sys.stdout", new=StringIO()):
+            selected = select_option(
+                "Choose",
+                [
+                    ("one", "One"),
+                    ("search-again", "Search with different words"),
+                ],
+                default="one",
+                allow_exit=True,
+                separator_before_values=("search-again",),
+                separator_before_exit=False,
+            )
+
+        self.assertEqual(selected, "search-again")
+        self.assertEqual(
+            fake_inquirer.select.call_args.kwargs["choices"],
+            [
+                {"value": "one", "name": "One"},
+                separator,
+                {
+                    "value": "search-again",
+                    "name": "Search with different words",
+                },
+                {"value": EXIT_OPTION, "name": "Exit MikanCli"},
+            ],
+        )
+
+    def test_select_option_separates_exit_by_default(self) -> None:
+        from unittest.mock import Mock, patch
+
+        prompt = Mock()
+        prompt.execute.return_value = "one"
+        fake_inquirer = Mock()
+        fake_inquirer.select.return_value = prompt
+        separator = object()
+
+        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+            "mikancli.cli.prompts._get_menu_separator",
+            return_value=separator,
+        ), patch("sys.stdout", new=StringIO()):
+            selected = select_option(
+                "Choose",
+                [("one", "One")],
+                default="one",
+                allow_exit=True,
+            )
+
+        self.assertEqual(selected, "one")
+        self.assertEqual(
+            fake_inquirer.select.call_args.kwargs["choices"],
+            [
+                {"value": "one", "name": "One"},
+                separator,
+                {"value": EXIT_OPTION, "name": "Exit MikanCli"},
+            ],
+        )
+
+    def test_menu_separator_label_is_blank_spacer(self) -> None:
+        self.assertEqual(MENU_SEPARATOR_LABEL, "")
 
     def test_prompt_text_uses_inquirer_text(self) -> None:
         from unittest.mock import Mock, patch
