@@ -20,7 +20,7 @@ class MikanParseError(RuntimeError):
     """Raised when Mikan HTML or RSS content cannot be parsed."""
 
 
-def _extract_bangumi_id(href: str) -> int | None:
+def extract_bangumi_id(href: str) -> int | None:
     prefix = "/Home/Bangumi/"
     if not href.startswith(prefix):
         return None
@@ -68,7 +68,7 @@ class _SearchResultParser(HTMLParser):
             return
 
         href = attr_map.get("href") or ""
-        bangumi_id = _extract_bangumi_id(href)
+        bangumi_id = extract_bangumi_id(href)
         if bangumi_id is None or bangumi_id in self._seen_ids:
             return
 
@@ -84,7 +84,7 @@ class _SearchResultParser(HTMLParser):
         if self._inside_anchor:
             self._anchor_depth -= 1
             if self._anchor_depth == 0:
-                self._finish_candidate()
+                self.finish_candidate()
 
         if not self._inside_candidate_list or tag != "ul":
             return
@@ -97,7 +97,7 @@ class _SearchResultParser(HTMLParser):
         if self._inside_anchor and self._current is not None:
             self._current.text_parts.append(data)
 
-    def _finish_candidate(self) -> None:
+    def finish_candidate(self) -> None:
         if self._current is None:
             self._inside_anchor = False
             return
@@ -167,7 +167,7 @@ Example: before "<span>Prejudice-Studio</span>" -> result "Prejudice-Studio".
 """
 
 
-def _strip_tags(value: str) -> str:
+def strip_tags(value: str) -> str:
     return collapse_spaces(unescape(_HTML_TAG_RE.sub(" ", value)))
 
 
@@ -196,7 +196,7 @@ def parse_bangumi_subgroups(html: str, *, bangumi_id: int) -> tuple[MikanSubgrou
         if rss_bangumi_id != bangumi_id or rss_subgroup_id != subgroup_id:
             continue
 
-        title = _strip_tags(publish_group_match.group("title"))
+        title = strip_tags(publish_group_match.group("title"))
         if not title:
             continue
 

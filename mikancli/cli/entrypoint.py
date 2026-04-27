@@ -68,7 +68,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _prompt_startup_action() -> str:
+def prompt_startup_action() -> str:
     return select_option(
         "Choose what you want to do",
         [
@@ -101,7 +101,7 @@ def build_request_from_args(args: argparse.Namespace, *, config: AppConfig, conf
     )
 
 
-def _build_interactive_draft(args: argparse.Namespace, *, config: AppConfig,config_path: Path) -> RuleDraft:
+def build_interactive_draft(args: argparse.Namespace, *, config: AppConfig,config_path: Path) -> RuleDraft:
 
     bangumi, subgroup = run_interactive_selection(initial_keyword=args.keyword)
 
@@ -174,7 +174,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             if has_startup_menu:
                 while True:
-                    startup_action = _prompt_startup_action()
+                    startup_action = prompt_startup_action()
                     if startup_action == STARTUP_ACTION_QBITTORRENT:
                         setup_exit_code = run_qbittorrent_configuration_flow(config, config_path)
                         if setup_exit_code != 0:
@@ -190,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
             if setup_exit_code != 0:
                 return setup_exit_code
             config = load_config(config_path)
-            draft = _build_interactive_draft(
+            draft = build_interactive_draft(
                 args,
                 config=config,
                 config_path=config_path,

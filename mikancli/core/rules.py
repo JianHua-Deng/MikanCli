@@ -4,7 +4,7 @@ from mikancli.core.models import MikanBangumi, MikanSubgroup, RuleDraft, SearchR
 from mikancli.core.normalize import collapse_spaces, normalize_keyword
 
 
-def _dedupe_nonempty(values: list[str]) -> tuple[str, ...]:
+def dedupe_nonempty(values: list[str]) -> tuple[str, ...]:
     seen: set[str] = set()
     ordered: list[str] = []
 
@@ -31,8 +31,8 @@ def build_rule_draft(request: SearchRequest, *, bangumi: MikanBangumi | None = N
     """
     collapsed_keyword = collapse_spaces(request.keyword)
 
-    must_contain = _dedupe_nonempty(list(request.include_words))
-    must_not_contain = _dedupe_nonempty(list(request.exclude_words))
+    must_contain = dedupe_nonempty(list(request.include_words))
+    must_not_contain = dedupe_nonempty(list(request.exclude_words))
 
     return RuleDraft(
         keyword=collapsed_keyword,

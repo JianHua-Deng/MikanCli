@@ -7,7 +7,7 @@ from io import StringIO
 from pathlib import Path
 
 from mikancli.cli.entrypoint import (
-    _build_interactive_draft,
+    build_interactive_draft,
     build_request_from_args,
     main,
     resolve_mikan_selection,
@@ -133,7 +133,7 @@ class InteractiveCliTests(unittest.TestCase):
         ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=True), patch(
             "sys.stdout", new=StringIO()
         ):
-            draft = _build_interactive_draft(
+            draft = build_interactive_draft(
                 args,
                 config=AppConfig(),
                 config_path=config_path,
@@ -204,7 +204,7 @@ class InteractiveCliTests(unittest.TestCase):
         ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=False), patch(
             "sys.stdout", new=StringIO()
         ):
-            draft = _build_interactive_draft(
+            draft = build_interactive_draft(
                 args,
                 config=AppConfig(),
                 config_path=self.temp_dir / ".mikancli.json",
@@ -289,7 +289,7 @@ class InteractiveCliTests(unittest.TestCase):
         ), patch("mikancli.cli.save_path_flow.confirm_choice", return_value=False), patch(
             "sys.stdout", new=stdout
         ):
-            _build_interactive_draft(
+            build_interactive_draft(
                 args,
                 config=AppConfig(),
                 config_path=config_path,
@@ -433,7 +433,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.qbittorrent_flow.confirm_choice",
             return_value=False,
         ) as confirm_mock, patch(
-            "mikancli.cli.entrypoint._build_interactive_draft",
+            "mikancli.cli.entrypoint.build_interactive_draft",
             return_value=draft,
         ) as build_mock, patch(
             "mikancli.cli.entrypoint.print_text_summary",
@@ -474,7 +474,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.entrypoint.run_qbittorrent_configuration_flow",
             return_value=0,
         ) as route_mock, patch(
-            "mikancli.cli.entrypoint._build_interactive_draft",
+            "mikancli.cli.entrypoint.build_interactive_draft",
         ) as build_mock, patch("sys.stdout", new=stdout):
             exit_code = main([])
 
@@ -500,7 +500,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.qbittorrent_flow.setup_qbittorrent",
             return_value=0,
         ) as setup_mock, patch(
-            "mikancli.cli.entrypoint._build_interactive_draft",
+            "mikancli.cli.entrypoint.build_interactive_draft",
             return_value=draft,
         ) as build_mock, patch(
             "mikancli.cli.entrypoint.print_text_summary",
@@ -537,7 +537,7 @@ class InteractiveCliTests(unittest.TestCase):
         ), patch("mikancli.cli.entrypoint.select_option", return_value="search"), patch(
             "mikancli.cli.entrypoint.load_config", return_value=config
         ), patch(
-            "mikancli.cli.entrypoint._build_interactive_draft",
+            "mikancli.cli.entrypoint.build_interactive_draft",
             return_value=draft,
         ), patch(
             "mikancli.cli.entrypoint.print_text_summary",
@@ -584,7 +584,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.entrypoint.load_config",
             return_value=AppConfig(qbittorrent_url="http://localhost:8080"),
         ), patch(
-            "mikancli.cli.entrypoint._build_interactive_draft",
+            "mikancli.cli.entrypoint.build_interactive_draft",
             return_value=draft,
         ), patch(
             "mikancli.cli.entrypoint.print_text_summary",
@@ -621,7 +621,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.entrypoint.load_config",
             return_value=AppConfig(qbittorrent_url="http://localhost:8080"),
         ), patch(
-            "mikancli.cli.entrypoint._build_interactive_draft",
+            "mikancli.cli.entrypoint.build_interactive_draft",
             return_value=draft,
         ), patch(
             "mikancli.cli.entrypoint.print_text_summary",
@@ -654,7 +654,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.qbittorrent_flow.setup_qbittorrent",
             side_effect=[1, 0],
         ) as setup_mock, patch(
-            "mikancli.cli.entrypoint._build_interactive_draft",
+            "mikancli.cli.entrypoint.build_interactive_draft",
             return_value=draft,
         ) as build_mock, patch(
             "mikancli.cli.entrypoint.print_text_summary",
@@ -686,7 +686,7 @@ class InteractiveCliTests(unittest.TestCase):
             "mikancli.cli.qbittorrent_flow.setup_qbittorrent",
             side_effect=[1, 0],
         ) as setup_mock, patch(
-            "mikancli.cli.entrypoint._build_interactive_draft",
+            "mikancli.cli.entrypoint.build_interactive_draft",
         ) as build_mock, patch("sys.stdout", new=stdout):
             exit_code = main([])
 

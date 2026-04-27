@@ -16,7 +16,7 @@ class ExitRequested(Exception):
     """Raised when the user explicitly chooses to quit the CLI."""
 
 
-def _get_inquirer():
+def get_inquirer():
     try:
         from InquirerPy import inquirer
     except ImportError as exc:
@@ -27,12 +27,12 @@ def _get_inquirer():
     return inquirer
 
 
-def _prepare_prompt_message(message: str) -> str:
-    print(f"\n{PROMPT_SEPARATOR}")
+def prepare_prompt_message(message: str) -> str:
+    print(PROMPT_SEPARATOR)
     return message.strip("\n")
 
 
-def _get_menu_separator() -> Any | None:
+def get_menu_separator() -> Any | None:
     try:
         from InquirerPy.separator import Separator
     except ImportError:
@@ -41,7 +41,7 @@ def _get_menu_separator() -> Any | None:
     return Separator(MENU_SEPARATOR_LABEL)
 
 
-def _build_select_choices(
+def build_select_choices(
     options: list[tuple[T, str]],
     *,
     allow_exit: bool,
@@ -49,7 +49,7 @@ def _build_select_choices(
     separator_before_exit: bool = True,
 ) -> list[object]:
     separator_values = set(separator_before_values)
-    separator = _get_menu_separator()
+    separator = get_menu_separator()
     choices: list[object] = []
 
     for value, label in options:
@@ -75,16 +75,16 @@ def select_option(
     separator_before_exit: bool = True,
 ) -> T:
     """Show an InquirerPy selection menu and return the selected option value. Raises ExitRequested when exit is allowed and the user chooses the exit option."""
-    inquirer = _get_inquirer()
+    inquirer = get_inquirer()
 
-    choices = _build_select_choices(
+    choices = build_select_choices(
         options,
         allow_exit=allow_exit,
         separator_before_values=separator_before_values,
         separator_before_exit=separator_before_exit,
     )
     prompt = inquirer.select(
-        message=_prepare_prompt_message(message),
+        message=prepare_prompt_message(message),
         choices=choices,
         default=default,
         pointer=">",
@@ -101,10 +101,10 @@ def select_option(
 def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = False) -> str:
     """Prompt for text, collapse surrounding whitespace, and return the cleaned value. Raises ExitRequested when exit words are allowed and entered."""
 
-    inquirer = _get_inquirer()
+    inquirer = get_inquirer()
 
     prompt = inquirer.text(
-        message=_prepare_prompt_message(message),
+        message=prepare_prompt_message(message),
         default=default or "",
     )
     entered = collapse_spaces(prompt.execute())
@@ -116,12 +116,12 @@ def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = 
 def prompt_password(message: str, *, allow_exit: bool = False) -> str:
     """Prompt for hidden password input and return the raw entered value. Raises ExitRequested when exit words are allowed and entered."""
     
-    inquirer = _get_inquirer()
+    inquirer = get_inquirer()
     prompt_factory = getattr(inquirer, "secret", None)
     if prompt_factory is not None:
-        prompt = prompt_factory(message=_prepare_prompt_message(message))
+        prompt = prompt_factory(message=prepare_prompt_message(message))
     else:  # pragma: no cover - fallback for alternate InquirerPy versions
-        prompt = inquirer.text(message=_prepare_prompt_message(message), secret=True)
+        prompt = inquirer.text(message=prepare_prompt_message(message), secret=True)
 
     entered = prompt.execute()
     if allow_exit and entered.strip().casefold() in EXIT_TEXT_VALUES:

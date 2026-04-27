@@ -26,13 +26,13 @@ class PromptWrapperTests(unittest.TestCase):
 
         stdout = StringIO()
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+        with patch("mikancli.cli.prompts.get_inquirer", return_value=fake_inquirer), patch(
             "sys.stdout", new=stdout
         ):
             selected = select_option("Choose", [("one", "One")], default="one")
 
         self.assertEqual(selected, "one")
-        self.assertEqual(stdout.getvalue(), f"\n{PROMPT_SEPARATOR}\n")
+        self.assertEqual(stdout.getvalue(), f"{PROMPT_SEPARATOR}\n")
         fake_inquirer.select.assert_called_once()
         self.assertEqual(
             fake_inquirer.select.call_args.kwargs["message"],
@@ -47,7 +47,7 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.select.return_value = prompt
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+        with patch("mikancli.cli.prompts.get_inquirer", return_value=fake_inquirer), patch(
             "sys.stdout", new=StringIO()
         ):
             with self.assertRaises(ExitRequested):
@@ -62,8 +62,8 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer.select.return_value = prompt
         separator = object()
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
-            "mikancli.cli.prompts._get_menu_separator",
+        with patch("mikancli.cli.prompts.get_inquirer", return_value=fake_inquirer), patch(
+            "mikancli.cli.prompts.get_menu_separator",
             return_value=separator,
         ), patch("sys.stdout", new=StringIO()):
             selected = select_option(
@@ -101,8 +101,8 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer.select.return_value = prompt
         separator = object()
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
-            "mikancli.cli.prompts._get_menu_separator",
+        with patch("mikancli.cli.prompts.get_inquirer", return_value=fake_inquirer), patch(
+            "mikancli.cli.prompts.get_menu_separator",
             return_value=separator,
         ), patch("sys.stdout", new=StringIO()):
             selected = select_option(
@@ -135,13 +135,13 @@ class PromptWrapperTests(unittest.TestCase):
 
         stdout = StringIO()
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+        with patch("mikancli.cli.prompts.get_inquirer", return_value=fake_inquirer), patch(
             "sys.stdout", new=stdout
         ):
             entered = prompt_text("Enter keyword")
 
         self.assertEqual(entered, "solo leveling")
-        self.assertEqual(stdout.getvalue(), f"\n{PROMPT_SEPARATOR}\n")
+        self.assertEqual(stdout.getvalue(), f"{PROMPT_SEPARATOR}\n")
         fake_inquirer.text.assert_called_once()
         self.assertEqual(
             fake_inquirer.text.call_args.kwargs["message"],
@@ -156,7 +156,7 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.text.return_value = prompt
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+        with patch("mikancli.cli.prompts.get_inquirer", return_value=fake_inquirer), patch(
             "sys.stdout", new=StringIO()
         ):
             with self.assertRaises(ExitRequested):
@@ -172,13 +172,13 @@ class PromptWrapperTests(unittest.TestCase):
 
         stdout = StringIO()
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+        with patch("mikancli.cli.prompts.get_inquirer", return_value=fake_inquirer), patch(
             "sys.stdout", new=stdout
         ):
             entered = prompt_password("Enter password")
 
         self.assertEqual(entered, "secret")
-        self.assertEqual(stdout.getvalue(), f"\n{PROMPT_SEPARATOR}\n")
+        self.assertEqual(stdout.getvalue(), f"{PROMPT_SEPARATOR}\n")
         fake_inquirer.secret.assert_called_once()
         self.assertEqual(
             fake_inquirer.secret.call_args.kwargs["message"],
@@ -193,7 +193,7 @@ class PromptWrapperTests(unittest.TestCase):
         fake_inquirer = Mock()
         fake_inquirer.secret.return_value = prompt
 
-        with patch("mikancli.cli.prompts._get_inquirer", return_value=fake_inquirer), patch(
+        with patch("mikancli.cli.prompts.get_inquirer", return_value=fake_inquirer), patch(
             "sys.stdout", new=StringIO()
         ):
             with self.assertRaises(ExitRequested):

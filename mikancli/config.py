@@ -34,7 +34,7 @@ def get_config_path(base_dir: Path | None = None) -> Path:
     return Path.home() / ".config" / POSIX_CONFIG_DIR_NAME / USER_CONFIG_FILENAME
 
 
-def _resolve_existing_config_path(config_path: Path) -> Path | None:
+def resolve_existing_config_path(config_path: Path) -> Path | None:
     target_path = config_path
     if target_path.exists():
         return target_path
@@ -42,8 +42,8 @@ def _resolve_existing_config_path(config_path: Path) -> Path | None:
     return None
 
 
-def _load_config_payload(config_path: Path) -> dict[str, object]:
-    target_path = _resolve_existing_config_path(config_path)
+def load_config_payload(config_path: Path) -> dict[str, object]:
+    target_path = resolve_existing_config_path(config_path)
     if target_path is None:
         return {}
 
@@ -54,7 +54,7 @@ def _load_config_payload(config_path: Path) -> dict[str, object]:
     return payload
 
 
-def _coerce_bool(value: object, *, default: bool = False) -> bool:
+def coerce_bool(value: object, *, default: bool = False) -> bool:
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
@@ -70,7 +70,7 @@ def _coerce_bool(value: object, *, default: bool = False) -> bool:
 
 def load_config(config_path: Path) -> AppConfig:
     """Load app configuration from JSON, coercing known fields into AppConfig. Returns an empty AppConfig when the config file is missing or not a JSON object."""
-    payload = _load_config_payload(config_path)
+    payload = load_config_payload(config_path)
 
     default_save_path = payload.get("default_save_path")
     qbittorrent_url = payload.get("qbittorrent_url")
@@ -96,13 +96,13 @@ def load_config(config_path: Path) -> AppConfig:
         qbittorrent_username=qbittorrent_username,
         qbittorrent_password=qbittorrent_password,
         qbittorrent_category=qbittorrent_category,
-        qbittorrent_add_paused=_coerce_bool(qbittorrent_add_paused),
+        qbittorrent_add_paused=coerce_bool(qbittorrent_add_paused),
     )
 
 
 def save_config(config_path: Path, config: AppConfig) -> None:
     """Write AppConfig fields to the config file while preserving unknown JSON keys. Returns None after writing the merged JSON payload."""
-    payload = _load_config_payload(config_path)
+    payload = load_config_payload(config_path)
     payload.update(
         {
             "default_save_path": config.default_save_path,

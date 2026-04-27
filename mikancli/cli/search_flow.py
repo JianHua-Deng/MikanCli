@@ -20,7 +20,7 @@ REJECT_SUBGROUP = "__reject_subgroup__"
 JSON_PREVIEW_NOTE = "JSON mode only prints the draft; interactive mode can submit it to qBittorrent."
 
 
-def _search_prompt(*, retry: bool = False) -> str:
+def search_prompt(*, retry: bool = False) -> str:
     prefix = "Enter another anime title or search keyword" if retry else "Enter anime title or search keyword"
     return f"{prefix} (or type 'exit' to quit): "
 
@@ -140,24 +140,24 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
     
     keyword = collapse_spaces(initial_keyword or "")
     if not keyword:
-        keyword = prompt_required_text(_search_prompt())
+        keyword = prompt_required_text(search_prompt())
 
     while True:
         try:
             candidates = search_mikan_bangumi(keyword)
         except MikanLookupError as exc:
             print(str(exc))
-            keyword = prompt_required_text(_search_prompt(retry=True))
+            keyword = prompt_required_text(search_prompt(retry=True))
             continue
 
         if not candidates:
             print(f"No Mikan results found for '{keyword}'.")
-            keyword = prompt_required_text(_search_prompt(retry=True))
+            keyword = prompt_required_text(search_prompt(retry=True))
             continue
 
         selected_candidate = select_candidate_or_search_again(candidates, keyword=keyword)
         if selected_candidate == SEARCH_AGAIN:
-            keyword = prompt_required_text(_search_prompt(retry=True))
+            keyword = prompt_required_text(search_prompt(retry=True))
             continue
 
         bangumi = selected_candidate
@@ -181,7 +181,7 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
             if selected_subgroup == BACK_TO_CANDIDATES:
                 break
             if selected_subgroup == SEARCH_AGAIN:
-                keyword = prompt_required_text(_search_prompt(retry=True))
+                keyword = prompt_required_text(search_prompt(retry=True))
                 break
 
             subgroup = selected_subgroup
@@ -197,7 +197,7 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
             if decision == BACK_TO_SUBGROUPS:
                 continue
             if decision == REJECT_SUBGROUP:
-                keyword = prompt_required_text(_search_prompt(retry=True))
+                keyword = prompt_required_text(search_prompt(retry=True))
                 break
 
             return bangumi, subgroup

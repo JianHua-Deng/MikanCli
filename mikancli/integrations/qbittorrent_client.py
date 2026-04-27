@@ -42,7 +42,7 @@ class QBittorrentClient:
 
     def login(self) -> None:
         """Authenticate against the qBittorrent WebUI API using the configured credentials. Returns None on success or raises QBittorrentError when credentials are rejected."""
-        response_text = self._open(
+        response_text = self.open_text(
             "/api/v2/auth/login",
             data=urlencode(
                 {
@@ -60,7 +60,7 @@ class QBittorrentClient:
 
     def get_version(self) -> str:
         """Fetch the qBittorrent WebUI app version. Returns the version string or raises QBittorrentError when qBittorrent returns an empty response."""
-        version = self._open("/api/v2/app/version").strip()
+        version = self.open_text("/api/v2/app/version").strip()
         if not version:
             raise QBittorrentError("qBittorrent returned an empty version response.")
         return version
@@ -78,7 +78,7 @@ class QBittorrentClient:
         if cleaned_path:
             payload["path"] = cleaned_path
 
-        self._open(
+        self.open_text(
             "/api/v2/rss/addFeed",
             data=urlencode(payload).encode("utf-8"),
             content_type="application/x-www-form-urlencoded",
@@ -96,7 +96,7 @@ class QBittorrentClient:
                 "RSS rule name is required before submitting to qBittorrent."
             )
 
-        self._open(
+        self.open_text(
             "/api/v2/rss/setRule",
             data=urlencode(
                 {
@@ -109,7 +109,7 @@ class QBittorrentClient:
 
     def get_rss_items(self) -> dict[str, object]:
         """Return the qBittorrent RSS item tree as a dictionary. Raises QBittorrentError when the WebUI returns invalid JSON or a non-object payload."""
-        payload = self._open_json("/api/v2/rss/items?withData=false")
+        payload = self.open_json("/api/v2/rss/items?withData=false")
         if not isinstance(payload, dict):
             raise QBittorrentError(
                 "qBittorrent returned an invalid RSS items response."
@@ -118,7 +118,7 @@ class QBittorrentClient:
 
     def get_auto_downloading_rules(self) -> dict[str, object]:
         """Return qBittorrent RSS auto-download rules as a dictionary. Raises QBittorrentError when the WebUI returns invalid JSON or a non-object payload."""
-        payload = self._open_json("/api/v2/rss/rules")
+        payload = self.open_json("/api/v2/rss/rules")
         if not isinstance(payload, dict):
             raise QBittorrentError(
                 "qBittorrent returned an invalid RSS rules response."
@@ -154,7 +154,7 @@ class QBittorrentClient:
             return False
         return nested_value_contains(self.get_rss_items(), cleaned_feed_url)
 
-    def _open(
+    def open_text(
         self,
         path: str,
         *,
@@ -164,7 +164,7 @@ class QBittorrentClient:
         full_url = f"{self.settings.url}{path}"
         headers = {
             "Referer": f"{self.settings.url}/",
-            "Origin": self._build_origin_header(),
+            "Origin": self.build_origin_header(),
         }
         if content_type:
             headers["Content-Type"] = content_type
@@ -185,12 +185,12 @@ class QBittorrentClient:
                 f"{self.settings.url}: {exc.reason}"
             ) from exc
 
-    def _build_origin_header(self) -> str:
+    def build_origin_header(self) -> str:
         parts = urlsplit(self.settings.url)
         return f"{parts.scheme}://{parts.netloc}"
 
-    def _open_json(self, path: str) -> object:
-        response_text = self._open(path)
+    def open_json(self, path: str) -> object:
+        response_text = self.open_text(path)
         try:
             return json.loads(response_text)
         except json.JSONDecodeError as exc:

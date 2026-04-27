@@ -40,7 +40,6 @@ def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
         or "http://localhost:8080"
     )
 
-    print()
     print('If you have "Bypass authentication for clients on localhost" enabled in qBittorrent settings, you can just press Enter for the next two prompts.')
     username = (
         collapse_spaces(
