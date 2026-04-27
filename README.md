@@ -26,27 +26,40 @@ Internally, the project is split by responsibility:
 - `mikancli/integrations/` contains external service adapters such as Mikan
 - `config.py` and `display.py` stay at the package root as shared support modules
 
-## Usage
+## Install from source
 
-For local development, install the package from the project folder first:
+Clone the repository, then install it from the project folder:
 
 ```bash
+git clone <repo-url>
+cd MikanCli
 python -m pip install -e .
 ```
 
-That installs MikanCli in editable mode and installs the dependencies declared in
-`pyproject.toml`. After that, you can run the installed command from any terminal
-location:
+This installs MikanCli in editable mode, installs the dependencies declared in
+`pyproject.toml`, and registers the `mikancli` command. After that, you can run
+MikanCli from any terminal location:
 
 ```bash
-mikancli "solo leveling" --include HEVC --exclude 720p
+mikancli
 ```
 
-You can still run the module directly from the project folder after installing
+You can also run the module directly from the project folder after installing
 the local environment:
 
 ```bash
-python -m mikancli "solo leveling" --include HEVC --exclude 720p
+python -m mikancli
+```
+
+Dependencies are installed by `pip` when the package is installed. MikanCli does
+not install packages at runtime.
+
+## Usage
+
+Search directly from the command line:
+
+```bash
+mikancli "solo leveling" --include HEVC --exclude 720p
 ```
 
 You can also run it with no extra arguments and let the script guide you:
@@ -67,9 +80,6 @@ When you run `mikancli` with no extra arguments, the first menu now lets you cho
 - `Modify qBittorrent configurations`
 
 If you choose `Search anime` and qBittorrent is not configured yet, MikanCli can still guide you into qBittorrent setup before continuing.
-
-Dependencies are installed by `pip` when the package is installed. MikanCli does
-not install packages at runtime.
 
 If `--save-path` is omitted, MikanCli first checks for a saved default in the
 user config file. On Windows, the default config location is
@@ -128,7 +138,7 @@ Troubleshooting:
 - if MikanCli says it could not reach qBittorrent, WebUI may be disabled or using a different port
 - if MikanCli says the credentials were rejected, re-check the WebUI username/password in qBittorrent settings
 
-## Packaging note
+## Packaging and release
 
 MikanCli is structured as an installable Python CLI package. The console command
 is declared in `pyproject.toml`:
@@ -161,6 +171,5 @@ mikancli
 
 Remaining packaging work:
 
-- verify the `mikancli` package name is available on PyPI before first upload
 - add a release workflow for building and publishing distributions
 - later consider a Windows executable for non-technical users
