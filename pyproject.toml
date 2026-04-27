@@ -8,9 +8,30 @@ version = "0.1.0"
 description = "CLI foundation for building qBittorrent RSS rules from anime search input."
 readme = "README.md"
 requires-python = ">=3.10"
+authors = [
+    { name = "metails" },
+]
+keywords = ["anime", "rss", "qbittorrent", "cli", "mikan"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Utilities",
+]
 dependencies = [
     "InquirerPy>=0.3",
 ]
+
+[project.urls]
+Repository = "https://github.com/JianHua-Deng/MikanCli"
+Issues = "https://github.com/JianHua-Deng/MikanCli/issues"
 
 [project.scripts]
 mikancli = "mikancli.cli.entrypoint:main"
