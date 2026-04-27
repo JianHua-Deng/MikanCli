@@ -4,7 +4,6 @@ import argparse
 import json
 from pathlib import Path
 
-from mikancli.bootstrap import ensure_runtime_dependencies
 from mikancli.cli.input_parsing import prompt_word_list
 from mikancli.cli.prompts import ExitRequested, select_option
 from mikancli.cli.qbittorrent_flow import (
@@ -144,9 +143,7 @@ def _build_interactive_draft(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the MikanCli command and return a process exit code. This function may prompt, print output, install missing dependencies, and submit rules to qBittorrent."""
-    ensure_runtime_dependencies()
-
+    """Run the MikanCli command and return a process exit code. This function may prompt, print output, and submit rules to qBittorrent."""
     parser = build_parser()
     args = parser.parse_args(argv)
     config_path = get_config_path()

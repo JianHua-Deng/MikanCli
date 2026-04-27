@@ -8,14 +8,30 @@ from pathlib import Path
 from mikancli.core.models import AppConfig
 from mikancli.core.normalize import collapse_spaces
 
-CONFIG_FILENAME = ".mikancli.json"
+USER_CONFIG_FILENAME = "config.json"
+WINDOWS_CONFIG_DIR_NAME = "MikanCli"
+POSIX_CONFIG_DIR_NAME = "mikancli"
 WINDOWS_DOWNLOADS_GUID = "{374DE290-123F-4565-9164-39C4925E467B}"
 
 
 def get_config_path(base_dir: Path | None = None) -> Path:
-    """Return the path to the local MikanCli config file. Example: get_config_path(Path("C:/tmp")) returns Path("C:/tmp/.mikancli.json")."""
-    root = base_dir if base_dir is not None else Path.cwd()
-    return root / CONFIG_FILENAME
+    """Return the MikanCli config path. Defaults to a user-level config file so installed CLI runs share settings across terminal locations."""
+    if base_dir is not None:
+        return base_dir / USER_CONFIG_FILENAME
+
+    if sys.platform == "win32":
+        config_root = os.environ.get("APPDATA")
+        if config_root:
+            return Path(config_root) / WINDOWS_CONFIG_DIR_NAME / USER_CONFIG_FILENAME
+        return Path.home() / "AppData" / "Roaming" / WINDOWS_CONFIG_DIR_NAME / USER_CONFIG_FILENAME
+
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / WINDOWS_CONFIG_DIR_NAME / USER_CONFIG_FILENAME
+
+    config_root = os.environ.get("XDG_CONFIG_HOME")
+    if config_root:
+        return Path(config_root) / POSIX_CONFIG_DIR_NAME / USER_CONFIG_FILENAME
+    return Path.home() / ".config" / POSIX_CONFIG_DIR_NAME / USER_CONFIG_FILENAME
 
 
 def _resolve_existing_config_path(config_path: Path) -> Path | None:
@@ -97,6 +113,7 @@ def save_config(config_path: Path, config: AppConfig) -> None:
             "qbittorrent_add_paused": config.qbittorrent_add_paused,
         }
     )
+    config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 

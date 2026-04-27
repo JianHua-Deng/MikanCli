@@ -36,8 +36,31 @@ class ConfigTests(unittest.TestCase):
     def test_get_config_path_uses_base_dir(self) -> None:
         self.assertEqual(
             get_config_path(self.temp_dir),
-            self.temp_dir / ".mikancli.json",
+            self.temp_dir / "config.json",
         )
+
+    def test_get_config_path_uses_windows_appdata_by_default(self) -> None:
+        from unittest.mock import patch
+
+        with patch("mikancli.config.sys.platform", "win32"), patch.dict(
+            "mikancli.config.os.environ",
+            {"APPDATA": "C:\\Users\\Example\\AppData\\Roaming"},
+            clear=True,
+        ):
+            config_path = get_config_path()
+
+        self.assertEqual(
+            config_path,
+            Path("C:\\Users\\Example\\AppData\\Roaming") / "MikanCli" / "config.json",
+        )
+
+    def test_save_config_creates_parent_directory(self) -> None:
+        config_path = self.temp_dir / "nested" / "config.json"
+
+        save_config(config_path, AppConfig(default_save_path="D:\\Anime"))
+
+        self.assertTrue(config_path.exists())
+        self.assertEqual(load_config(config_path).default_save_path, "D:\\Anime")
 
     def test_load_config_reads_qbittorrent_fields(self) -> None:
         config_path = self.temp_dir / ".mikancli.json"

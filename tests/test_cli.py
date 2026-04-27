@@ -353,7 +353,7 @@ class InteractiveCliTests(unittest.TestCase):
 
         stdout = StringIO()
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch("mikancli.cli.entrypoint.load_config", return_value=AppConfig()), patch(
             "mikancli.cli.entrypoint.select_option", side_effect=ExitRequested
@@ -375,7 +375,7 @@ class InteractiveCliTests(unittest.TestCase):
             self.assertIsNone(settings.password)
             return "5.0.0"
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=config_path
         ), patch("mikancli.cli.entrypoint.load_config", return_value=AppConfig()), patch(
             "mikancli.cli.qbittorrent_flow.prompt_text",
@@ -402,7 +402,7 @@ class InteractiveCliTests(unittest.TestCase):
         config_path = self.temp_dir / ".mikancli.json"
         stdout = StringIO()
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=config_path
         ), patch("mikancli.cli.entrypoint.load_config", return_value=AppConfig()), patch(
             "mikancli.cli.qbittorrent_flow.prompt_text",
@@ -425,7 +425,7 @@ class InteractiveCliTests(unittest.TestCase):
 
         draft = object()
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch("mikancli.cli.entrypoint.select_option", return_value="search") as select_mock, patch(
             "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
@@ -463,7 +463,7 @@ class InteractiveCliTests(unittest.TestCase):
 
         stdout = StringIO()
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch(
             "mikancli.cli.entrypoint.select_option",
@@ -489,7 +489,7 @@ class InteractiveCliTests(unittest.TestCase):
 
         draft = object()
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch("mikancli.cli.entrypoint.select_option", return_value="search"), patch(
             "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
@@ -532,7 +532,7 @@ class InteractiveCliTests(unittest.TestCase):
             qbittorrent_add_paused=True,
         )
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch("mikancli.cli.entrypoint.select_option", return_value="search"), patch(
             "mikancli.cli.entrypoint.load_config", return_value=config
@@ -575,7 +575,7 @@ class InteractiveCliTests(unittest.TestCase):
         )
         stdout = StringIO()
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch(
             "mikancli.cli.entrypoint.select_option",
@@ -615,7 +615,7 @@ class InteractiveCliTests(unittest.TestCase):
         )
         stdout = StringIO()
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch("mikancli.cli.entrypoint.select_option", return_value="search"), patch(
             "mikancli.cli.entrypoint.load_config",
@@ -643,7 +643,7 @@ class InteractiveCliTests(unittest.TestCase):
 
         draft = object()
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch("mikancli.cli.entrypoint.select_option", return_value="search"), patch(
             "mikancli.cli.entrypoint.load_config", return_value=AppConfig()
@@ -672,7 +672,7 @@ class InteractiveCliTests(unittest.TestCase):
 
         stdout = StringIO()
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch(
             "mikancli.cli.entrypoint.select_option",
@@ -700,7 +700,7 @@ class InteractiveCliTests(unittest.TestCase):
 
         stdout = StringIO()
 
-        with patch("mikancli.cli.entrypoint.ensure_runtime_dependencies"), patch(
+        with patch(
             "mikancli.cli.entrypoint.get_config_path", return_value=self.temp_dir / ".mikancli.json"
         ), patch(
             "mikancli.cli.entrypoint.select_option",

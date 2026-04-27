@@ -24,9 +24,26 @@ Internally, the project is split by responsibility:
 - `mikancli/cli/` contains CLI entrypoint, prompts, and interactive navigation
 - `mikancli/core/` contains models, normalization helpers, and rule-building logic
 - `mikancli/integrations/` contains external service adapters such as Mikan
-- `config.py`, `display.py`, and `bootstrap.py` stay at the package root as shared support modules
+- `config.py` and `display.py` stay at the package root as shared support modules
 
 ## Usage
+
+For local development, install the package from the project folder first:
+
+```bash
+python -m pip install -e .
+```
+
+That installs MikanCli in editable mode and installs the dependencies declared in
+`pyproject.toml`. After that, you can run the installed command from any terminal
+location:
+
+```bash
+mikancli "solo leveling" --include HEVC --exclude 720p
+```
+
+You can still run the module directly from the project folder after installing
+the local environment:
 
 ```bash
 python -m mikancli "solo leveling" --include HEVC --exclude 720p
@@ -35,25 +52,28 @@ python -m mikancli "solo leveling" --include HEVC --exclude 720p
 You can also run it with no extra arguments and let the script guide you:
 
 ```bash
-python -m mikancli
+mikancli
 ```
 
 To set up qBittorrent WebUI access for future increments:
 
 ```bash
-python -m mikancli --setup-qbittorrent
+mikancli --setup-qbittorrent
 ```
 
-When you run `python -m mikancli` with no extra arguments, the first menu now lets you choose between:
+When you run `mikancli` with no extra arguments, the first menu now lets you choose between:
 
 - `Search anime`
 - `Modify qBittorrent configurations`
 
 If you choose `Search anime` and qBittorrent is not configured yet, MikanCli can still guide you into qBittorrent setup before continuing.
 
-On first run, MikanCli will automatically install any missing project dependencies before continuing.
+Dependencies are installed by `pip` when the package is installed. MikanCli does
+not install packages at runtime.
 
-If `--save-path` is omitted, MikanCli first checks for a local default in `.mikancli.json`.
+If `--save-path` is omitted, MikanCli first checks for a saved default in the
+user config file. On Windows, the default config location is
+`%APPDATA%\MikanCli\config.json`.
 In a normal interactive run, the guided prompts now use `InquirerPy`, so list selections stay in place instead of printing a new block of text on every key press.
 Every interactive menu now includes an `Exit MikanCli` option, and text prompts accept `exit` or `quit` to stop the tool cleanly.
 The first search prompt now says that explicitly, so the quit path is visible before any lookup starts.
@@ -94,7 +114,7 @@ Before MikanCli can talk to qBittorrent, do a one-time setup inside qBittorrent:
 Then run:
 
 ```bash
-python -m mikancli --setup-qbittorrent
+mikancli --setup-qbittorrent
 ```
 
 Setup notes:
@@ -110,8 +130,37 @@ Troubleshooting:
 
 ## Packaging note
 
-Planned improvement:
+MikanCli is structured as an installable Python CLI package. The console command
+is declared in `pyproject.toml`:
 
-- make `mikancli` accessible from any terminal location so users do not need to `cd` into the project folder first
-- likely support a normal installed CLI workflow where the user can open a terminal and run `mikancli` directly
-- later consider a more user-friendly distribution path such as `pipx`, PyPI packaging, or a Windows executable for non-technical users
+```toml
+[project.scripts]
+mikancli = "mikancli.cli.entrypoint:main"
+```
+
+Current local install flow:
+
+```bash
+python -m pip install -e .
+mikancli
+```
+
+Planned public install flow after publishing to PyPI:
+
+```bash
+python -m pip install mikancli
+mikancli
+```
+
+Recommended CLI-app install flow after publishing:
+
+```bash
+pipx install mikancli
+mikancli
+```
+
+Remaining packaging work:
+
+- verify the `mikancli` package name is available on PyPI before first upload
+- add a release workflow for building and publishing distributions
+- later consider a Windows executable for non-technical users
