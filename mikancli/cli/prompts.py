@@ -13,7 +13,7 @@ MENU_SEPARATOR_LABEL = ""
 
 
 class ExitRequested(Exception):
-    """Raised when the user explicitly chooses to quit the interactive CLI."""
+    """Raised when the user explicitly chooses to quit the CLI."""
 
 
 def _get_inquirer():
@@ -98,13 +98,9 @@ def select_option(
     return selected
 
 
-def prompt_text(
-    message: str,
-    *,
-    default: str | None = None,
-    allow_exit: bool = False,
-) -> str:
+def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = False) -> str:
     """Prompt for text, collapse surrounding whitespace, and return the cleaned value. Raises ExitRequested when exit words are allowed and entered."""
+
     inquirer = _get_inquirer()
 
     prompt = inquirer.text(
@@ -117,12 +113,9 @@ def prompt_text(
     return entered
 
 
-def prompt_password(
-    message: str,
-    *,
-    allow_exit: bool = False,
-) -> str:
+def prompt_password(message: str, *, allow_exit: bool = False) -> str:
     """Prompt for hidden password input and return the raw entered value. Raises ExitRequested when exit words are allowed and entered."""
+    
     inquirer = _get_inquirer()
     prompt_factory = getattr(inquirer, "secret", None)
     if prompt_factory is not None:
@@ -136,13 +129,9 @@ def prompt_password(
     return entered
 
 
-def confirm_choice(
-    message: str,
-    *,
-    default: bool = True,
-    allow_exit: bool = False,
-) -> bool:
+def confirm_choice(message: str, *, default: bool = True, allow_exit: bool = False) -> bool:
     """Ask a yes/no question using the same menu style as other prompts. Returns True for Yes and False for No."""
+
     default_value = "yes" if default else "no"
     selected = select_option(
         message,

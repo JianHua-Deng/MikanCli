@@ -23,13 +23,7 @@ def _dedupe_nonempty(values: list[str]) -> tuple[str, ...]:
     return tuple(ordered)
 
 
-def build_rule_draft(
-    request: SearchRequest,
-    *,
-    bangumi: MikanBangumi | None = None,
-    subgroup: MikanSubgroup | None = None,
-    notes: tuple[str, ...] | None = None,
-) -> RuleDraft:
+def build_rule_draft(request: SearchRequest, *, bangumi: MikanBangumi | None = None, subgroup: MikanSubgroup | None = None, notes: tuple[str, ...] | None = None) -> RuleDraft:
     """
     Build the qBittorrent rule draft from user input and optional Mikan matches.
     Returns a RuleDraft with cleaned filters, selected Mikan metadata, feed URL, save path, and notes.

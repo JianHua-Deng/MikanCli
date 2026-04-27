@@ -80,13 +80,9 @@ def _prompt_startup_action() -> str:
     )
 
 
-def build_request_from_args(
-    args: argparse.Namespace,
-    *,
-    config: AppConfig,
-    config_path: Path,
-) -> SearchRequest:
+def build_request_from_args(args: argparse.Namespace, *, config: AppConfig, config_path: Path) -> SearchRequest:
     """Convert parsed JSON-mode CLI arguments into a SearchRequest. Returns the cleaned request or raises ValueError when the required keyword is missing."""
+
     if not args.keyword:
         raise ValueError("keyword is required when using --json")
 
@@ -105,12 +101,8 @@ def build_request_from_args(
     )
 
 
-def _build_interactive_draft(
-    args: argparse.Namespace,
-    *,
-    config: AppConfig,
-    config_path: Path,
-) -> RuleDraft:
+def _build_interactive_draft(args: argparse.Namespace, *, config: AppConfig,config_path: Path) -> RuleDraft:
+
     bangumi, subgroup = run_interactive_selection(initial_keyword=args.keyword)
 
     include_words = tuple(args.include) or prompt_word_list(
@@ -143,7 +135,7 @@ def _build_interactive_draft(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the MikanCli command and return a process exit code. This function may prompt, print output, and submit rules to qBittorrent."""
+    
     parser = build_parser()
     args = parser.parse_args(argv)
     config_path = get_config_path()
