@@ -1,38 +1,27 @@
 # MikanCli
 
-MikanCli is a Python CLI for turning an anime search keyword into a qBittorrent RSS feed and download-rule setup workflow.
+MikanCli is a Python CLI for finding Bangumi/Anime from Mikan and automating the set up flow of qbitorrent's download rules 
 
-## Current increment
+## Requirements
+- Have `Qbitorrent` installed on your machine
+- Have `pipx` and `pip` installed
 
-The repository currently contains the first small slice of the project:
+## Internal Responsibility
 
-- a Python CLI scaffold
-- keyword normalization
-- Mikan Bangumi search, subgroup discovery, and subgroup RSS feed resolution
-- draft qBittorrent rule construction and interactive qBittorrent submission
-- focused tests for the pure logic
-
-This increment now searches Mikan, lets you select the Bangumi and subgroup,
-resolves the subgroup-specific RSS feed, and prints that feed alongside the
-draft rule details. In interactive search mode, MikanCli can now submit the
-RSS feed and auto-download rule to qBittorrent after you confirm the draft.
-After submission, it reads qBittorrent back to verify that the feed and rule
-were created. qBittorrent WebUI setup verification is also available.
-
-Internally, the project is split by responsibility:
+Internally, the project is split by directories via the following responsibility:
 
 - `mikancli/cli/` contains CLI entrypoint, prompts, and interactive navigation
-- `mikancli/core/` contains models, normalization helpers, and rule-building logic
+- `mikancli/core/` contains models/data classes, normalization helpers, and rule-building logic
 - `mikancli/integrations/` contains external service adapters such as Mikan
 - `config.py` and `display.py` stay at the package root as shared support modules
 
 ## Install
 
-For normal use after MikanCli is published, install it as a CLI app with `pipx`, make sure to have pipx installed:
+For normal use after MikanCli is published, install it as a CLI app with `pipx`:
 
 ```bash
-python -m pip install --user pipx
-python -m pipx ensurepath 
+python -m pip install --user pipx               # For installing pipx for the current specific user of this machine
+python -m pipx ensurepath                       # Updates machine's PATH variable to include the folder where pipx places executable files
 ```
 
 Then install the CLI:
@@ -40,13 +29,13 @@ Then install the CLI:
 python -m pipx install mikancli
 ```
 
-Then open a new terminal and run MikanCli:
+Then you are good to go, open a new terminal and run MikanCli to use it:
 
 ```bash
 mikancli
 ```
 
-## Install from source
+## Install by Git Cloning the Repo
 
 Clone the repository, then install it from the project folder:
 
