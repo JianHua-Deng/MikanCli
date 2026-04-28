@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
+from mikancli import __version__
 from mikancli.cli.input_parsing import prompt_word_list
 from mikancli.cli.prompts import ExitRequested, select_option
 from mikancli.cli.qbittorrent_flow import (
@@ -64,6 +65,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--setup-qbittorrent",
         action="store_true",
         help="Configure and verify qBittorrent WebUI access.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     return parser
 

@@ -26,6 +26,26 @@ Internally, the project is split by responsibility:
 - `mikancli/integrations/` contains external service adapters such as Mikan
 - `config.py` and `display.py` stay at the package root as shared support modules
 
+## Install
+
+For normal use after MikanCli is published, install it as a CLI app with `pipx`, make sure to have pipx installed:
+
+```bash
+python -m pip install --user pipx
+python -m pipx ensurepath 
+```
+
+Then install the CLI:
+```bash
+pipx install mikancli
+```
+
+Then open a new terminal and run MikanCli:
+
+```bash
+mikancli
+```
+
 ## Install from source
 
 Clone the repository, then install it from the project folder:
@@ -33,15 +53,23 @@ Clone the repository, then install it from the project folder:
 ```bash
 git clone <repo-url>
 cd MikanCli
-python -m pip install -e .
+python -m pip install --user pipx
+python -m pipx ensurepath
+pipx install -e .
 ```
 
 This installs MikanCli in editable mode, installs the dependencies declared in
-`pyproject.toml`, and registers the `mikancli` command. After that, you can run
-MikanCli from any terminal location:
+`pyproject.toml`, and registers the `mikancli` command. After that, open a new
+terminal and run MikanCli from any location:
 
 ```bash
 mikancli
+```
+
+For development, a direct editable pip install also works:
+
+```bash
+python -m pip install -e .
 ```
 
 You can also run the module directly from the project folder after installing
@@ -151,7 +179,7 @@ mikancli = "mikancli.cli.entrypoint:main"
 Current local install flow:
 
 ```bash
-python -m pip install -e .
+pipx install -e .
 mikancli
 ```
 

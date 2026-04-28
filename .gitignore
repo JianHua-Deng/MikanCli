@@ -1,5 +1,10 @@
 .venv
+.venv-test/
 __pycache__/
 *.pyc
 .pytest_cache/
 .mikancli.json
+build/
+dist/
+*.egg-info/
+.tmp_*/

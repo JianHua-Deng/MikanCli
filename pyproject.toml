@@ -29,6 +29,9 @@ dependencies = [
     "InquirerPy>=0.3",
 ]
 
+[tool.setuptools.packages.find]
+include = ["mikancli*"]
+
 [project.urls]
 Repository = "https://github.com/JianHua-Deng/MikanCli"
 Issues = "https://github.com/JianHua-Deng/MikanCli/issues"
