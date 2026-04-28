@@ -37,7 +37,7 @@ python -m pipx ensurepath
 
 Then install the CLI:
 ```bash
-pipx install mikancli
+python -m pipx install mikancli
 ```
 
 Then open a new terminal and run MikanCli:
@@ -55,7 +55,7 @@ git clone <repo-url>
 cd MikanCli
 python -m pip install --user pipx
 python -m pipx ensurepath
-pipx install -e .
+python -m pipx install -e .
 ```
 
 This installs MikanCli in editable mode, installs the dependencies declared in
@@ -179,7 +179,7 @@ mikancli = "mikancli.cli.entrypoint:main"
 Current local install flow:
 
 ```bash
-pipx install -e .
+python -m pipx install -e .
 mikancli
 ```
 
@@ -193,7 +193,7 @@ mikancli
 Recommended CLI-app install flow after publishing:
 
 ```bash
-pipx install mikancli
+python -m pipx install mikancli
 mikancli
 ```
 
