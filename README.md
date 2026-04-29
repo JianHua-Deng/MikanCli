@@ -1,192 +1,164 @@
 # MikanCli
 
-MikanCli is a Python CLI for finding Bangumi/Anime from Mikan and automating the set up flow of qbitorrent's download rules 
+MikanCli is a Python command-line tool for finding bangumi/anime on Mikan, choosing the correct Bangumi and subgroup RSS feed, and turning that selection into a qBittorrent RSS auto-download rule
+
+It supports both a guided interactive flow and a JSON preview mode for scripting or inspection. Though, only the interactive flow is pretty much finished as of now
+
+## Features
+
+- Search Mikan by anime title or keyword
+- Choose from matching Bangumi results and subgroup-specific RSS feeds
+- Preview recent RSS feed items before confirming a feed
+- Build qBittorrent RSS rules with include and exclude filters
+- Choose and save a default download folder
+- Configure qBittorrent WebUI access from the CLI
+- Submit RSS feeds and auto-download rules to qBittorrent, then verify that qBittorrent saved them
+- Print rule drafts as JSON without submitting anything
 
 ## Requirements
-- Have `Qbitorrent` installed on your machine
-- Have `pipx` and `pip` installed
 
-## Internal Responsibility
+- Python 3.10 or newer.
+- qBittorrent, if you want MikanCli to submit RSS feeds and rules automatically
+- qBittorrent WebUI enabled for automatic submission
+- `pipx` for installing MikanCli as a standalone CLI app
 
-Internally, the project is split by directories via the following responsibility:
+## Quick Start | Install
 
-- `mikancli/cli/` contains CLI entrypoint, prompts, and interactive navigation
-- `mikancli/core/` contains models/data classes, normalization helpers, and rule-building logic
-- `mikancli/integrations/` contains external service adapters such as Mikan
-- `config.py` and `display.py` stay at the package root as shared support modules
-
-## Install
-
-For normal use after MikanCli is published, install it as a CLI app with `pipx`:
+I recommend installing it with `pipx`, such so you can use it as a CLI app anytime anywhere from the terminal
+You can skip the following if you already have `pipx` installed:
 
 ```bash
-python -m pip install --user pipx               # For installing pipx for the current specific user of this machine
-python -m pipx ensurepath                       # Updates machine's PATH variable to include the folder where pipx places executable files
+python -m pip install --user pipx           # Installing pipx for the current user on this machine
+python -m pipx ensurepath                   # Update machine's PATH variable to include the folder where pipx places executable files
 ```
 
-Then install the CLI:
+Refresh by reopening a new terminal after `pipx ensurepath`, then run:
+
 ```bash
-python -m pipx install mikancli
+pipx install mikancli
 ```
 
-Then you are good to go, open a new terminal and run MikanCli to use it:
+## How to use
 
+Now that it is installed, run the following and follow the menu to use it:
 ```bash
 mikancli
 ```
 
-## Install by Git Cloning the Repo
+## Install by cloning the Repo
 
-Clone the repository, then install it from the project folder:
+To install from a local clone:
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/JianHua-Deng/MikanCli.git
 cd MikanCli
-python -m pip install --user pipx
-python -m pipx ensurepath
 python -m pipx install -e .
 ```
 
-This installs MikanCli in editable mode, installs the dependencies declared in
-`pyproject.toml`, and registers the `mikancli` command. After that, open a new
-terminal and run MikanCli from any location:
-
-```bash
-mikancli
-```
-
-For development, a direct editable pip install also works:
+For development, an editable `pip` install also works:
 
 ```bash
 python -m pip install -e .
-```
-
-You can also run the module directly from the project folder after installing
-the local environment:
-
-```bash
 python -m mikancli
 ```
 
-Dependencies are installed by `pip` when the package is installed. MikanCli does
-not install packages at runtime.
+Dependencies are declared in `pyproject.toml` and installed by `pip` or `pipx`. MikanCli does not install packages at runtime.
 
-## Usage
+## Guided Flow
 
-Search directly from the command line:
+When you run `mikancli` without arguments, the first menu lets you:
 
-```bash
-mikancli "solo leveling" --include HEVC --exclude 720p
-```
+- search anime
+- modify qBittorrent configuration
+- exit MikanCli
 
-You can also run it with no extra arguments and let the script guide you:
+The search flow then:
 
-```bash
-mikancli
-```
+1. asks for an anime title or keyword
+2. searches Mikan for matching Bangumi entries
+3. lets you choose the correct Bangumi entry
+4. fetches subgroup RSS feeds from the selected Bangumi page
+5. lets you choose a subgroup
+6. previews recent RSS feed items
+7. asks for include and exclude filters
+8. asks where downloads should be saved
+9. builds a rule draft
+10. optionally submits the feed and rule to qBittorrent
+11. verifies the submitted feed and rule through the qBittorrent WebUI API
 
-To set up qBittorrent WebUI access for future increments:
+Interactive prompts accept `exit` or `quit` where text input is requested, and menus include an exit option.
 
-```bash
-mikancli --setup-qbittorrent
-```
+## qBittorrent Setup
 
-When you run `mikancli` with no extra arguments, the first menu now lets you choose between:
-
-- `Search anime`
-- `Modify qBittorrent configurations`
-
-If you choose `Search anime` and qBittorrent is not configured yet, MikanCli can still guide you into qBittorrent setup before continuing.
-
-If `--save-path` is omitted, MikanCli first checks for a saved default in the
-user config file. On Windows, the default config location is
-`%APPDATA%\MikanCli\config.json`.
-In a normal interactive run, the guided prompts now use `InquirerPy`, so list selections stay in place instead of printing a new block of text on every key press.
-Every interactive menu now includes an `Exit MikanCli` option, and text prompts accept `exit` or `quit` to stop the tool cleanly.
-The first search prompt now says that explicitly, so the quit path is visible before any lookup starts.
-
-- use the saved default folder
-- use the system Downloads folder
-- browse for a folder
-- type a folder path manually
-
-If the chosen folder is not already the saved default, MikanCli asks whether it should be saved for future runs.
-
-Current guided flow:
-
-- ask for anime keyword if you did not type one
-- search Mikan for matching Bangumi entries
-- let you choose the correct Mikan entry when more than one match is found
-- fetch subgroup entries from the selected Bangumi page
-- let you choose the correct subgroup RSS feed when more than one subgroup is found
-- show the subgroup RSS contents before confirmation
-- let you confirm, go back to subgroup selection, or search again
-- optionally ask for include words
-- optionally ask for exclude words
-- let you choose the base download folder from a menu
-- ask for the content folder name inside that base folder, defaulting to the selected Bangumi title
-- allow quitting cleanly from any interactive menu or prompt
-- print the resolved Mikan page URL, subgroup, and subgroup RSS feed URL with the draft rule summary
-- ask whether to submit the RSS feed and download rule to qBittorrent when WebUI access is configured
-- verify submitted qBittorrent feeds and rules by reading them back from the WebUI API
-
-## qBittorrent setup
-
-Before MikanCli can talk to qBittorrent, do a one-time setup inside qBittorrent:
+Before MikanCli can submit feeds or rules, enable qBittorrent WebUI:
 
 1. Open qBittorrent settings.
-2. Enable WebUI / remote control.
-3. Check the WebUI address, username, and password there.
-
-Then run:
-
-```bash
-mikancli --setup-qbittorrent
-```
+2. Enable WebUI or remote control.
+3. Confirm the WebUI address, username, and password. If the address is empty, it usually mean it is just `http://localhost:[port]`
+4. Run `mikancli --setup-qbittorrent`.
 
 Setup notes:
 
-- if you press Enter for the URL, MikanCli uses `http://localhost:8080`
-- you can enter `localhost:8080` and MikanCli will normalize it automatically
-- username and password may be left blank for the first test if your local qBittorrent allows it
+- Pressing Enter for the URL uses `http://localhost:8080`.
+- Entering `localhost:8080` is normalized to `http://localhost:8080`.
+- Username and password can be left blank if your qBittorrent WebUI allows localhost access without authentication.
+- If qBittorrent rejects the connection, re-check the WebUI port and credentials in qBittorrent settings.
 
-Troubleshooting:
+## Configuration
 
-- if MikanCli says it could not reach qBittorrent, WebUI may be disabled or using a different port
-- if MikanCli says the credentials were rejected, re-check the WebUI username/password in qBittorrent settings
+MikanCli stores user-level configuration in a JSON file:
 
-## Packaging and release
+- Windows: `%APPDATA%\MikanCli\config.json`
+- macOS: `~/Library/Application Support/MikanCli/config.json`
+- Linux and other POSIX systems: `$XDG_CONFIG_HOME/mikancli/config.json` or `~/.config/mikancli/config.json`
 
-MikanCli is structured as an installable Python CLI package. The console command
-is declared in `pyproject.toml`:
+Saved settings can include:
+
+- default download folder
+- qBittorrent WebUI URL
+- qBittorrent username and password
+- qBittorrent category
+- whether qBittorrent should add matched torrents paused
+
+The qBittorrent password is stored in the config file so MikanCli can submit rules in later runs. Keep that file private on shared machines.
+
+## Project Structure
+
+```text
+mikancli/
+  cli/            CLI entrypoint, prompts, and interactive flows
+  core/           dataclasses, normalization, and rule-building logic
+  integrations/   Mikan and qBittorrent adapters
+  config.py       user config and folder selection helpers
+  display.py      text summaries and feed previews
+```
+
+The console command is declared in `pyproject.toml`:
 
 ```toml
 [project.scripts]
 mikancli = "mikancli.cli.entrypoint:main"
 ```
 
-Current local install flow:
+## Commands Usage
 
-```bash
-python -m pipx install -e .
-mikancli
+```text
+usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
+                [--save-path SAVE_PATH] [--json] [--setup-qbittorrent]
+                [--version]
+                [keyword]
 ```
 
-Planned public install flow after publishing to PyPI:
+Options:
 
-```bash
-python -m pip install mikancli
-mikancli
-```
+- `keyword`: anime title or search phrase.
+- `--include VALUE`: require a word or phrase in accepted release titles. Repeat for multiple values.
+- `--exclude VALUE`: reject release titles containing a word or phrase. Repeat for multiple values.
+- `--save-path PATH`: use this base download folder for the generated qBittorrent rule.
+- `--json`: print the rule draft as JSON. This mode does not submit to qBittorrent.
+- `--setup-qbittorrent`: configure and verify qBittorrent WebUI settings.
+- `--version`: print the installed CLI version.
 
-Recommended CLI-app install flow after publishing:
+## Release
 
-```bash
-python -m pipx install mikancli
-mikancli
-```
-
-Remaining packaging work:
-
-- add a release workflow for building and publishing distributions
-- later consider a Windows executable for non-technical users
+The repository includes a GitHub Actions workflow at `.github/workflows/publish.yml` that builds distributions, checks them with `twine`, and publishes to PyPI when a GitHub release is published.
