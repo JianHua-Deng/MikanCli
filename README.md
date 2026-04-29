@@ -1,6 +1,6 @@
 # MikanCli
 
-MikanCli is a Python command-line tool for finding bangumi/anime on Mikan, choosing the correct Bangumi and subgroup RSS feed, and turning that selection into a qBittorrent RSS auto-download rule
+MikanCli is a Python command-line tool for finding bangumi/anime on Mikanani.me, choosing the correct Bangumi and subgroup RSS feed, and turning that selection into a qBittorrent RSS download rule
 
 It supports both a guided interactive flow and a JSON preview mode for scripting or inspection. Though, only the interactive flow is pretty much finished as of now
 
@@ -18,9 +18,8 @@ It supports both a guided interactive flow and a JSON preview mode for scripting
 ## Requirements
 
 - Python 3.10 or newer.
-- qBittorrent, if you want MikanCli to submit RSS feeds and rules automatically
-- qBittorrent WebUI enabled for automatic submission
 - `pipx` for installing MikanCli as a standalone CLI app
+- qBittorrent, if you want MikanCli to submit RSS feeds and rules automatically
 
 ## Quick Start | Install
 
@@ -32,7 +31,7 @@ python -m pip install --user pipx           # Installing pipx for the current us
 python -m pipx ensurepath                   # Update machine's PATH variable to include the folder where pipx places executable files
 ```
 
-Refresh by reopening a new terminal after `pipx ensurepath`, then run:
+Refresh by reopening a new terminal after running `pipx ensurepath`, then run:
 
 ```bash
 pipx install mikancli
@@ -40,7 +39,7 @@ pipx install mikancli
 
 ## How to use
 
-Now that it is installed, run the following and follow the menu to use it:
+Now that it is installed, run the following and follow the menu to start using it:
 ```bash
 mikancli
 ```
@@ -86,23 +85,23 @@ The search flow then:
 10. optionally submits the feed and rule to qBittorrent
 11. verifies the submitted feed and rule through the qBittorrent WebUI API
 
-Interactive prompts accept `exit` or `quit` where text input is requested, and menus include an exit option.
+Interactive prompts accept `exit` or `quit` where text input is requested, and menus include an exit option
 
 ## qBittorrent Setup
 
 Before MikanCli can submit feeds or rules, enable qBittorrent WebUI:
 
-1. Open qBittorrent settings.
-2. Enable WebUI or remote control.
+1. Open qBittorrent settings
+2. Enable WebUI or remote control
 3. Confirm the WebUI address, username, and password. If the address is empty, it usually mean it is just `http://localhost:[port]`
-4. Run `mikancli --setup-qbittorrent`.
+4. Run `mikancli --setup-qbittorrent`
 
 Setup notes:
 
-- Pressing Enter for the URL uses `http://localhost:8080`.
-- Entering `localhost:8080` is normalized to `http://localhost:8080`.
-- Username and password can be left blank if your qBittorrent WebUI allows localhost access without authentication.
-- If qBittorrent rejects the connection, re-check the WebUI port and credentials in qBittorrent settings.
+- Pressing Enter for the URL uses `http://localhost:8080`
+- Entering `localhost:8080` is normalized to `http://localhost:8080`
+- Username and password can be left blank if your qBittorrent WebUI allows localhost access without authentication
+- If qBittorrent rejects the connection, re-check the WebUI port and credentials in qBittorrent settings
 
 ## Configuration
 
@@ -151,12 +150,12 @@ usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
 
 Options:
 
-- `keyword`: anime title or search phrase.
-- `--include VALUE`: require a word or phrase in accepted release titles. Repeat for multiple values.
-- `--exclude VALUE`: reject release titles containing a word or phrase. Repeat for multiple values.
-- `--save-path PATH`: use this base download folder for the generated qBittorrent rule.
-- `--json`: print the rule draft as JSON. This mode does not submit to qBittorrent.
-- `--setup-qbittorrent`: configure and verify qBittorrent WebUI settings.
+- `keyword`: anime title or search phrase
+- `--include VALUE`: require a word or phrase in accepted release titles. Repeat for multiple values
+- `--exclude VALUE`: reject release titles containing a word or phrase. Repeat for multiple values
+- `--save-path PATH`: use this base download folder for the generated qBittorrent rule
+- `--json`: print the rule draft as JSON. This mode does not submit to qBittorrent
+- `--setup-qbittorrent`: configure and verify qBittorrent WebUI settings
 - `--version`: print the installed CLI version.
 
 ## Release
