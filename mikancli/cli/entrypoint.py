@@ -8,6 +8,8 @@ from mikancli import __version__
 from mikancli.cli.input_parsing import prompt_word_list
 from mikancli.cli.prompts import ExitRequested, select_option
 from mikancli.cli.qbittorrent_flow import (
+    QBITTORRENT_SETUP_SUCCESS,
+    QBITTORRENT_NOT_CONFIGURED,
     QBITTORRENT_SUBMISSION_SKIPPED,
     prompt_for_qbittorrent_setup_if_needed,
     prompt_to_submit_rule_to_qbittorrent,
@@ -183,7 +185,10 @@ def main(argv: list[str] | None = None) -> int:
                     startup_action = prompt_startup_action()
                     if startup_action == STARTUP_ACTION_QBITTORRENT:
                         setup_exit_code = run_qbittorrent_configuration_flow(config, config_path)
-                        if setup_exit_code != 0:
+                        if setup_exit_code not in {
+                            QBITTORRENT_SETUP_SUCCESS,
+                            QBITTORRENT_NOT_CONFIGURED,
+                        }:
                             return setup_exit_code
                         config = load_config(config_path)
                         continue
@@ -193,7 +198,10 @@ def main(argv: list[str] | None = None) -> int:
                 config,
                 config_path,
             )
-            if setup_exit_code != 0:
+            if setup_exit_code not in {
+                QBITTORRENT_SETUP_SUCCESS,
+                QBITTORRENT_NOT_CONFIGURED,
+            }:
                 return setup_exit_code
             config = load_config(config_path)
             draft = build_interactive_draft(
@@ -210,6 +218,21 @@ def main(argv: list[str] | None = None) -> int:
             return summary_exit_code
         try:
             submission_exit_code = prompt_to_submit_rule_to_qbittorrent(config, draft)
+            if submission_exit_code == QBITTORRENT_NOT_CONFIGURED:
+                print("qBittorrent is not configured. Please set up qBittorrent access to submit rules.")
+                setup_exit_code = prompt_for_qbittorrent_setup_if_needed(config, config_path)
+                if setup_exit_code not in {
+                    QBITTORRENT_SETUP_SUCCESS,
+                    QBITTORRENT_NOT_CONFIGURED, # When user declines but we can still continue to allow them to submit without qBittorrent
+                }:
+                    return setup_exit_code
+
+                config = load_config(config_path)
+                if config.qbittorrent_url:
+                    submission_exit_code = prompt_to_submit_rule_to_qbittorrent(config, draft)
+                else:
+                    continue
+
         except ExitRequested:
             print("Exited MikanCli.")
             return 0
@@ -218,4 +241,4 @@ def main(argv: list[str] | None = None) -> int:
             config = load_config(config_path)
             continue
 
-        return 0 if submission_exit_code == QBITTORRENT_SUBMISSION_SKIPPED else submission_exit_code
+        return QBITTORRENT_SETUP_SUCCESS if submission_exit_code == QBITTORRENT_SUBMISSION_SKIPPED else submission_exit_code

@@ -106,11 +106,11 @@ Setup notes:
 
 ## Configuration
 
-MikanCli stores user-level configuration in a JSON file:
+MikanCli stores configuration in a JSON file:
 
-- Windows: `%APPDATA%\MikanCli\config.json`
-- macOS: `~/Library/Application Support/MikanCli/config.json`
-- Linux and other POSIX systems: `$XDG_CONFIG_HOME/mikancli/config.json` or `~/.config/mikancli/config.json`
+- Windows: `%APPDATA%\Roaming\MikanCli\config.json`
+- macOS(Probably): `~/Library/Application Support/MikanCli/config.json`
+- Linux and other POSIX systems(Probably): `$XDG_CONFIG_HOME/mikancli/config.json` or `~/.config/mikancli/config.json`
 
 Saved settings can include:
 
