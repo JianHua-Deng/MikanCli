@@ -222,12 +222,7 @@ def nested_value_contains(value: object, target: str) -> bool:
     return False
 
 
-def rules_contain_rule_for_feed(
-    rules: dict[str, object],
-    *,
-    rule_name: str,
-    feed_url: str,
-) -> bool:
+def rules_contain_rule_for_feed(rules: dict[str, object], *, rule_name: str, feed_url: str) -> bool:
     """
     Return whether a qBittorrent rules payload has a named rule affecting a feed URL.
     Returns False when the rule is missing or its affectedFeeds field is not a list.

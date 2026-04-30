@@ -33,7 +33,6 @@ STARTUP_ACTION_QBITTORRENT = "qbittorrent"
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Create the command-line parser for MikanCli flags and positional arguments. Returns a configured ArgumentParser; it does not parse arguments by itself."""
     parser = argparse.ArgumentParser(
         prog="mikancli",
         description=(
@@ -89,7 +88,6 @@ def prompt_startup_action() -> str:
 
 
 def build_request_from_args(args: argparse.Namespace, *, config: AppConfig, config_path: Path) -> SearchRequest:
-    """Convert parsed JSON-mode CLI arguments into a SearchRequest. Returns the cleaned request or raises ValueError when the required keyword is missing."""
 
     if not args.keyword:
         raise ValueError("keyword is required when using --json")
@@ -223,7 +221,7 @@ def main(argv: list[str] | None = None) -> int:
                 setup_exit_code = prompt_for_qbittorrent_setup_if_needed(config, config_path)
                 if setup_exit_code not in {
                     QBITTORRENT_SETUP_SUCCESS,
-                    QBITTORRENT_NOT_CONFIGURED, # When user declines but we can still continue to allow them to submit without qBittorrent
+                    QBITTORRENT_NOT_CONFIGURED, # When user declines but we can still continue to allow them to continue without qBittorrent
                 }:
                     return setup_exit_code
 

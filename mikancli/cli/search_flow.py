@@ -26,7 +26,6 @@ def search_prompt(*, retry: bool = False) -> str:
 
 
 def select_candidate_or_search_again(candidates: tuple[MikanBangumi, ...], *, keyword: str) -> MikanBangumi | str:
-    """Ask the user to choose a Bangumi search result or start a new search. Returns a MikanBangumi, or SEARCH_AGAIN when the user wants different keywords to search for."""
 
     options: list[tuple[int | str, str]] = [
         (index, f"{candidate.title} (Bangumi {candidate.bangumi_id})")
@@ -136,7 +135,7 @@ def resolve_mikan_selection(request: SearchRequest,) -> tuple[MikanBangumi | Non
 
 
 def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBangumi, MikanSubgroup]:
-    """Run the interactive Mikan search, Bangumi selection, subgroup selection, and feed preview loop. Returns the confirmed Bangumi and subgroup, or propagates ExitRequested when the user quits"""
+    """Run Mikan search, Bangumi selection, subgroup selection, and feed preview loop. Returns the confirmed Bangumi and subgroup, or propagates ExitRequested when the user quits"""
     
     keyword = collapse_spaces(initial_keyword or "")
     if not keyword:

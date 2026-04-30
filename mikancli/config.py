@@ -47,7 +47,11 @@ def load_config_payload(config_path: Path) -> dict[str, object]:
     if target_path is None:
         return {}
 
-    payload = json.loads(target_path.read_text(encoding="utf-8"))
+    try:
+        payload = json.loads(target_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
     if not isinstance(payload, dict):
         return {}
 

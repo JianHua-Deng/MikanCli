@@ -14,12 +14,7 @@ from mikancli.integrations.qbittorrent_client import (
 )
 
 
-def build_qbittorrent_rule_definition(
-    draft: RuleDraft,
-    *,
-    add_paused: bool = False,
-    assigned_category: str | None = None,
-) -> dict[str, object]:
+def build_qbittorrent_rule_definition(draft: RuleDraft, *, add_paused: bool = False, assigned_category: str | None = None) -> dict[str, object]:
     """
     Convert a RuleDraft into the JSON shape qBittorrent expects for an RSS auto-download rule.
     Returns a dictionary ready to encode as the WebUI ruleDef payload.
@@ -124,7 +119,7 @@ def submit_rule_draft(
     *,
     add_paused: bool = False,
     assigned_category: str | None = None,
-    feed_path: str | None = None,
+    feed_path: str | None = None
 ) -> QBittorrentSubmissionResult:
     """Log in, add the RSS feed if needed, create the qBittorrent rule, and verify both were saved. Returns QBittorrentSubmissionResult, or raises QBittorrentError when submission or verification fails."""
     client = QBittorrentClient(settings)

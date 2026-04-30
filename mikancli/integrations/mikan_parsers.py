@@ -120,7 +120,6 @@ class _SearchResultParser(HTMLParser):
 
 def parse_search_results(html: str) -> tuple[MikanBangumi, ...]:
     """
-    Parse a Mikan search results page into unique Bangumi candidates.
     Returns a tuple of MikanBangumi objects with ids, titles, page URLs, and feed URLs.
     Example: HTML containing '<a href="/Home/Bangumi/3560">Solo</a>' returns MikanBangumi(bangumi_id=3560, title="Solo", ...).
     """

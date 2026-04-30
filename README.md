@@ -23,7 +23,7 @@ It supports both a guided interactive flow and a JSON preview mode for scripting
 
 ## Quick Start | Install
 
-I recommend installing it with `pipx`, such so you can use it as a CLI app anytime anywhere from the terminal
+I recommend installing it with `pipx`, such so you can use it as a CLI app anytime anywhere from the terminal.
 You can skip the following if you already have `pipx` installed:
 
 ```bash
@@ -82,7 +82,7 @@ The search flow then:
 7. asks for include and exclude filters
 8. asks where downloads should be saved
 9. builds a rule draft
-10. optionally submits the feed and rule to qBittorrent
+10. submits the feed and rule to qBittorrent
 11. verifies the submitted feed and rule through the qBittorrent WebUI API
 
 Interactive prompts accept `exit` or `quit` where text input is requested, and menus include an exit option

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from typing import Any, TypeVar
+from InquirerPy.separator import Separator
 
 from mikancli.core.normalize import collapse_spaces
 
@@ -32,24 +33,9 @@ def prepare_prompt_message(message: str) -> str:
     return message.strip("\n")
 
 
-def get_menu_separator() -> Any | None:
-    try:
-        from InquirerPy.separator import Separator
-    except ImportError:
-        return None
-
-    return Separator(MENU_SEPARATOR_LABEL)
-
-
-def build_select_choices(
-    options: list[tuple[T, str]],
-    *,
-    allow_exit: bool,
-    separator_before_values: Iterable[T] = (),
-    separator_before_exit: bool = True,
-) -> list[object]:
+def build_select_choices(options: list[tuple[T, str]], *, allow_exit: bool, separator_before_values: Iterable[T] = (), separator_before_exit: bool = True) -> list[object]:
     separator_values = set(separator_before_values)
-    separator = get_menu_separator()
+    separator = Separator(MENU_SEPARATOR_LABEL)
     choices: list[object] = []
 
     for value, label in options:
@@ -72,11 +58,10 @@ def select_option(
     default: T | None = None,
     allow_exit: bool = False,
     separator_before_values: Iterable[T] = (),
-    separator_before_exit: bool = True,
+    separator_before_exit: bool = True
 ) -> T:
-    """Show an InquirerPy selection menu and return the selected option value. Raises ExitRequested when exit is allowed and the user chooses the exit option."""
+    
     inquirer = get_inquirer()
-
     choices = build_select_choices(
         options,
         allow_exit=allow_exit,
@@ -99,7 +84,6 @@ def select_option(
 
 
 def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = False) -> str:
-    """Prompt for text, collapse surrounding whitespace, and return the cleaned value. Raises ExitRequested when exit words are allowed and entered."""
 
     inquirer = get_inquirer()
 
@@ -114,7 +98,6 @@ def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = 
 
 
 def prompt_password(message: str, *, allow_exit: bool = False) -> str:
-    """Prompt for hidden password input and return the raw entered value. Raises ExitRequested when exit words are allowed and entered."""
     
     inquirer = get_inquirer()
     prompt_factory = getattr(inquirer, "secret", None)
