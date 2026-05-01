@@ -33,18 +33,34 @@ def prompt_for_manual_save_path() -> str | None:
     return entered or None
 
 
-def prompt_for_content_folder_name(default_name: str) -> str:
+def prompt_for_content_folder_name(default_name: str, base_path: str | None) -> str:
     """Prompt for the folder name inside the selected base download folder. Returns a sanitized folder name, falling back to the sanitized default title when left blank."""
 
     safe_default_name = sanitize_folder_name(default_name)
-    entered = collapse_spaces(
-        prompt_text(
-            "Enter the folder name for downloaded content (press Enter to use the default title from Mikan)",
-            default=safe_default_name,
-            allow_exit=True,
+    while True:
+        entered = collapse_spaces(
+            prompt_text(
+                "Enter the folder name for downloaded content (press Enter to use the default title from Mikan)",
+                default=safe_default_name,
+                allow_exit=True,
+            )
         )
-    )
-    return sanitize_folder_name(entered or safe_default_name) or "MikanCli Download"
+        folder_name = sanitize_folder_name(entered or safe_default_name) or "MikanCli Download"
+        if not base_path:
+            return folder_name
+
+        content_path = Path(base_path) / folder_name
+        if not content_path.exists():
+            return folder_name
+
+        if confirm_choice(
+            f"'{content_path}' already exists. Continue using this folder?",
+            default=False,
+            allow_exit=True,
+        ):
+            return folder_name
+
+        print("Choose a different folder name.")
 
 
 def build_content_save_path(base_path: str | None, folder_name: str) -> str | None:

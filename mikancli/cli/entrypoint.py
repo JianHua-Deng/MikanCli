@@ -123,7 +123,7 @@ def build_interactive_draft(args: argparse.Namespace, *, config: AppConfig,confi
         prompt_for_default=True,
         config_path=config_path,
     )
-    content_folder_name = prompt_for_content_folder_name(bangumi.title)
+    content_folder_name = prompt_for_content_folder_name(bangumi.title, save_path)
     final_save_path = build_content_save_path(save_path, content_folder_name)
 
     request = SearchRequest(
