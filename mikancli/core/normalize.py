@@ -16,6 +16,18 @@ It is used when creating download folder names so titles from Mikan do not produ
 Example: before 'One Piece: "Egghead"?' -> result "One Piece Egghead".
 """
 
+_WINDOWS_RESERVED_FOLDER_NAMES = {
+    "aux",
+    "con",
+    "nul",
+    "prn",
+    *(f"com{number}" for number in range(1, 10)),
+    *(f"lpt{number}" for number in range(1, 10)),
+}
+"""
+Matches Windows reserved device names that cannot be used as folder names, even with an extension.
+"""
+
 def collapse_spaces(value: str) -> str:
     """Collapse repeated whitespace and trim the ends of a string. Example: collapse_spaces("  Solo   Leveling  ") returns "Solo Leveling"."""
     return _WHITESPACE_RE.sub(" ", value).strip()
@@ -29,4 +41,7 @@ def normalize_keyword(keyword: str) -> str:
 def sanitize_folder_name(value: str) -> str:
     """Remove unsafe Windows path characters from a folder name. Example: sanitize_folder_name("Re: Zero?") returns "Re Zero"."""
     cleaned = _INVALID_PATH_CHARS_RE.sub("", collapse_spaces(value))
-    return cleaned.rstrip(". ")
+    cleaned = cleaned.rstrip(". ")
+    if cleaned.split(".", 1)[0].casefold() in _WINDOWS_RESERVED_FOLDER_NAMES:
+        return f"{cleaned} Folder"
+    return cleaned
