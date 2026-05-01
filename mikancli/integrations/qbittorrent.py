@@ -85,6 +85,14 @@ def build_default_feed_path(draft: RuleDraft) -> str:
     return cleaned_rule_name or "MikanCli Feed"
 
 
+def qbittorrent_rule_exists(settings: QBittorrentSettings, rule_name: str) -> bool:
+    """Return whether qBittorrent already has an RSS auto-download rule with the given name."""
+    client = QBittorrentClient(settings)
+    client.login()
+    rules = client.get_auto_downloading_rules()
+    return collapse_spaces(rule_name) in rules
+
+
 def check_connection(settings: QBittorrentSettings) -> str:
     """Verify qBittorrent WebUI access and return the reported version string. Raises QBittorrentError with user-facing guidance when the WebUI is unreachable or authentication fails."""
     client = QBittorrentClient(settings)

@@ -5,11 +5,13 @@ from pathlib import Path
 from mikancli.cli.prompts import confirm_choice, prompt_password, prompt_text
 from mikancli.config import save_config
 from mikancli.core.models import AppConfig, QBittorrentSettings, RuleDraft
-from mikancli.core.normalize import collapse_spaces
+from mikancli.core.normalize import collapse_spaces, sanitize_folder_name
 from mikancli.integrations.qbittorrent import (
     QBittorrentError,
+    build_default_feed_path,
     check_connection,
     normalize_qbittorrent_url,
+    qbittorrent_rule_exists,
     submit_rule_draft,
 )
 
@@ -135,6 +137,19 @@ def run_qbittorrent_configuration_flow(config: AppConfig, config_path: Path) -> 
             return QBITTORRENT_NOT_CONFIGURED
 
 
+def prompt_for_rss_feed_name(draft: RuleDraft) -> str:
+    """Prompt for the qBittorrent RSS feed path/name, falling back to the default derived from the rule draft."""
+    default_feed_path = build_default_feed_path(draft)
+    entered = collapse_spaces(
+        prompt_text(
+            "Enter qBittorrent RSS feed name (press Enter to use the default)",
+            default=default_feed_path,
+            allow_exit=True,
+        )
+    )
+    return sanitize_folder_name(entered or default_feed_path) or default_feed_path
+
+
 def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -> int:
     """Ask whether to submit a confirmed rule draft to qBittorrent and report the result. Returns QBITTORRENT_SETUP_SUCCESS on success, QBITTORRENT_NOT_CONFIGURED when no WebUI URL is saved, QBITTORRENT_SUBMISSION_SKIPPED when declined, or QBITTORRENT_ERROR on submission failure."""
     
@@ -156,12 +171,23 @@ def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -
     )
 
     try:
+        if qbittorrent_rule_exists(settings, draft.rule_name):
+            should_replace = confirm_choice(
+                f"qBittorrent already has a rule named '{draft.rule_name}'. Replace it?",
+                default=False,
+                allow_exit=True,
+            )
+            if not should_replace:
+                return QBITTORRENT_SUBMISSION_SKIPPED
+
+        feed_path = prompt_for_rss_feed_name(draft)
         print("Submitting RSS feed and download rule to qBittorrent...")
         submit_rule_draft(
             settings,
             draft,
             add_paused=config.qbittorrent_add_paused,
             assigned_category=config.qbittorrent_category,
+            feed_path=feed_path,
         )
     except QBittorrentError as exc:
         print(f"Failed to submit to qBittorrent: {str(exc)}")
