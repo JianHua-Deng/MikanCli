@@ -157,7 +157,7 @@ def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -
         return QBITTORRENT_NOT_CONFIGURED
 
     should_submit = confirm_choice(
-        "Submit this RSS feed and download rule to qBittorrent now?",
+        "Continue to qBittorrent submission details for this RSS feed and rule?",
         default=True,
         allow_exit=True,
     )
