@@ -1,8 +1,10 @@
 # MikanCli
 
-MikanCli is a Python command-line tool for finding bangumi/anime on Mikanani.me, choosing the correct Bangumi and subgroup RSS feed, and turning that selection into a qBittorrent RSS download rule
+Language: [English](README.md) | [简体中文](README.zh-CN.md)
 
-It supports both a guided interactive flow and a JSON preview mode for scripting or inspection. Though, only the interactive flow is pretty much finished as of now
+MikanCli is a Python command-line tool for finding bangumi/anime on Mikanani.me, choosing the correct Bangumi and subgroup RSS feed, and turning that selection into a qBittorrent RSS download rule.
+
+It supports both a guided interactive flow and a JSON preview mode for scripting or inspection. The interactive flow is the most complete mode right now.
 
 ## Features
 
@@ -17,18 +19,18 @@ It supports both a guided interactive flow and a JSON preview mode for scripting
 
 ## Requirements
 
-- Python 3.10 or newer.
+- Python 3.10 or newer
 - `pipx` for installing MikanCli as a standalone CLI app
 - qBittorrent, if you want MikanCli to submit RSS feeds and rules automatically
 
 ## Quick Start | Install
 
-I recommend installing it with `pipx`, such so you can use it as a CLI app anytime anywhere from the terminal.
+I recommend installing MikanCli with `pipx` so you can use it as a CLI app from any terminal.
 You can skip the following if you already have `pipx` installed:
 
 ```bash
-python -m pip install --user pipx           # Installing pipx for the current user on this machine
-python -m pipx ensurepath                   # Update machine's PATH variable to include the folder where pipx places executable files
+python -m pip install --user pipx           # Install pipx for the current user
+python -m pipx ensurepath                   # Add the pipx executable folder to PATH
 ```
 
 Refresh by reopening a new terminal after running `pipx ensurepath`, then run:
@@ -37,14 +39,15 @@ Refresh by reopening a new terminal after running `pipx ensurepath`, then run:
 pipx install mikancli
 ```
 
-## How to use
+## How to Use
 
-Now that it is installed, run the following and follow the menu to start using it:
+Now that it is installed, run the following and follow the menu:
+
 ```bash
 mikancli
 ```
 
-## Install by cloning the Repo
+## Install by Cloning the Repo
 
 To install from a local clone:
 
@@ -85,7 +88,7 @@ The search flow then:
 10. submits the feed and rule to qBittorrent
 11. verifies the submitted feed and rule through the qBittorrent WebUI API
 
-Interactive prompts accept `exit` or `quit` where text input is requested, and menus include an exit option
+Interactive prompts accept `exit` or `quit` where text input is requested, and menus include an exit option.
 
 ## qBittorrent Setup
 
@@ -93,7 +96,7 @@ Before MikanCli can submit feeds or rules, enable qBittorrent WebUI:
 
 1. Open qBittorrent settings
 2. Enable WebUI or remote control
-3. Confirm the WebUI address, username, and password. If the address is empty, it usually mean it is just `http://localhost:[port]`
+3. Confirm the WebUI address, username, and password. If the address is empty, it usually means it is `http://localhost:[port]`
 4. Run `mikancli --setup-qbittorrent`
 
 Setup notes:
@@ -108,8 +111,6 @@ Setup notes:
 MikanCli stores configuration in a JSON file:
 
 - Windows: `%APPDATA%\Roaming\MikanCli\config.json`
-- macOS(Probably): `~/Library/Application Support/MikanCli/config.json`
-- Linux and other POSIX systems(Probably): `$XDG_CONFIG_HOME/mikancli/config.json` or `~/.config/mikancli/config.json`
 
 Saved settings can include:
 
@@ -121,15 +122,29 @@ Saved settings can include:
 
 The qBittorrent password is stored in the config file so MikanCli can submit rules in later runs. Keep that file private on shared machines.
 
+## Chinese Language Support Plan
+
+Chinese language support is planned but not implemented yet. The goal is to make the interactive CLI usable in English and Simplified Chinese while keeping command names, JSON field names, Mikan titles, subgroup names, URLs, and qBittorrent API payloads stable.
+
+Planned implementation:
+
+1. Add a small localization layer for user-facing messages, prompt labels, menu choices, setup instructions, validation errors, and summaries.
+2. Add language selection through a CLI option such as `--language en` / `--language zh-CN`, an environment variable such as `MIKANCLI_LANG`, and a saved config value for interactive users.
+3. Keep language switching available from the interactive CLI, including a startup/menu option to change the current language at any time without editing config files manually.
+4. Move hard-coded English UI text out of the flow modules and replace it with translation keys.
+5. Add Simplified Chinese translations for the guided search flow, qBittorrent setup flow, download folder flow, rule summary, and common errors.
+6. Keep scripting output stable: `--json` should continue using the same keys and structure, with only human-readable notes localized when appropriate.
+7. Add tests for language selection, fallback behavior, and representative translated prompts so missing translations are caught before release.
+
 ## Project Structure
 
 ```text
 mikancli/
-  cli/            CLI entrypoint, prompts, and interactive flows
-  core/           dataclasses, normalization, and rule-building logic
-  integrations/   Mikan and qBittorrent adapters
-  config.py       user config and folder selection helpers
-  display.py      text summaries and feed previews
+  cli/             CLI entrypoint, prompts, and interactive flows
+  core/            dataclasses, normalization, and rule-building logic
+  integrations/    Mikan and qBittorrent adapters
+  config.py        user config and folder selection helpers
+  display.py       text summaries and feed previews
 ```
 
 The console command is declared in `pyproject.toml`:
@@ -156,7 +171,7 @@ Options:
 - `--save-path PATH`: use this base download folder for the generated qBittorrent rule
 - `--json`: print the rule draft as JSON. This mode does not submit to qBittorrent
 - `--setup-qbittorrent`: configure and verify qBittorrent WebUI settings
-- `--version`: print the installed CLI version.
+- `--version`: print the installed CLI version
 
 ## Release
 
