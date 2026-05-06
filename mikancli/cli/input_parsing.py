@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from mikancli.cli.prompts import prompt_text
 from mikancli.core.normalize import collapse_spaces
+from mikancli.i18n import t
 
 
 def prompt_required_text(prompt: str) -> str:
@@ -9,7 +10,7 @@ def prompt_required_text(prompt: str) -> str:
         entered = collapse_spaces(prompt_text(prompt, allow_exit=True))
         if entered:
             return entered
-        print("A value is required.")
+        print(t("common.value_required"))
 
 
 def parse_word_list(value: str) -> tuple[str, ...]:

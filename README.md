@@ -72,6 +72,7 @@ When you run `mikancli` without arguments, the first menu lets you:
 
 - search anime
 - modify qBittorrent configuration
+- change language
 - exit MikanCli
 
 The search flow then:
@@ -115,6 +116,7 @@ MikanCli stores configuration in a JSON file:
 Saved settings can include:
 
 - default download folder
+- language preference
 - qBittorrent WebUI URL
 - qBittorrent username and password
 - qBittorrent category
@@ -122,19 +124,18 @@ Saved settings can include:
 
 The qBittorrent password is stored in the config file so MikanCli can submit rules in later runs. Keep that file private on shared machines.
 
-## Chinese Language Support Plan
+## Language Support
 
-Chinese language support is planned but not implemented yet. The goal is to make the interactive CLI usable in English and Simplified Chinese while keeping command names, JSON field names, Mikan titles, subgroup names, URLs, and qBittorrent API payloads stable.
+MikanCli supports English and Simplified Chinese for user-facing CLI text, including interactive menus, prompts, setup instructions, summaries, and help text. Command names, option names, JSON field names, Mikan titles, subgroup names, URLs, and qBittorrent API payloads stay stable.
 
-Planned implementation:
+Language selection uses this precedence order:
 
-1. Add a small localization layer for user-facing messages, prompt labels, menu choices, setup instructions, validation errors, and summaries.
-2. Add language selection through a CLI option such as `--language en` / `--language zh-CN`, an environment variable such as `MIKANCLI_LANG`, and a saved config value for interactive users.
-3. Keep language switching available from the interactive CLI, including a startup/menu option to change the current language at any time without editing config files manually.
-4. Move hard-coded English UI text out of the flow modules and replace it with translation keys.
-5. Add Simplified Chinese translations for the guided search flow, qBittorrent setup flow, download folder flow, rule summary, and common errors.
-6. Keep scripting output stable: `--json` should continue using the same keys and structure, with only human-readable notes localized when appropriate.
-7. Add tests for language selection, fallback behavior, and representative translated prompts so missing translations are caught before release.
+1. `--language en` or `--language zh-CN`
+2. `MIKANCLI_LANG=en` or `MIKANCLI_LANG=zh-CN`
+3. saved config value
+4. English fallback
+
+Interactive users can always change language from the startup menu. The selected language is saved to the config file for future runs.
 
 ## Project Structure
 
@@ -159,7 +160,7 @@ mikancli = "mikancli.cli.entrypoint:main"
 ```text
 usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
                 [--save-path SAVE_PATH] [--json] [--setup-qbittorrent]
-                [--version]
+                [--language {en,zh-CN}] [--version]
                 [keyword]
 ```
 
@@ -171,6 +172,7 @@ Options:
 - `--save-path PATH`: use this base download folder for the generated qBittorrent rule
 - `--json`: print the rule draft as JSON. This mode does not submit to qBittorrent
 - `--setup-qbittorrent`: configure and verify qBittorrent WebUI settings
+- `--language {en,zh-CN}`: choose CLI language for this run
 - `--version`: print the installed CLI version
 
 ## Release
