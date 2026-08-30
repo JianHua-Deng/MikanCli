@@ -6,7 +6,11 @@ from dataclasses import replace
 from pathlib import Path
 
 from mikancli import __version__
-from mikancli.cli.input_parsing import prompt_word_list
+from mikancli.cli.input_parsing import (
+    parse_optional_positive_int,
+    prompt_optional_positive_int,
+    prompt_word_list,
+)
 from mikancli.cli.prompts import ExitRequested, select_option
 from mikancli.cli.qbittorrent_flow import (
     QBITTORRENT_SETUP_SUCCESS,
@@ -62,6 +66,11 @@ def build_parser() -> argparse.ArgumentParser:
         help=t("arg.exclude.help"),
     )
     parser.add_argument(
+        "--min-episode",
+        type=parse_min_episode_arg,
+        help=t("arg.min_episode.help"),
+    )
+    parser.add_argument(
         "--save-path",
         help=t("arg.save_path.help"),
     )
@@ -97,6 +106,21 @@ def parse_language_arg(value: str) -> str:
             t("language.invalid", language=value, supported=supported)
         )
     return normalized
+
+
+def parse_min_episode_arg(value: str) -> int:
+    try:
+        parsed = parse_optional_positive_int(
+            value,
+            field_name=t("filters.min_episode_field"),
+        )
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+    if parsed is None:
+        raise argparse.ArgumentTypeError(
+            t("filters.positive_int_required", field=t("filters.min_episode_field"))
+        )
+    return parsed
 
 
 def parse_requested_language(argv: list[str] | None) -> str | None:
@@ -161,6 +185,7 @@ def build_request_from_args(args: argparse.Namespace, *, config: AppConfig, conf
         keyword=collapse_spaces(args.keyword),
         include_words=tuple(args.include),
         exclude_words=tuple(args.exclude),
+        min_episode=args.min_episode,
         save_path=save_path,
     )
 
@@ -175,6 +200,12 @@ def build_interactive_draft(args: argparse.Namespace, *, config: AppConfig,confi
     exclude_words = tuple(args.exclude) or prompt_word_list(
         t("filters.exclude_prompt")
     )
+    min_episode = args.min_episode
+    if min_episode is None:
+        min_episode = prompt_optional_positive_int(
+            t("filters.min_episode_prompt"),
+            field_name=t("filters.min_episode_field"),
+        )
     save_path = resolve_save_path(
         args.save_path,
         config,
@@ -188,6 +219,7 @@ def build_interactive_draft(args: argparse.Namespace, *, config: AppConfig,confi
         keyword=bangumi.title,
         include_words=include_words,
         exclude_words=exclude_words,
+        min_episode=min_episode,
         save_path=final_save_path,
     )
     return build_rule_draft(

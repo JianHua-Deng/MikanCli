@@ -40,6 +40,7 @@ def build_rule_draft(request: SearchRequest, *, bangumi: MikanBangumi | None = N
         rule_name=collapsed_keyword,
         must_contain=must_contain,
         must_not_contain=must_not_contain,
+        min_episode=request.min_episode,
         mikan_title=bangumi.title if bangumi else None,
         mikan_bangumi_id=bangumi.bangumi_id if bangumi else None,
         mikan_page_url=bangumi.page_url if bangumi else None,

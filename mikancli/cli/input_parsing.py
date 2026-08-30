@@ -39,3 +39,27 @@ def prompt_word_list(prompt: str) -> tuple[str, ...]:
         return ()
 
     return parse_word_list(entered)
+
+
+def parse_optional_positive_int(value: str, *, field_name: str) -> int | None:
+    cleaned = collapse_spaces(value)
+    if not cleaned:
+        return None
+
+    try:
+        parsed = int(cleaned)
+    except ValueError as exc:
+        raise ValueError(t("filters.positive_int_required", field=field_name)) from exc
+
+    if parsed < 1:
+        raise ValueError(t("filters.positive_int_required", field=field_name))
+    return parsed
+
+
+def prompt_optional_positive_int(prompt: str, *, field_name: str) -> int | None:
+    while True:
+        entered = prompt_text(prompt, allow_exit=True)
+        try:
+            return parse_optional_positive_int(entered, field_name=field_name)
+        except ValueError as exc:
+            print(exc)

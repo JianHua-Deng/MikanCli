@@ -12,6 +12,7 @@ MikanCli 是一个 Python 命令行工具，用于在 Mikanani.me 上查找番�
 - 从匹配的 Bangumi 结果和字幕组 RSS 订阅中进行选择
 - 在确认订阅前预览最近的 RSS 条目
 - 使用包含和排除过滤条件生成 qBittorrent RSS 规则
+- 过滤达到某个最低集数的动画标题格式
 - 选择并保存默认下载文件夹
 - 从命令行配置 qBittorrent WebUI 访问
 - 将 RSS 订阅和自动下载规则提交到 qBittorrent，并验证 qBittorrent 已保存这些内容
@@ -83,7 +84,7 @@ python -m mikancli
 4. 从所选 Bangumi 页面获取字幕组 RSS 订阅
 5. 让你选择字幕组
 6. 预览最近的 RSS 订阅条目
-7. 询问包含和排除过滤条件
+7. 询问包含、排除和最低集数过滤条件
 8. 询问下载保存位置
 9. 生成规则草稿
 10. 将订阅和规则提交到 qBittorrent
@@ -160,8 +161,8 @@ mikancli = "mikancli.cli.entrypoint:main"
 
 ```text
 usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
-                [--save-path SAVE_PATH] [--json] [--setup-qbittorrent]
-                [--language {en,zh-CN}] [--version]
+                [--min-episode MIN_EPISODE] [--save-path SAVE_PATH] [--json]
+                [--setup-qbittorrent] [--language {en,zh-CN}] [--version]
                 [keyword]
 ```
 
@@ -170,12 +171,30 @@ usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
 - `keyword`：动画标题或搜索短语
 - `--include VALUE`：要求已接受的发布标题中包含某个词或短语。可重复传入多个值
 - `--exclude VALUE`：拒绝标题中包含某个词或短语的发布。可重复传入多个值
+- `--min-episode NUMBER`：只接受达到此集数或更高集数的动画发布标题
 - `--save-path PATH`：为生成的 qBittorrent 规则使用这个基础下载文件夹
 - `--json`：以 JSON 形式打印规则草稿。此模式不会提交到 qBittorrent
 - `--setup-qbittorrent`：配置并验证 qBittorrent WebUI 设置
 - `--language {en,zh-CN}`：为本次运行选择 CLI 语言
 - `--version`：打印已安装的 CLI 版本
 
+## 最低集数过滤
+
+当 RSS 条目标题使用常见的动画格式，并在集数前有短横线或使用方括号集数时，可以使用 `--min-episode`：
+
+```text
+[SubsPlease] One Piece - 1126 (1080p)
+[Skymoon-Raws][One Piece][1126][ViuTV][WEB-RIP][CHT][SRT][1080p][MKV]
+```
+
+例如：
+
+```bash
+mikancli "one piece" --include SubsPlease --min-episode 1126
+```
+
+MikanCli 会把最低集数转换成 qBittorrent 规则 `mustContain` 字段中的正则表达式，并启用 `useRegex`。普通的 `--include` 和 `--exclude` 值仍然按字面词或短语处理。
+
 ## 发布
 
-仓库包含 GitHub Actions 工作流 `.github/workflows/publish.yml`。当 GitHub Release 发布时，该工作流会构建发行包，使用 `twine` 检查，并发布到 PyPI。
+仓库包含 GitHub Actions 工作流 `.github/workflows/publish.yml`。当 `main` 分支中 `pyproject.toml` 的包版本发生变化时，该工作流会发布到 PyPI。

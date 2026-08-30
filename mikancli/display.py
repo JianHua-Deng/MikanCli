@@ -29,6 +29,12 @@ def print_text_summary(draft: RuleDraft) -> int:
             value=", ".join(draft.must_not_contain) if draft.must_not_contain else t("common.none"),
         )
     )
+    print(
+        t(
+            "display.min_episode",
+            value=draft.min_episode if draft.min_episode is not None else t("common.none"),
+        )
+    )
     print(t("display.save_path", value=draft.save_path or t("common.not_set")))
     print(t("display.rule_footer"))
     print()

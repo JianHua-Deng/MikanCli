@@ -1,52 +1,74 @@
 name: Publish to PyPI
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
 
 jobs:
-  build:
-    name: Build package
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Install packaging tools
-        run: python -m pip install --upgrade build twine
-
-      - name: Build distributions
-        run: python -m build
-
-      - name: Check distributions
-        run: python -m twine check dist/*
-
-      - name: Upload distributions
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
   publish:
     name: Publish package
-    needs: build
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/p/mikancli
     permissions:
+      contents: read
       id-token: write
 
     steps:
-      - name: Download distributions
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: dist
-          path: dist/
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check whether package version changed
+        id: version
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          python - <<'PY'
+          import os
+          import subprocess
+          import tomllib
+
+          def read_version(text):
+              return tomllib.loads(text)["project"]["version"]
+
+          current_text = open("pyproject.toml", "rb").read().decode("utf-8")
+          current_version = read_version(current_text)
+
+          try:
+              before_sha = os.environ["BEFORE_SHA"]
+              previous_text = subprocess.check_output(
+                  ["git", "show", f"{before_sha}:pyproject.toml"],
+                  text=True,
+                  stderr=subprocess.DEVNULL,
+              )
+              previous_version = read_version(previous_text)
+          except (KeyError, subprocess.CalledProcessError):
+              previous_version = ""
+
+          version_changed = str(current_version != previous_version).lower()
+          print(f"version={current_version}")
+          print(f"previous_version={previous_version}")
+          print(f"changed={version_changed}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"version={current_version}\n")
+              output.write(f"changed={version_changed}\n")
+          PY
+
+      - name: Install build tool
+        if: steps.version.outputs.changed == 'true'
+        run: python -m pip install --upgrade build
+
+      - name: Build distributions
+        if: steps.version.outputs.changed == 'true'
+        run: python -m build
 
       - name: Publish to PyPI
+        if: steps.version.outputs.changed == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1

@@ -25,7 +25,10 @@ def build_qbittorrent_rule_definition(draft: RuleDraft, *, add_paused: bool = Fa
             "RSS feed URL is required before building a qBittorrent rule."
         )
 
-    must_contain = build_required_terms_regex(draft.must_contain)
+    must_contain = build_required_terms_regex(
+        draft.must_contain,
+        min_episode=draft.min_episode,
+    )
     must_not_contain = build_rejected_terms_regex(draft.must_not_contain)
 
     return {
@@ -45,16 +48,80 @@ def build_qbittorrent_rule_definition(draft: RuleDraft, *, add_paused: bool = Fa
     }
 
 
-def build_required_terms_regex(terms: tuple[str, ...]) -> str:
+def build_required_terms_regex(
+    terms: tuple[str, ...],
+    *,
+    min_episode: int | None = None,
+) -> str:
     """
     Builds a positive-lookahead regex that requires every cleaned term to appear somewhere in a release title.
     qBittorrent uses the result as the rule's "must contain" filter, so all include words must match.
     Example: before ("HEVC", "1080p") -> result "(?=.*HEVC)(?=.*1080p).*".
     """
     cleaned_terms = clean_rule_terms(terms)
-    if not cleaned_terms:
+    episode_regex = (
+        build_min_episode_title_regex(min_episode)
+        if min_episode is not None
+        else ""
+    )
+    if not cleaned_terms and not episode_regex:
         return ""
-    return "".join(f"(?=.*{re.escape(term)})" for term in cleaned_terms) + ".*"
+    literal_lookaheads = "".join(
+        f"(?=.*{re.escape(term)})" for term in cleaned_terms
+    )
+    episode_lookahead = f"(?=.*{episode_regex})" if episode_regex else ""
+    return literal_lookaheads + episode_lookahead + ".*"
+
+
+def build_min_episode_title_regex(min_episode: int | None) -> str:
+    """
+    Build the raw regex used to match common anime RSS title episode numbers.
+    Example: min_episode=1126 matches "[SubsPlease] One Piece - 1126 (1080p)" and "[Group][One Piece][1126][1080p]".
+    """
+    if min_episode is None:
+        return ""
+    if min_episode < 1:
+        raise ValueError("Minimum episode must be a positive integer.")
+    number_regex = build_minimum_number_regex(min_episode)
+    return rf"(?:-\s*0*(?:{number_regex})(?=\D|$)|\[\s*0*(?:{number_regex})\s*\])"
+
+
+def build_minimum_number_regex(minimum: int) -> str:
+    """
+    Build a regex alternation for positive integers greater than or equal to minimum.
+    Example: minimum=1126 returns an alternation that matches 1126, 1127, 1130, 1200, and 10000.
+    """
+    if minimum < 1:
+        raise ValueError("Minimum must be a positive integer.")
+
+    minimum_text = str(minimum)
+    width = len(minimum_text)
+    alternatives = [minimum_text]
+
+    for index in range(width - 1, -1, -1):
+        digit_text = minimum_text[index]
+        digit = int(digit_text)
+        if digit == 9:
+            continue
+
+        next_digit = digit + 1
+        prefix = minimum_text[:index]
+        remaining = width - index - 1
+        higher_digit = (
+            str(next_digit) if next_digit == 9 else f"[{next_digit}-9]"
+        )
+        alternatives.append(prefix + higher_digit + digit_wildcard(remaining))
+
+    alternatives.append(rf"[1-9]\d{{{width},}}")
+    return "|".join(alternatives)
+
+
+def digit_wildcard(count: int) -> str:
+    if count <= 0:
+        return ""
+    if count == 1:
+        return r"\d"
+    return rf"\d{{{count}}}"
 
 
 def build_rejected_terms_regex(terms: tuple[str, ...]) -> str:

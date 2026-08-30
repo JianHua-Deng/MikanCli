@@ -26,6 +26,7 @@ class SearchRequest:
     keyword: str
     include_words: tuple[str, ...] = ()
     exclude_words: tuple[str, ...] = ()
+    min_episode: int | None = None
     save_path: str | None = None
 
 
@@ -61,6 +62,7 @@ class RuleDraft:
     rule_name: str
     must_contain: tuple[str, ...]
     must_not_contain: tuple[str, ...]
+    min_episode: int | None = None
     mikan_title: str | None = None
     mikan_bangumi_id: int | None = None
     mikan_page_url: str | None = None

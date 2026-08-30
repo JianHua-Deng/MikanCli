@@ -12,6 +12,7 @@ It supports both a guided interactive flow and a JSON preview mode for scripting
 - Choose from matching Bangumi results and subgroup-specific RSS feeds
 - Preview recent RSS feed items before confirming a feed
 - Build qBittorrent RSS rules with include and exclude filters
+- Filter anime-style episode numbers at or above a minimum episode
 - Choose and save a default download folder
 - Configure qBittorrent WebUI access from the CLI
 - Submit RSS feeds and auto-download rules to qBittorrent, then verify that qBittorrent saved them
@@ -83,7 +84,7 @@ The search flow then:
 4. fetches subgroup RSS feeds from the selected Bangumi page
 5. lets you choose a subgroup
 6. previews recent RSS feed items
-7. asks for include and exclude filters
+7. asks for include, exclude, and minimum episode filters
 8. asks where downloads should be saved
 9. builds a rule draft
 10. submits the feed and rule to qBittorrent
@@ -159,8 +160,8 @@ mikancli = "mikancli.cli.entrypoint:main"
 
 ```text
 usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
-                [--save-path SAVE_PATH] [--json] [--setup-qbittorrent]
-                [--language {en,zh-CN}] [--version]
+                [--min-episode MIN_EPISODE] [--save-path SAVE_PATH] [--json]
+                [--setup-qbittorrent] [--language {en,zh-CN}] [--version]
                 [keyword]
 ```
 
@@ -169,12 +170,30 @@ Options:
 - `keyword`: anime title or search phrase
 - `--include VALUE`: require a word or phrase in accepted release titles. Repeat for multiple values
 - `--exclude VALUE`: reject release titles containing a word or phrase. Repeat for multiple values
+- `--min-episode NUMBER`: only accept anime-style release titles at or above this episode number
 - `--save-path PATH`: use this base download folder for the generated qBittorrent rule
 - `--json`: print the rule draft as JSON. This mode does not submit to qBittorrent
 - `--setup-qbittorrent`: configure and verify qBittorrent WebUI settings
 - `--language {en,zh-CN}`: choose CLI language for this run
 - `--version`: print the installed CLI version
 
+## Minimum Episode Filtering
+
+Use `--min-episode` when RSS item titles use common anime formats with a dash before the episode number or a bracketed episode number:
+
+```text
+[SubsPlease] One Piece - 1126 (1080p)
+[Skymoon-Raws][One Piece][1126][ViuTV][WEB-RIP][CHT][SRT][1080p][MKV]
+```
+
+For example:
+
+```bash
+mikancli "one piece" --include SubsPlease --min-episode 1126
+```
+
+MikanCli converts the minimum episode into a qBittorrent regular expression in the rule's `mustContain` field and enables `useRegex`. Normal `--include` and `--exclude` values still behave as literal words or phrases.
+
 ## Release
 
-The repository includes a GitHub Actions workflow at `.github/workflows/publish.yml` that builds distributions, checks them with `twine`, and publishes to PyPI when a GitHub release is published.
+The repository includes a GitHub Actions workflow at `.github/workflows/publish.yml` that publishes to PyPI from `main` when the package version in `pyproject.toml` changes.
