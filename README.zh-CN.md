@@ -72,6 +72,7 @@ python -m mikancli
 
 - 搜索动画
 - 修改 qBittorrent 配置
+- 切换语言
 - 退出 MikanCli
 
 搜索流程会依次：
@@ -115,12 +116,26 @@ MikanCli 将配置保存在 JSON 文件中：
 保存的设置可以包括：
 
 - 默认下载文件夹
+- 语言偏好
 - qBittorrent WebUI URL
 - qBittorrent 用户名和密码
 - qBittorrent 分类
 - qBittorrent 是否应将匹配的种子以暂停状态添加
 
 qBittorrent 密码会保存在配置文件中，这样 MikanCli 后续运行时才能提交规则。共享机器上请保护好这个文件。
+
+## 语言支持
+
+MikanCli 支持英文和简体中文的用户界面文本，包括交互式菜单、提示、设置说明、摘要和帮助文本。命令名称、选项名称、JSON 字段名、Mikan 标题、字幕组名称、URL 和 qBittorrent API 数据保持稳定。
+
+语言选择优先级如下：
+
+1. `--language en` 或 `--language zh-CN`
+2. `MIKANCLI_LANG=en` 或 `MIKANCLI_LANG=zh-CN`
+3. 已保存的配置值
+4. 默认回退到英文
+
+交互式用户始终可以从启动菜单切换语言。选中的语言会保存到配置文件，供以后运行使用。
 
 
 ## 项目结构
@@ -146,7 +161,7 @@ mikancli = "mikancli.cli.entrypoint:main"
 ```text
 usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
                 [--save-path SAVE_PATH] [--json] [--setup-qbittorrent]
-                [--version]
+                [--language {en,zh-CN}] [--version]
                 [keyword]
 ```
 
@@ -158,6 +173,7 @@ usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
 - `--save-path PATH`：为生成的 qBittorrent 规则使用这个基础下载文件夹
 - `--json`：以 JSON 形式打印规则草稿。此模式不会提交到 qBittorrent
 - `--setup-qbittorrent`：配置并验证 qBittorrent WebUI 设置
+- `--language {en,zh-CN}`：为本次运行选择 CLI 语言
 - `--version`：打印已安装的 CLI 版本
 
 ## 发布

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from mikancli.core.models import AppConfig
 from mikancli.core.normalize import collapse_spaces
+from mikancli.i18n import DEFAULT_LANGUAGE, normalize_language
 
 USER_CONFIG_FILENAME = "config.json"
 WINDOWS_CONFIG_DIR_NAME = "MikanCli"
@@ -77,6 +78,7 @@ def load_config(config_path: Path) -> AppConfig:
     payload = load_config_payload(config_path)
 
     default_save_path = payload.get("default_save_path")
+    language = payload.get("language")
     qbittorrent_url = payload.get("qbittorrent_url")
     qbittorrent_username = payload.get("qbittorrent_username")
     qbittorrent_password = payload.get("qbittorrent_password")
@@ -85,6 +87,7 @@ def load_config(config_path: Path) -> AppConfig:
 
     if default_save_path is not None:
         default_save_path = collapse_spaces(str(default_save_path)) or None
+    normalized_language = normalize_language(str(language)) if language is not None else None
     if qbittorrent_url is not None:
         qbittorrent_url = collapse_spaces(str(qbittorrent_url)) or None
     if qbittorrent_username is not None:
@@ -96,6 +99,7 @@ def load_config(config_path: Path) -> AppConfig:
 
     return AppConfig(
         default_save_path=default_save_path,
+        language=normalized_language or DEFAULT_LANGUAGE,
         qbittorrent_url=qbittorrent_url,
         qbittorrent_username=qbittorrent_username,
         qbittorrent_password=qbittorrent_password,
@@ -110,6 +114,7 @@ def save_config(config_path: Path, config: AppConfig) -> None:
     payload.update(
         {
             "default_save_path": config.default_save_path,
+            "language": normalize_language(config.language) or DEFAULT_LANGUAGE,
             "qbittorrent_url": config.qbittorrent_url,
             "qbittorrent_username": config.qbittorrent_username,
             "qbittorrent_password": config.qbittorrent_password,

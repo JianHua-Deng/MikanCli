@@ -5,6 +5,7 @@ from mikancli.cli.prompts import select_option
 from mikancli.core.models import MikanBangumi, MikanSubgroup, SearchRequest
 from mikancli.core.normalize import collapse_spaces
 from mikancli.display import build_feed_preview_text
+from mikancli.i18n import t
 from mikancli.integrations.mikan import (
     MikanLookupError,
     fetch_mikan_feed_items,
@@ -17,12 +18,10 @@ BACK_TO_CANDIDATES = "__back_to_candidates__"
 BACK_TO_SUBGROUPS = "__back_to_subgroups__"
 CONFIRM_SUBGROUP = "__confirm_subgroup__"
 REJECT_SUBGROUP = "__reject_subgroup__"
-JSON_PREVIEW_NOTE = "JSON mode only prints the draft; interactive mode can submit it to qBittorrent."
 
 
 def search_prompt(*, retry: bool = False) -> str:
-    prefix = "Enter another anime title or search keyword" if retry else "Enter anime title or search keyword"
-    return f"{prefix} (or type 'exit' to quit): "
+    return t("search.prompt_retry" if retry else "search.prompt")
 
 
 def select_candidate_or_search_again(candidates: tuple[MikanBangumi, ...], *, keyword: str) -> MikanBangumi | str:
@@ -31,10 +30,10 @@ def select_candidate_or_search_again(candidates: tuple[MikanBangumi, ...], *, ke
         (index, f"{candidate.title} (Bangumi {candidate.bangumi_id})")
         for index, candidate in enumerate(candidates)
     ]
-    options.append((SEARCH_AGAIN, "Search with different words"))
+    options.append((SEARCH_AGAIN, t("search.search_again")))
 
     selected = select_option(
-        f"Choose the Mikan entry for '{keyword}'",
+        t("search.choose_candidate", keyword=keyword),
         options,
         default=0,
         allow_exit=True,
@@ -55,13 +54,13 @@ def select_subgroup_or_navigate(subgroups: tuple[MikanSubgroup, ...], *, bangumi
     ]
     options.extend(
         [
-            (BACK_TO_CANDIDATES, "Back to Bangumi list"),
-            (SEARCH_AGAIN, "Search with different words"),
+            (BACK_TO_CANDIDATES, t("search.back_to_candidates")),
+            (SEARCH_AGAIN, t("search.search_again")),
         ]
     )
 
     selected = select_option(
-        f"Choose the subgroup for '{bangumi_title}'",
+        t("search.choose_subgroup", title=bangumi_title),
         options,
         default=0,
         allow_exit=True,
@@ -79,11 +78,11 @@ def confirm_subgroup_selection(preview_text: str) -> str:
     """Show a feed preview and ask whether to use that subgroup feed. Returns CONFIRM_SUBGROUP, REJECT_SUBGROUP, or BACK_TO_SUBGROUPS based on the user's decision"""
     print(preview_text)
     return select_option(
-        "Use this subgroup feed?",
+        t("search.use_subgroup"),
         [
-            (CONFIRM_SUBGROUP, "Yes"),
-            (REJECT_SUBGROUP, "No, search with different words"),
-            (BACK_TO_SUBGROUPS, "Back to subgroup list"),
+            (CONFIRM_SUBGROUP, t("common.yes")),
+            (REJECT_SUBGROUP, t("search.no_search_again")),
+            (BACK_TO_SUBGROUPS, t("search.back_to_subgroups")),
         ],
         default=CONFIRM_SUBGROUP,
         allow_exit=True,
@@ -98,15 +97,15 @@ def resolve_mikan_selection(request: SearchRequest,) -> tuple[MikanBangumi | Non
     try:
         candidates = search_mikan_bangumi(request.keyword)
     except MikanLookupError as exc:
-        return None, None, (str(exc), JSON_PREVIEW_NOTE)
+        return None, None, (str(exc), t("search.json_preview_note"))
 
     if not candidates:
         return (
             None,
             None,
             (
-                "No matching Mikan Bangumi entry was found for the keyword.",
-                JSON_PREVIEW_NOTE,
+                t("search.no_matching_json"),
+                t("search.json_preview_note"),
             ),
         )
 
@@ -118,7 +117,7 @@ def resolve_mikan_selection(request: SearchRequest,) -> tuple[MikanBangumi | Non
         return (
             selected_bangumi,
             None,
-            (str(exc), JSON_PREVIEW_NOTE),
+            (str(exc), t("search.json_preview_note")),
         )
 
     if not subgroups:
@@ -126,12 +125,12 @@ def resolve_mikan_selection(request: SearchRequest,) -> tuple[MikanBangumi | Non
             selected_bangumi,
             None,
             (
-                "No subgroup-specific RSS feed was found for the selected Bangumi.",
-                JSON_PREVIEW_NOTE,
+                t("search.no_subgroup_json"),
+                t("search.json_preview_note"),
             ),
         )
 
-    return selected_bangumi, subgroups[0], (JSON_PREVIEW_NOTE,)
+    return selected_bangumi, subgroups[0], (t("search.json_preview_note"),)
 
 
 def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBangumi, MikanSubgroup]:
@@ -150,7 +149,7 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
             continue
 
         if not candidates:
-            print(f"No Mikan results found for '{keyword}'.")
+            print(t("search.no_results", keyword=keyword))
             keyword = prompt_required_text(search_prompt(retry=True))
             continue
 
@@ -169,7 +168,7 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
                 break
 
             if not subgroups:
-                print("No subgroup-specific RSS feed was found for the selected Bangumi.")
+                print(t("search.no_subgroup"))
                 break
 
             selected_subgroup = select_subgroup_or_navigate(

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from typing import Any, TypeVar
-from InquirerPy.separator import Separator
 
 from mikancli.core.normalize import collapse_spaces
+from mikancli.i18n import t
 
 T = TypeVar("T")
 EXIT_OPTION = "__exit_cli__"
@@ -28,6 +28,17 @@ def get_inquirer():
     return inquirer
 
 
+def get_separator_class():
+    try:
+        from InquirerPy.separator import Separator
+    except ImportError as exc:
+        raise RuntimeError(
+            "Interactive mode requires InquirerPy. Install project dependencies first."
+        ) from exc
+
+    return Separator
+
+
 def prepare_prompt_message(message: str) -> str:
     print(PROMPT_SEPARATOR)
     return message.strip("\n")
@@ -35,7 +46,7 @@ def prepare_prompt_message(message: str) -> str:
 
 def build_select_choices(options: list[tuple[T, str]], *, allow_exit: bool, separator_before_values: Iterable[T] = (), separator_before_exit: bool = True) -> list[object]:
     separator_values = set(separator_before_values)
-    separator = Separator(MENU_SEPARATOR_LABEL)
+    separator = get_separator_class()(MENU_SEPARATOR_LABEL)
     choices: list[object] = []
 
     for value, label in options:
@@ -46,7 +57,7 @@ def build_select_choices(options: list[tuple[T, str]], *, allow_exit: bool, sepa
     if allow_exit:
         if choices and separator_before_exit and separator is not None:
             choices.append(separator)
-        choices.append({"value": EXIT_OPTION, "name": "Exit MikanCli"})
+        choices.append({"value": EXIT_OPTION, "name": t("common.exit_mikancli")})
 
     return choices
 
@@ -73,7 +84,7 @@ def select_option(
         choices=choices,
         default=default,
         pointer=">",
-        instruction="Use arrow keys",
+        instruction=t("common.use_arrow_keys"),
         max_height="70%",
         cycle=True,
     )
@@ -119,8 +130,8 @@ def confirm_choice(message: str, *, default: bool = True, allow_exit: bool = Fal
     selected = select_option(
         message,
         [
-            ("yes", "Yes"),
-            ("no", "No"),
+            ("yes", t("common.yes")),
+            ("no", t("common.no")),
         ],
         default=default_value,
         allow_exit=allow_exit,

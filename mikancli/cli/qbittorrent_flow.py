@@ -6,6 +6,7 @@ from mikancli.cli.prompts import confirm_choice, prompt_password, prompt_text
 from mikancli.config import save_config
 from mikancli.core.models import AppConfig, QBittorrentSettings, RuleDraft
 from mikancli.core.normalize import collapse_spaces, sanitize_folder_name
+from mikancli.i18n import t
 from mikancli.integrations.qbittorrent import (
     QBittorrentError,
     build_default_feed_path,
@@ -24,12 +25,12 @@ QBITTORRENT_ERROR = 3
 def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     """Prompt for qBittorrent WebUI settings, verify the connection, and save them on success. Returns QBITTORRENT_SETUP_SUCCESS when verification succeeds and QBITTORRENT_ERROR when qBittorrent rejects or cannot be reached."""
     print()
-    print("----- qBittorrent setup instructions -----")
-    print("1. Install qBittorrent and open its settings.")
-    print("2. Enable WebUI / remote control if it is not enabled yet.")
-    print("3. Copy the WebUI address, username, and password from qBittorrent.")
-    print("4. Enter those values below.")
-    print("5. After successful verification, the values will be saved to the config file for future runs.")
+    print(t("qb.setup.title"))
+    print(t("qb.setup.step1"))
+    print(t("qb.setup.step2"))
+    print(t("qb.setup.step3"))
+    print(t("qb.setup.step4"))
+    print(t("qb.setup.step5"))
     print("------------------------------------------")
     print()
 
@@ -37,7 +38,7 @@ def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     entered_url = (
         collapse_spaces(
             prompt_text(
-                "Enter qBittorrent WebUI URL (http://localhost:8080 is the usual default)",
+                t("qb.setup.url_prompt"),
                 default=default_url,
                 allow_exit=True,
             )
@@ -45,11 +46,11 @@ def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
         or "http://localhost:8080"
     )
 
-    print('If you have "Bypass authentication for clients on localhost" enabled in qBittorrent settings, you can just press Enter for the next two prompts.')
+    print(t("qb.setup.auth_hint"))
     username = (
         collapse_spaces(
             prompt_text(
-                "Enter qBittorrent WebUI username (press Enter to leave blank)",
+                t("qb.setup.username_prompt"),
                 default=config.qbittorrent_username or "",
                 allow_exit=True,
             )
@@ -57,7 +58,7 @@ def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
         or None
     )
     password = prompt_password(
-        "Enter qBittorrent WebUI password (press Enter to leave blank)",
+        t("qb.setup.password_prompt"),
         allow_exit=True,
     ) or None
 
@@ -68,7 +69,7 @@ def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     )
 
     try:
-        print("Verifying qBittorrent connection...")
+        print(t("qb.setup.verifying"))
         version = check_connection(settings)
     except QBittorrentError as exc:
         print(str(exc))
@@ -78,6 +79,7 @@ def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
         config_path,
         AppConfig(
             default_save_path=config.default_save_path,
+            language=config.language,
             qbittorrent_url=normalize_qbittorrent_url(entered_url),
             qbittorrent_username=username,
             qbittorrent_password=password,
@@ -85,10 +87,7 @@ def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
             qbittorrent_add_paused=config.qbittorrent_add_paused,
         ),
     )
-    print(
-        "qBittorrent connection verified successfully "
-        f"(version: {version})."
-    )
+    print(t("qb.setup.verified", version=version))
     return QBITTORRENT_SETUP_SUCCESS
 
 
@@ -99,7 +98,7 @@ def prompt_for_qbittorrent_setup_if_needed(config: AppConfig, config_path: Path)
         return QBITTORRENT_SETUP_SUCCESS
 
     should_setup = confirm_choice(
-        "qBittorrent is not set up yet. Set up qBittorrent WebUI now?",
+        t("qb.setup.offer"),
         default=True,
         allow_exit=True,
     )
@@ -112,7 +111,7 @@ def prompt_for_qbittorrent_setup_if_needed(config: AppConfig, config_path: Path)
             return QBITTORRENT_SETUP_SUCCESS
 
         continue_without_setup = confirm_choice(
-            "Continue without qBittorrent setup for now?",
+            t("qb.setup.continue_without"),
             default=False,
             allow_exit=True,
         )
@@ -129,7 +128,7 @@ def run_qbittorrent_configuration_flow(config: AppConfig, config_path: Path) -> 
             return QBITTORRENT_SETUP_SUCCESS
 
         retry_setup = confirm_choice(
-            "Retry qBittorrent setup?",
+            t("qb.setup.retry"),
             default=True,
             allow_exit=True,
         )
@@ -142,7 +141,7 @@ def prompt_for_rss_feed_name(draft: RuleDraft) -> str:
     default_feed_path = build_default_feed_path(draft)
     entered = collapse_spaces(
         prompt_text(
-            "Enter qBittorrent RSS feed name (press Enter to use the default)",
+            t("qb.submit.feed_name_prompt"),
             default=default_feed_path,
             allow_exit=True,
         )
@@ -157,7 +156,7 @@ def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -
         return QBITTORRENT_NOT_CONFIGURED
 
     should_submit = confirm_choice(
-        "Continue to qBittorrent submission details for this RSS feed and rule?",
+        t("qb.submit.continue"),
         default=True,
         allow_exit=True,
     )
@@ -173,7 +172,7 @@ def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -
     try:
         if qbittorrent_rule_exists(settings, draft.rule_name):
             should_replace = confirm_choice(
-                f"qBittorrent already has a rule named '{draft.rule_name}'. Replace it?",
+                t("qb.submit.replace_existing", rule_name=draft.rule_name),
                 default=False,
                 allow_exit=True,
             )
@@ -181,7 +180,7 @@ def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -
                 return QBITTORRENT_SUBMISSION_SKIPPED
 
         feed_path = prompt_for_rss_feed_name(draft)
-        print("Submitting RSS feed and download rule to qBittorrent...")
+        print(t("qb.submit.submitting"))
         submit_rule_draft(
             settings,
             draft,
@@ -190,8 +189,8 @@ def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -
             feed_path=feed_path,
         )
     except QBittorrentError as exc:
-        print(f"Failed to submit to qBittorrent: {str(exc)}")
+        print(t("qb.submit.failed", error=str(exc)))
         return QBITTORRENT_ERROR
 
-    print("qBittorrent feed and download rule submitted and verified successfully.")
+    print(t("qb.submit.success"))
     return QBITTORRENT_SETUP_SUCCESS

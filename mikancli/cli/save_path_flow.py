@@ -10,6 +10,7 @@ from mikancli.config import (
 )
 from mikancli.core.models import AppConfig
 from mikancli.core.normalize import collapse_spaces, sanitize_folder_name
+from mikancli.i18n import t
 
 
 def should_save_as_default(selected_path: str, config: AppConfig) -> bool:
@@ -19,7 +20,7 @@ def should_save_as_default(selected_path: str, config: AppConfig) -> bool:
         return False
 
     return confirm_choice(
-        f"Save '{selected_path}' as the default download folder for future runs?",
+        t("save.default_prompt", path=selected_path),
         default=True,
         allow_exit=True,
     )
@@ -28,7 +29,7 @@ def should_save_as_default(selected_path: str, config: AppConfig) -> bool:
 def prompt_for_manual_save_path() -> str | None:
     """Prompt the user to type a download folder path. Returns the cleaned path, or None when the prompt is left blank."""
     entered = collapse_spaces(
-        prompt_text("Enter a download folder path", allow_exit=True)
+        prompt_text(t("save.manual_prompt"), allow_exit=True)
     )
     return entered or None
 
@@ -40,12 +41,12 @@ def prompt_for_content_folder_name(default_name: str, base_path: str | None) -> 
     while True:
         entered = collapse_spaces(
             prompt_text(
-                "Enter the folder name for downloaded content (press Enter to use the default title from Mikan)",
+                t("save.content_folder_prompt"),
                 default=safe_default_name,
                 allow_exit=True,
             )
         )
-        folder_name = sanitize_folder_name(entered or safe_default_name) or "MikanCli Download"
+        folder_name = sanitize_folder_name(entered or safe_default_name) or t("save.default_folder_name")
         if not base_path:
             return folder_name
 
@@ -54,13 +55,13 @@ def prompt_for_content_folder_name(default_name: str, base_path: str | None) -> 
             return folder_name
 
         if confirm_choice(
-            f"'{content_path}' already exists. Continue using this folder?",
+            t("save.folder_exists", path=content_path),
             default=False,
             allow_exit=True,
         ):
             return folder_name
 
-        print("Choose a different folder name.")
+        print(t("save.choose_different"))
 
 
 def build_content_save_path(base_path: str | None, folder_name: str) -> str | None:
@@ -68,7 +69,7 @@ def build_content_save_path(base_path: str | None, folder_name: str) -> str | No
 
     if not base_path:
         return None
-    safe_folder_name = sanitize_folder_name(folder_name) or "MikanCli Download"
+    safe_folder_name = sanitize_folder_name(folder_name) or t("save.default_folder_name")
     return str(Path(base_path) / safe_folder_name)
 
 
@@ -79,15 +80,15 @@ def prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
     menu_options: list[tuple[str, str]] = []
 
     if config.default_save_path:
-        menu_options.append(("saved-default", f"Use saved default: {config.default_save_path}"))
+        menu_options.append(("saved-default", t("save.use_saved_default", path=config.default_save_path)))
 
-    menu_options.append(("downloads", f"Use Downloads folder: {downloads_path}"))
-    menu_options.append(("browse", "Browse for folder"))
-    menu_options.append(("manual", "Type folder path manually"))
+    menu_options.append(("downloads", t("save.use_downloads", path=downloads_path)))
+    menu_options.append(("browse", t("save.browse")))
+    menu_options.append(("manual", t("save.manual")))
 
     while True:
         selected_key = select_option(
-            "Choose a download folder option",
+            t("save.choose_option"),
             menu_options,
             default=menu_options[0][0],
             allow_exit=True,
@@ -103,12 +104,12 @@ def prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
                 initial_dir=config.default_save_path or downloads_path
             )
             if not selected_path:
-                print("No folder was selected. Choose another option.")
+                print(t("save.no_folder_selected"))
                 continue
         else:
             selected_path = prompt_for_manual_save_path()
             if not selected_path:
-                print("No path was entered. Choose another option.")
+                print(t("save.no_path_entered"))
                 continue
 
         if should_save_as_default(selected_path, config):
@@ -116,6 +117,7 @@ def prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
                 config_path,
                 AppConfig(
                     default_save_path=selected_path,
+                    language=config.language,
                     qbittorrent_url=config.qbittorrent_url,
                     qbittorrent_username=config.qbittorrent_username,
                     qbittorrent_password=config.qbittorrent_password,
