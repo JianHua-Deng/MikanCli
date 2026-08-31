@@ -30,6 +30,7 @@ def build_rule_draft(request: SearchRequest, *, bangumi: MikanBangumi | None = N
     Example: SearchRequest(keyword=" Solo ", include_words=("HEVC", "")) returns a draft with rule_name="Solo" and must_contain=("HEVC",).
     """
     collapsed_keyword = collapse_spaces(request.keyword)
+    rule_name = collapse_spaces(request.rule_name or collapsed_keyword)
 
     must_contain = dedupe_nonempty(list(request.include_words))
     must_not_contain = dedupe_nonempty(list(request.exclude_words))
@@ -37,7 +38,7 @@ def build_rule_draft(request: SearchRequest, *, bangumi: MikanBangumi | None = N
     return RuleDraft(
         keyword=collapsed_keyword,
         normalized_keyword=normalize_keyword(request.keyword),
-        rule_name=collapsed_keyword,
+        rule_name=rule_name,
         must_contain=must_contain,
         must_not_contain=must_not_contain,
         min_episode=request.min_episode,

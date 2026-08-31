@@ -27,6 +27,7 @@ class SearchRequest:
     include_words: tuple[str, ...] = ()
     exclude_words: tuple[str, ...] = ()
     min_episode: int | None = None
+    rule_name: str | None = None
     save_path: str | None = None
 
 

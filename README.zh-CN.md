@@ -193,7 +193,7 @@ usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
 mikancli "one piece" --include SubsPlease --min-episode 1126
 ```
 
-MikanCli 会把最低集数转换成 qBittorrent 规则 `mustContain` 字段中的正则表达式，并启用 `useRegex`。普通的 `--include` 和 `--exclude` 值仍然按字面词或短语处理。
+MikanCli 会把最低集数转换成 qBittorrent 规则 `mustContain` 字段中的正则表达式，并启用 `useRegex`。普通的 `--include` 和 `--exclude` 值仍然按字面词或短语处理，并且每个包含值都必须出现在标题中，qBittorrent 才会认为它匹配。
 
 ## 发布
 

@@ -4,6 +4,8 @@ import re
 from unittest import TestCase
 
 from mikancli.core.models import RuleDraft
+from mikancli.core.models import SearchRequest
+from mikancli.core.rules import build_rule_draft
 from mikancli.integrations.qbittorrent import (
     build_min_episode_title_regex,
     build_qbittorrent_rule_definition,
@@ -82,3 +84,15 @@ class QBittorrentEpisodeFilterTests(TestCase):
     def test_min_episode_must_be_positive(self) -> None:
         with self.assertRaises(ValueError):
             build_min_episode_title_regex(0)
+
+    def test_request_can_override_rule_name(self) -> None:
+        draft = build_rule_draft(
+            SearchRequest(
+                keyword="航海王",
+                rule_name="海贼王 1126-xx",
+                min_episode=1126,
+            )
+        )
+
+        self.assertEqual(draft.keyword, "航海王")
+        self.assertEqual(draft.rule_name, "海贼王 1126-xx")

@@ -220,6 +220,7 @@ def build_interactive_draft(args: argparse.Namespace, *, config: AppConfig,confi
         include_words=include_words,
         exclude_words=exclude_words,
         min_episode=min_episode,
+        rule_name=content_folder_name,
         save_path=final_save_path,
     )
     return build_rule_draft(

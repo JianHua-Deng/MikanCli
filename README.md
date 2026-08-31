@@ -192,7 +192,7 @@ For example:
 mikancli "one piece" --include SubsPlease --min-episode 1126
 ```
 
-MikanCli converts the minimum episode into a qBittorrent regular expression in the rule's `mustContain` field and enables `useRegex`. Normal `--include` and `--exclude` values still behave as literal words or phrases.
+MikanCli converts the minimum episode into a qBittorrent regular expression in the rule's `mustContain` field and enables `useRegex`. Normal `--include` and `--exclude` values still behave as literal words or phrases, and every include value must also be present in a title before qBittorrent treats it as a match.
 
 ## Release
 
