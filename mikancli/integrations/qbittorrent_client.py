@@ -125,6 +125,25 @@ class QBittorrentClient:
             )
         return payload
 
+    def get_preferences(self) -> dict[str, object]:
+        """Return qBittorrent application preferences as a dictionary."""
+        payload = self.open_json("/api/v2/app/preferences")
+        if not isinstance(payload, dict):
+            raise QBittorrentError(
+                "qBittorrent returned an invalid preferences response."
+            )
+        return payload
+
+    def set_preferences(self, preferences: dict[str, object]) -> None:
+        """Update qBittorrent application preferences through the WebUI API."""
+        self.open_text(
+            "/api/v2/app/setPreferences",
+            data=urlencode(
+                {"json": json.dumps(preferences, ensure_ascii=False)}
+            ).encode("utf-8"),
+            content_type="application/x-www-form-urlencoded",
+        )
+
     def verify_rule_draft(self, draft: RuleDraft) -> QBittorrentSubmissionResult:
         """
         Check whether qBittorrent contains the draft's feed URL and rule.

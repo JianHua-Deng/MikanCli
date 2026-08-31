@@ -8,11 +8,14 @@ from mikancli.core.models import AppConfig, QBittorrentSettings, RuleDraft
 from mikancli.core.normalize import collapse_spaces, sanitize_folder_name
 from mikancli.i18n import t
 from mikancli.integrations.qbittorrent import (
+    MIN_RSS_ARTICLES_FOR_EPISODE_FILTER,
     QBittorrentError,
     build_default_feed_path,
     check_connection,
+    get_rss_max_articles_per_feed,
     normalize_qbittorrent_url,
     qbittorrent_rule_exists,
+    set_rss_max_articles_per_feed,
     submit_rule_draft,
 )
 
@@ -149,6 +152,51 @@ def prompt_for_rss_feed_name(draft: RuleDraft) -> str:
     return sanitize_folder_name(entered or default_feed_path) or default_feed_path
 
 
+def prompt_to_raise_rss_article_limit_if_needed(
+    settings: QBittorrentSettings,
+    draft: RuleDraft,
+) -> None:
+    """Offer to raise qBittorrent's RSS retention limit for minimum-episode rules."""
+    if draft.min_episode is None:
+        return
+
+    current_limit = get_rss_max_articles_per_feed(settings)
+    if (
+        current_limit is None
+        or current_limit >= MIN_RSS_ARTICLES_FOR_EPISODE_FILTER
+    ):
+        return
+
+    should_update = confirm_choice(
+        t(
+            "qb.submit.rss_limit_offer",
+            current=current_limit,
+            minimum=MIN_RSS_ARTICLES_FOR_EPISODE_FILTER,
+        ),
+        default=True,
+        allow_exit=True,
+    )
+    if not should_update:
+        print(
+            t(
+                "qb.submit.rss_limit_skipped",
+                current=current_limit,
+            )
+        )
+        return
+
+    set_rss_max_articles_per_feed(
+        settings,
+        MIN_RSS_ARTICLES_FOR_EPISODE_FILTER,
+    )
+    print(
+        t(
+            "qb.submit.rss_limit_updated",
+            minimum=MIN_RSS_ARTICLES_FOR_EPISODE_FILTER,
+        )
+    )
+
+
 def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -> int:
     """Ask whether to submit a confirmed rule draft to qBittorrent and report the result. Returns QBITTORRENT_SETUP_SUCCESS on success, QBITTORRENT_NOT_CONFIGURED when no WebUI URL is saved, QBITTORRENT_SUBMISSION_SKIPPED when declined, or QBITTORRENT_ERROR on submission failure."""
     
@@ -179,6 +227,7 @@ def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -
             if not should_replace:
                 return QBITTORRENT_SUBMISSION_SKIPPED
 
+        prompt_to_raise_rss_article_limit_if_needed(settings, draft)
         feed_path = prompt_for_rss_feed_name(draft)
         print(t("qb.submit.submitting"))
         submit_rule_draft(

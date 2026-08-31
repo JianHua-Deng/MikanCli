@@ -10,7 +10,7 @@ MikanCli 是一个 Python 命令行工具，用于在 Mikanani.me 上查找番�
 
 - 根据动画标题或关键词搜索 Mikan
 - 从匹配的 Bangumi 结果和字幕组 RSS 订阅中进行选择
-- 在确认订阅前预览最近的 RSS 条目
+- 在确认订阅前分页预览最近的 RSS 条目
 - 使用包含和排除过滤条件生成 qBittorrent RSS 规则
 - 过滤达到某个最低集数的动画标题格式
 - 选择并保存默认下载文件夹
@@ -194,6 +194,8 @@ mikancli "one piece" --include SubsPlease --min-episode 1126
 ```
 
 MikanCli 会把最低集数转换成 qBittorrent 规则 `mustContain` 字段中的正则表达式，并启用 `useRegex`。普通的 `--include` 和 `--exclude` 值仍然按字面词或短语处理，并且每个包含值都必须出现在标题中，qBittorrent 才会认为它匹配。
+
+提交最低集数规则时，MikanCli 会检查 qBittorrent 的 RSS 条目保留上限。如果 qBittorrent 每个订阅保留少于 500 个条目，MikanCli 会询问是否增加这个设置，让 qBittorrent 能看到足够多的 Mikan 订阅条目来匹配较新的集数。
 
 ## 发布
 

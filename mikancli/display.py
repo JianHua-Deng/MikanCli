@@ -5,6 +5,8 @@ from datetime import datetime
 from mikancli.core.models import MikanFeedItem, MikanSubgroup, RuleDraft
 from mikancli.i18n import t
 
+FEED_PREVIEW_PAGE_SIZE = 12
+
 
 def print_text_summary(draft: RuleDraft) -> int:
     """Print a human-readable summary of a rule draft. Returns 0 after writing the summary and any next-step notes to stdout."""
@@ -78,10 +80,37 @@ def build_feed_preview_text(
     feed_items: tuple[MikanFeedItem, ...],
 ) -> str:
     """Build the text shown before the user confirms a subgroup RSS feed. Returns a multi-line preview string containing the feed URL and any recent feed items."""
+    return build_feed_preview_page_text(
+        subgroup,
+        feed_items,
+        page=1,
+        page_size=max(len(feed_items), 1),
+    )
+
+
+def build_feed_preview_page_text(
+    subgroup: MikanSubgroup,
+    feed_items: tuple[MikanFeedItem, ...],
+    *,
+    page: int,
+    page_size: int = FEED_PREVIEW_PAGE_SIZE,
+) -> str:
+    """Build one page of RSS feed preview text."""
+    total_items = len(feed_items)
+    total_pages = max(1, (total_items + page_size - 1) // page_size)
+    current_page = min(max(page, 1), total_pages)
+    start_index = (current_page - 1) * page_size
+    end_index = min(start_index + page_size, total_items)
+
     lines = [
         t("display.feed_preview", title=subgroup.title),
         t("display.feed_url_plain", url=subgroup.feed_url),
-        t("display.items", count=len(feed_items)),
+        t(
+            "display.items_page",
+            count=total_items,
+            page=current_page,
+            pages=total_pages,
+        ),
         "",
     ]
 
@@ -89,7 +118,10 @@ def build_feed_preview_text(
         lines.append(t("display.feed_empty"))
         return "\n".join(lines)
 
-    for index, item in enumerate(feed_items, start=1):
+    for index, item in enumerate(
+        feed_items[start_index:end_index],
+        start=start_index + 1,
+    ):
         lines.append(f"{index}. {item.title}")
         lines.append(
             "   "

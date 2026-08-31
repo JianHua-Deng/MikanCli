@@ -10,7 +10,7 @@ It supports both a guided interactive flow and a JSON preview mode for scripting
 
 - Search Mikan by anime title or keyword
 - Choose from matching Bangumi results and subgroup-specific RSS feeds
-- Preview recent RSS feed items before confirming a feed
+- Preview recent RSS feed items with pagination before confirming a feed
 - Build qBittorrent RSS rules with include and exclude filters
 - Filter anime-style episode numbers at or above a minimum episode
 - Choose and save a default download folder
@@ -193,6 +193,8 @@ mikancli "one piece" --include SubsPlease --min-episode 1126
 ```
 
 MikanCli converts the minimum episode into a qBittorrent regular expression in the rule's `mustContain` field and enables `useRegex`. Normal `--include` and `--exclude` values still behave as literal words or phrases, and every include value must also be present in a title before qBittorrent treats it as a match.
+
+When submitting a minimum-episode rule, MikanCli checks qBittorrent's RSS article retention limit. If qBittorrent is keeping fewer than 500 articles per feed, MikanCli offers to increase that setting so qBittorrent can see enough of Mikan's feed to match newer episodes.
 
 ## Release
 

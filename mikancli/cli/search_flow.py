@@ -2,9 +2,17 @@ from __future__ import annotations
 
 from mikancli.cli.input_parsing import prompt_required_text
 from mikancli.cli.prompts import select_option
-from mikancli.core.models import MikanBangumi, MikanSubgroup, SearchRequest
+from mikancli.core.models import (
+    MikanBangumi,
+    MikanFeedItem,
+    MikanSubgroup,
+    SearchRequest,
+)
 from mikancli.core.normalize import collapse_spaces
-from mikancli.display import build_feed_preview_text
+from mikancli.display import (
+    FEED_PREVIEW_PAGE_SIZE,
+    build_feed_preview_page_text,
+)
 from mikancli.i18n import t
 from mikancli.integrations.mikan import (
     MikanLookupError,
@@ -18,6 +26,8 @@ BACK_TO_CANDIDATES = "__back_to_candidates__"
 BACK_TO_SUBGROUPS = "__back_to_subgroups__"
 CONFIRM_SUBGROUP = "__confirm_subgroup__"
 REJECT_SUBGROUP = "__reject_subgroup__"
+NEXT_PREVIEW_PAGE = "__next_preview_page__"
+PREVIOUS_PREVIEW_PAGE = "__previous_preview_page__"
 
 
 def search_prompt(*, retry: bool = False) -> str:
@@ -74,21 +84,53 @@ def select_subgroup_or_navigate(subgroups: tuple[MikanSubgroup, ...], *, bangumi
     return subgroups[selected]
 
 
-def confirm_subgroup_selection(preview_text: str) -> str:
-    """Show a feed preview and ask whether to use that subgroup feed. Returns CONFIRM_SUBGROUP, REJECT_SUBGROUP, or BACK_TO_SUBGROUPS based on the user's decision"""
-    print(preview_text)
-    return select_option(
-        t("search.use_subgroup"),
-        [
-            (CONFIRM_SUBGROUP, t("common.yes")),
-            (REJECT_SUBGROUP, t("search.no_search_again")),
-            (BACK_TO_SUBGROUPS, t("search.back_to_subgroups")),
-        ],
-        default=CONFIRM_SUBGROUP,
-        allow_exit=True,
-        separator_before_values=(BACK_TO_SUBGROUPS,),
-        separator_before_exit=False,
+def confirm_subgroup_selection(
+    subgroup: MikanSubgroup,
+    feed_items: tuple[MikanFeedItem, ...],
+) -> str:
+    """Show a paginated feed preview and ask whether to use that subgroup feed."""
+    page = 1
+    total_pages = max(
+        1,
+        (len(feed_items) + FEED_PREVIEW_PAGE_SIZE - 1) // FEED_PREVIEW_PAGE_SIZE,
     )
+
+    while True:
+        print(
+            build_feed_preview_page_text(
+                subgroup,
+                feed_items,
+                page=page,
+            )
+        )
+
+        options = [(CONFIRM_SUBGROUP, t("common.yes"))]
+        if page < total_pages:
+            options.append((NEXT_PREVIEW_PAGE, t("search.next_page")))
+        if page > 1:
+            options.append((PREVIOUS_PREVIEW_PAGE, t("search.previous_page")))
+        options.extend(
+            [
+                (REJECT_SUBGROUP, t("search.no_search_again")),
+                (BACK_TO_SUBGROUPS, t("search.back_to_subgroups")),
+            ]
+        )
+
+        selected = select_option(
+            t("search.use_subgroup"),
+            options,
+            default=CONFIRM_SUBGROUP,
+            allow_exit=True,
+            separator_before_values=(REJECT_SUBGROUP,),
+            separator_before_exit=False,
+        )
+        if selected == NEXT_PREVIEW_PAGE:
+            page = min(page + 1, total_pages)
+            continue
+        if selected == PREVIOUS_PREVIEW_PAGE:
+            page = max(page - 1, 1)
+            continue
+        return selected
 
 
 def resolve_mikan_selection(request: SearchRequest,) -> tuple[MikanBangumi | None, MikanSubgroup | None, tuple[str, ...]]:
@@ -190,8 +232,7 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
                 print(str(exc))
                 continue
 
-            preview_text = build_feed_preview_text(subgroup, feed_items)
-            decision = confirm_subgroup_selection(preview_text)
+            decision = confirm_subgroup_selection(subgroup, feed_items)
             if decision == BACK_TO_SUBGROUPS:
                 continue
             if decision == REJECT_SUBGROUP:

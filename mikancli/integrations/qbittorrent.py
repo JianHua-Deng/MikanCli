@@ -13,6 +13,8 @@ from mikancli.integrations.qbittorrent_client import (
     rules_contain_rule_for_feed,
 )
 
+MIN_RSS_ARTICLES_FOR_EPISODE_FILTER = 500
+
 
 def build_qbittorrent_rule_definition(draft: RuleDraft, *, add_paused: bool = False, assigned_category: str | None = None) -> dict[str, object]:
     """
@@ -186,6 +188,33 @@ def check_connection(settings: QBittorrentSettings) -> str:
                 "and try again."
             ) from exc
         raise
+
+
+def get_rss_max_articles_per_feed(settings: QBittorrentSettings) -> int | None:
+    """Return qBittorrent's RSS article retention limit, or None when it cannot be read as an integer."""
+    client = QBittorrentClient(settings)
+    client.login()
+    value = client.get_preferences().get("rss_max_articles_per_feed")
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and value.isdigit():
+        return int(value)
+    return None
+
+
+def set_rss_max_articles_per_feed(
+    settings: QBittorrentSettings,
+    max_articles: int,
+) -> None:
+    """Update qBittorrent's RSS article retention limit."""
+    if max_articles < 1:
+        raise QBittorrentError("RSS max articles per feed must be positive.")
+
+    client = QBittorrentClient(settings)
+    client.login()
+    client.set_preferences({"rss_max_articles_per_feed": max_articles})
 
 
 def submit_rule_draft(
