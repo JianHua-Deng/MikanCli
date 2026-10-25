@@ -11,7 +11,9 @@ from mikancli.core.models import (
 from mikancli.core.normalize import collapse_spaces
 from mikancli.display import (
     FEED_PREVIEW_PAGE_SIZE,
-    build_feed_preview_page_text,
+    loading,
+    print_feed_preview_page,
+    print_message,
 )
 from mikancli.i18n import t
 from mikancli.integrations.mikan import (
@@ -96,13 +98,7 @@ def confirm_subgroup_selection(
     )
 
     while True:
-        print(
-            build_feed_preview_page_text(
-                subgroup,
-                feed_items,
-                page=page,
-            )
-        )
+        print_feed_preview_page(subgroup, feed_items, page=page)
 
         options = [(CONFIRM_SUBGROUP, t("common.yes"))]
         if page < total_pages:
@@ -184,14 +180,15 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
 
     while True:
         try:
-            candidates = search_mikan_bangumi(keyword)
+            with loading(t("search.searching")):
+                candidates = search_mikan_bangumi(keyword)
         except MikanLookupError as exc:
-            print(str(exc))
+            print_message(str(exc), style="error")
             keyword = prompt_required_text(search_prompt(retry=True))
             continue
 
         if not candidates:
-            print(t("search.no_results", keyword=keyword))
+            print_message(t("search.no_results", keyword=keyword), style="warning")
             keyword = prompt_required_text(search_prompt(retry=True))
             continue
 
@@ -204,13 +201,14 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
 
         while True:
             try:
-                subgroups = fetch_mikan_subgroups(bangumi.bangumi_id)
+                with loading(t("search.loading_subgroups")):
+                    subgroups = fetch_mikan_subgroups(bangumi.bangumi_id)
             except MikanLookupError as exc:
-                print(str(exc))
+                print_message(str(exc), style="error")
                 break
 
             if not subgroups:
-                print(t("search.no_subgroup"))
+                print_message(t("search.no_subgroup"), style="warning")
                 break
 
             selected_subgroup = select_subgroup_or_navigate(
@@ -227,9 +225,10 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
             subgroup = selected_subgroup
 
             try:
-                feed_items = fetch_mikan_feed_items(subgroup.feed_url)
+                with loading(t("search.loading_feed")):
+                    feed_items = fetch_mikan_feed_items(subgroup.feed_url)
             except MikanLookupError as exc:
-                print(str(exc))
+                print_message(str(exc), style="error")
                 continue
 
             decision = confirm_subgroup_selection(subgroup, feed_items)

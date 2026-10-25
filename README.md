@@ -11,6 +11,7 @@ It supports both a guided interactive flow and a JSON preview mode for scripting
 - Search Mikan by anime title or keyword
 - Choose from matching Bangumi results and subgroup-specific RSS feeds
 - Preview recent RSS feed items with pagination before confirming a feed
+- Read Rich-formatted rule summaries, feed previews, and status messages, with loading indicators for network requests
 - Build qBittorrent RSS rules with include and exclude filters
 - Filter anime-style episode numbers at or above a minimum episode
 - Choose and save a default download folder
@@ -65,7 +66,26 @@ python -m pip install -e .
 python -m mikancli
 ```
 
-Dependencies are declared in `pyproject.toml` and installed by `pip` or `pipx`. MikanCli does not install packages at runtime.
+Dependencies, including Rich for output and InquirerPy for prompts, are declared in `pyproject.toml` and installed by `pip` or `pipx`. MikanCli does not install packages at runtime.
+
+After pulling dependency changes into an existing editable `pip` installation, rerun `python -m pip install -e .` in that environment. Update `pipx` installations through `pipx` so dependencies stay in the app's environment.
+
+## Terminal Output
+
+Rich formats rule summaries, feed previews, and feedback. InquirerPy handles menus and text input. Release titles containing brackets are displayed literally, and long titles, URLs, and paths wrap to fit the terminal.
+
+Interactive terminals show loading indicators during network requests. Indicators stop before prompts and after failures. Redirected output uses static status messages, and feed previews retain their plain-text layout.
+
+To disable Rich colors in PowerShell:
+
+```powershell
+$env:NO_COLOR = "1"
+mikancli
+```
+
+Remove that setting with `Remove-Item Env:NO_COLOR`. Bold or dim text and loading animations may remain; InquirerPy manages menu styling separately.
+
+The `--json` draft mode prints one JSON document without Rich formatting or progress messages.
 
 ## Guided Flow
 
@@ -146,7 +166,7 @@ mikancli/
   core/            dataclasses, normalization, and rule-building logic
   integrations/    Mikan and qBittorrent adapters
   config.py        user config and folder selection helpers
-  display.py       text summaries and feed previews
+  display.py       Rich summaries, feed previews, feedback, and loading indicators
 ```
 
 The console command is declared in `pyproject.toml`:

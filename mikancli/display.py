@@ -1,48 +1,65 @@
 from __future__ import annotations
 
+from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime
+
+from rich.console import Console
+from rich.table import Table
+from rich.text import Text
+from rich.theme import Theme
 
 from mikancli.core.models import MikanFeedItem, MikanSubgroup, RuleDraft
 from mikancli.i18n import t
 
 FEED_PREVIEW_PAGE_SIZE = 12
+console = Console(
+    markup=False, highlight=False, emoji=False,
+    theme=Theme({
+        "heading": "bold cyan", "label": "cyan", "note": "dim",
+        "success": "green", "warning": "yellow", "error": "bold red",
+    }),
+)
+
+
+def print_message(message: str, *, style: str = "note") -> None:
+    """Print literal feedback with wrapping in terminals and plain redirected text."""
+    console.print(Text(message), style=style, soft_wrap=not console.is_terminal)
+
+
+def loading(message: str) -> AbstractContextManager[object]:
+    """Animate terminal requests, or print one static message when redirected."""
+    if console.is_terminal and console.is_interactive:
+        return console.status(Text(message), spinner="line")
+    print_message(message)
+    return nullcontext()
 
 
 def print_text_summary(draft: RuleDraft) -> int:
     """Print a human-readable summary of a rule draft. Returns 0 after writing the summary and any next-step notes to stdout."""
-    print()
-    print(t("display.rule_header"))
-    print(t("display.keyword", value=draft.keyword))
-    print(t("display.normalized_keyword", value=draft.normalized_keyword))
-    print(t("display.rule_name", value=draft.rule_name))
-    print(t("display.mikan_title", value=draft.mikan_title or t("common.not_found")))
-    print(t("display.mikan_subgroup", value=draft.mikan_subgroup or t("common.not_found")))
-    print(t("display.mikan_page", value=draft.mikan_page_url or t("common.not_found")))
-    print(t("display.feed_url", value=draft.feed_url or t("common.not_found")))
-    print(
-        t(
-            "display.must_contain",
-            value=", ".join(draft.must_contain) if draft.must_contain else t("common.none"),
-        )
-    )
-    print(
-        t(
-            "display.must_not_contain",
-            value=", ".join(draft.must_not_contain) if draft.must_not_contain else t("common.none"),
-        )
-    )
-    print(
-        t(
-            "display.min_episode",
-            value=draft.min_episode if draft.min_episode is not None else t("common.none"),
-        )
-    )
-    print(t("display.save_path", value=draft.save_path or t("common.not_set")))
-    print(t("display.rule_footer"))
-    print()
-
+    fields = {
+        "keyword": draft.keyword,
+        "normalized_keyword": draft.normalized_keyword,
+        "rule_name": draft.rule_name,
+        "mikan_title": draft.mikan_title or t("common.not_found"),
+        "mikan_subgroup": draft.mikan_subgroup or t("common.not_found"),
+        "mikan_page": draft.mikan_page_url or t("common.not_found"),
+        "feed_url": draft.feed_url or t("common.not_found"),
+        "must_contain": ", ".join(draft.must_contain) or t("common.none"),
+        "must_not_contain": ", ".join(draft.must_not_contain) or t("common.none"),
+        "min_episode": draft.min_episode if draft.min_episode is not None else t("common.none"),
+        "save_path": draft.save_path or t("common.not_set"),
+    }
+    table = Table.grid(padding=(0, 2))
+    table.add_column(style="label")
+    table.add_column(overflow="fold")
+    for key, value in fields.items():
+        table.add_row(Text(t(f"display.{key}", value="").rstrip()), Text(str(value)))
+    console.print()
+    console.rule(Text(t("display.rule_header").strip("- ")), style="heading")
+    console.print(table)
+    console.print()
     for note in draft.notes:
-        print(t("display.next_step", value=note))
+        console.print(Text(t("display.next_step", value=note)), style="note")
 
     return 0
 
@@ -86,6 +103,27 @@ def build_feed_preview_text(
         page=1,
         page_size=max(len(feed_items), 1),
     )
+
+
+def print_feed_preview_page(
+    subgroup: MikanSubgroup,
+    feed_items: tuple[MikanFeedItem, ...],
+    *,
+    page: int,
+) -> None:
+    """Render a feed page with literal titles and wrapping terminal output."""
+    content = build_feed_preview_page_text(subgroup, feed_items, page=page)
+    if not console.is_terminal:
+        console.print(Text(content), soft_wrap=True)
+        return
+
+    preview = Text()
+    for index, line in enumerate(content.splitlines(keepends=True)):
+        style = "heading" if index == 0 else ""
+        if index in (1, 2) or line.startswith("   "):
+            style = "note"
+        preview.append(line, style=style)
+    console.print(preview, overflow="fold")
 
 
 def build_feed_preview_page_text(

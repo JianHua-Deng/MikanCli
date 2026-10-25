@@ -6,6 +6,7 @@ from mikancli.cli.prompts import confirm_choice, prompt_password, prompt_text
 from mikancli.config import save_config
 from mikancli.core.models import AppConfig, QBittorrentSettings, RuleDraft
 from mikancli.core.normalize import collapse_spaces, sanitize_folder_name
+from mikancli.display import loading, print_message
 from mikancli.i18n import t
 from mikancli.integrations.qbittorrent import (
     MIN_RSS_ARTICLES_FOR_EPISODE_FILTER,
@@ -49,7 +50,7 @@ def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
         or "http://localhost:8080"
     )
 
-    print(t("qb.setup.auth_hint"))
+    print_message(t("qb.setup.auth_hint"))
     username = (
         collapse_spaces(
             prompt_text(
@@ -72,10 +73,10 @@ def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     )
 
     try:
-        print(t("qb.setup.verifying"))
-        version = check_connection(settings)
+        with loading(t("qb.setup.verifying")):
+            version = check_connection(settings)
     except QBittorrentError as exc:
-        print(str(exc))
+        print_message(str(exc), style="error")
         return QBITTORRENT_ERROR
 
     save_config(
@@ -90,7 +91,7 @@ def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
             qbittorrent_add_paused=config.qbittorrent_add_paused,
         ),
     )
-    print(t("qb.setup.verified", version=version))
+    print_message(t("qb.setup.verified", version=version), style="success")
     return QBITTORRENT_SETUP_SUCCESS
 
 
@@ -160,7 +161,8 @@ def prompt_to_raise_rss_article_limit_if_needed(
     if draft.min_episode is None:
         return
 
-    current_limit = get_rss_max_articles_per_feed(settings)
+    with loading(t("qb.submit.checking")):
+        current_limit = get_rss_max_articles_per_feed(settings)
     if (
         current_limit is None
         or current_limit >= MIN_RSS_ARTICLES_FOR_EPISODE_FILTER
@@ -177,23 +179,26 @@ def prompt_to_raise_rss_article_limit_if_needed(
         allow_exit=True,
     )
     if not should_update:
-        print(
+        print_message(
             t(
                 "qb.submit.rss_limit_skipped",
                 current=current_limit,
-            )
+            ),
+            style="warning",
         )
         return
 
-    set_rss_max_articles_per_feed(
-        settings,
-        MIN_RSS_ARTICLES_FOR_EPISODE_FILTER,
-    )
-    print(
+    with loading(t("qb.submit.updating_limit")):
+        set_rss_max_articles_per_feed(
+            settings,
+            MIN_RSS_ARTICLES_FOR_EPISODE_FILTER,
+        )
+    print_message(
         t(
             "qb.submit.rss_limit_updated",
             minimum=MIN_RSS_ARTICLES_FOR_EPISODE_FILTER,
-        )
+        ),
+        style="success",
     )
 
 
@@ -218,7 +223,9 @@ def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -
     )
 
     try:
-        if qbittorrent_rule_exists(settings, draft.rule_name):
+        with loading(t("qb.submit.checking")):
+            rule_exists = qbittorrent_rule_exists(settings, draft.rule_name)
+        if rule_exists:
             should_replace = confirm_choice(
                 t("qb.submit.replace_existing", rule_name=draft.rule_name),
                 default=False,
@@ -229,17 +236,17 @@ def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -
 
         prompt_to_raise_rss_article_limit_if_needed(settings, draft)
         feed_path = prompt_for_rss_feed_name(draft)
-        print(t("qb.submit.submitting"))
-        submit_rule_draft(
-            settings,
-            draft,
-            add_paused=config.qbittorrent_add_paused,
-            assigned_category=config.qbittorrent_category,
-            feed_path=feed_path,
-        )
+        with loading(t("qb.submit.submitting")):
+            submit_rule_draft(
+                settings,
+                draft,
+                add_paused=config.qbittorrent_add_paused,
+                assigned_category=config.qbittorrent_category,
+                feed_path=feed_path,
+            )
     except QBittorrentError as exc:
-        print(t("qb.submit.failed", error=str(exc)))
+        print_message(t("qb.submit.failed", error=str(exc)), style="error")
         return QBITTORRENT_ERROR
 
-    print(t("qb.submit.success"))
+    print_message(t("qb.submit.success"), style="success")
     return QBITTORRENT_SETUP_SUCCESS

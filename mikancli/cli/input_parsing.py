@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from mikancli.cli.prompts import prompt_text
 from mikancli.core.normalize import collapse_spaces
+from mikancli.display import print_message
 from mikancli.i18n import t
 
 
@@ -10,7 +11,7 @@ def prompt_required_text(prompt: str) -> str:
         entered = collapse_spaces(prompt_text(prompt, allow_exit=True))
         if entered:
             return entered
-        print(t("common.value_required"))
+        print_message(t("common.value_required"), style="warning")
 
 
 def parse_word_list(value: str) -> tuple[str, ...]:
@@ -62,4 +63,4 @@ def prompt_optional_positive_int(prompt: str, *, field_name: str) -> int | None:
         try:
             return parse_optional_positive_int(entered, field_name=field_name)
         except ValueError as exc:
-            print(exc)
+            print_message(str(exc), style="warning")

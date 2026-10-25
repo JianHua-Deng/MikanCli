@@ -10,6 +10,7 @@ from mikancli.config import (
 )
 from mikancli.core.models import AppConfig
 from mikancli.core.normalize import collapse_spaces, sanitize_folder_name
+from mikancli.display import print_message
 from mikancli.i18n import t
 
 
@@ -61,7 +62,7 @@ def prompt_for_content_folder_name(default_name: str, base_path: str | None) -> 
         ):
             return folder_name
 
-        print(t("save.choose_different"))
+        print_message(t("save.choose_different"), style="warning")
 
 
 def build_content_save_path(base_path: str | None, folder_name: str) -> str | None:
@@ -104,12 +105,12 @@ def prompt_for_save_path(config: AppConfig, config_path: Path) -> str:
                 initial_dir=config.default_save_path or downloads_path
             )
             if not selected_path:
-                print(t("save.no_folder_selected"))
+                print_message(t("save.no_folder_selected"), style="warning")
                 continue
         else:
             selected_path = prompt_for_manual_save_path()
             if not selected_path:
-                print(t("save.no_path_entered"))
+                print_message(t("save.no_path_entered"), style="warning")
                 continue
 
         if should_save_as_default(selected_path, config):

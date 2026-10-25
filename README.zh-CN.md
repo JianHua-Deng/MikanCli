@@ -11,6 +11,7 @@ MikanCli 是一个 Python 命令行工具，用于在 Mikanani.me 上查找番�
 - 根据动画标题或关键词搜索 Mikan
 - 从匹配的 Bangumi 结果和字幕组 RSS 订阅中进行选择
 - 在确认订阅前分页预览最近的 RSS 条目
+- 使用 Rich 显示规则摘要、订阅预览和状态消息，并在网络请求期间显示加载指示器
 - 使用包含和排除过滤条件生成 qBittorrent RSS 规则
 - 过滤达到某个最低集数的动画标题格式
 - 选择并保存默认下载文件夹
@@ -65,7 +66,26 @@ python -m pip install -e .
 python -m mikancli
 ```
 
-依赖项声明在 `pyproject.toml` 中，并由 `pip` 或 `pipx` 安装。MikanCli 不会在运行时安装依赖包。
+依赖项（包括用于输出的 Rich 和用于交互提示的 InquirerPy）声明在 `pyproject.toml` 中，并由 `pip` 或 `pipx` 安装。MikanCli 不会在运行时安装依赖包。
+
+已有可编辑 `pip` 安装在拉取依赖变更后，需要在原环境中重新运行 `python -m pip install -e .`。通过 `pipx` 安装的应用应使用 `pipx` 更新，让依赖仍安装在应用自己的环境中。
+
+## 终端输出
+
+Rich 用于显示规则摘要、订阅预览和反馈消息，InquirerPy 负责菜单和文本输入。发布标题中的方括号会原样显示，较长的标题、URL 和路径会根据终端宽度自动换行。
+
+交互式终端会在网络请求期间显示加载指示器，并在提示输入前或请求失败后停止。输出被重定向时，会使用静态状态消息，订阅预览保留纯文本布局。
+
+在 PowerShell 中禁用 Rich 颜色：
+
+```powershell
+$env:NO_COLOR = "1"
+mikancli
+```
+
+使用 `Remove-Item Env:NO_COLOR` 移除此设置。粗体、暗色样式和加载动画可能仍会显示；菜单样式由 InquirerPy 单独管理。
+
+`--json` 草稿模式只输出一个 JSON 文档，不包含 Rich 格式或进度消息。
 
 ## 引导式流程
 
@@ -147,7 +167,7 @@ mikancli/
   core/            数据类、规范化和规则生成逻辑
   integrations/    Mikan 和 qBittorrent 适配器
   config.py        用户配置和文件夹选择辅助函数
-  display.py       文本摘要和订阅预览
+  display.py       Rich 摘要、订阅预览、反馈和加载指示器
 ```
 
 控制台命令在 `pyproject.toml` 中声明：

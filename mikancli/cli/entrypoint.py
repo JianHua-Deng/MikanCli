@@ -31,7 +31,7 @@ from mikancli.config import get_config_path, load_config, save_config
 from mikancli.core.models import AppConfig, RuleDraft, SearchRequest
 from mikancli.core.normalize import collapse_spaces
 from mikancli.core.rules import build_rule_draft
-from mikancli.display import print_text_summary
+from mikancli.display import print_message, print_text_summary
 from mikancli.i18n import (
     LANGUAGE_LABELS,
     SUPPORTED_LANGUAGES,
@@ -165,7 +165,7 @@ def run_language_configuration_flow(config: AppConfig, config_path: Path) -> App
     set_language(selected_language)
     updated_config = replace(config, language=selected_language)
     save_config(config_path, updated_config)
-    print(t("language.saved", language=LANGUAGE_LABELS[selected_language]))
+    print_message(t("language.saved", language=LANGUAGE_LABELS[selected_language]), style="success")
     return updated_config
 
 
@@ -247,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             return setup_qbittorrent(config, config_path)
         except ExitRequested:
-            print(t("common.exited"))
+            print_message(t("common.exited"))
             return 0
 
     if args.json:
@@ -307,7 +307,7 @@ def main(argv: list[str] | None = None) -> int:
                 config_path=config_path,
             )
         except ExitRequested:
-            print(t("common.exited"))
+            print_message(t("common.exited"))
             return 0
 
         summary_exit_code = print_text_summary(draft)
@@ -316,7 +316,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             submission_exit_code = prompt_to_submit_rule_to_qbittorrent(config, draft)
             if submission_exit_code == QBITTORRENT_NOT_CONFIGURED:
-                print(t("qb.submit.not_configured"))
+                print_message(t("qb.submit.not_configured"), style="warning")
                 setup_exit_code = prompt_for_qbittorrent_setup_if_needed(config, config_path)
                 if setup_exit_code not in {
                     QBITTORRENT_SETUP_SUCCESS,
@@ -331,7 +331,7 @@ def main(argv: list[str] | None = None) -> int:
                     continue
 
         except ExitRequested:
-            print(t("common.exited"))
+            print_message(t("common.exited"))
             return 0
 
         if has_startup_menu and submission_exit_code == QBITTORRENT_SUBMISSION_SKIPPED:
