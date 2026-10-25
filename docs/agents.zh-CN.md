@@ -2,11 +2,11 @@
 
 语言：[简体中文](agents.zh-CN.md) | [English](agents.md)
 
-自动化请使用以下显式命令。它们不会提示交互输入，即使未指定 `--json`，也始终向标准输出写入一个 JSON 响应。先从查询结果中选择 Bangumi 和字幕组，再保存、检查并提交规则计划。
+自动化场景请使用以下显式命令。这些命令不会发起交互式提示；即使未指定 `--json`，也始终向标准输出写入一个 JSON 响应。请先从查询结果中选择 Bangumi 和字幕组，再保存、检查并提交规则计划。
 
 ## 查询、规划、提交与验证
 
-将 `123` 和 `456` 替换为查询结果返回的实际 ID。计划保存为本地 JSON 文件；只有 `rules apply` 会修改 qBittorrent。
+将 `123` 和 `456` 替换为查询结果返回的实际 ID。计划会保存为本地 JSON 文件；只有 `rules apply` 会修改 qBittorrent。
 
 ```sh
 mikancli search "One Piece"
@@ -17,9 +17,9 @@ mikancli rules apply --file plan.json --if-exists fail
 mikancli rules get --name "One Piece"
 ```
 
-每一步完成后，请检查命令的退出码和 `ok`，再继续执行。提交前请检查 `plan.json`。提交时会按需创建订阅并保存 RSS 规则，根据 qBittorrent 的 RSS 设置，这可能触发下载。该操作不会修改全局 RSS 偏好设置。
+每一步完成后，请检查命令的退出码和 `ok`，再继续执行。提交前请检查 `plan.json`。提交时会按需创建订阅并保存 RSS 规则；根据 qBittorrent 的 RSS 设置，这可能触发下载。该操作不会修改全局 RSS 偏好设置。
 
-使用管道输入时，`rules apply --file -` 从标准输入读取 JSON。它既接受 `rules plan` 保存的完整成功响应，也接受其中原始的 `data` 对象。Shell 重定向需要生成 UTF-8 编码的 JSON 文件。
+通过管道输入时，`rules apply --file -` 会从标准输入读取 JSON。它既接受 `rules plan` 保存的完整成功响应，也接受其中原始的 `data` 对象。使用 Shell 重定向时，需要生成 UTF-8 编码的 JSON 文件。
 
 ## 命令参考
 
@@ -64,7 +64,7 @@ mikancli rules plan --bangumi-id 123 --subgroup-id 456 --name "One Piece" --incl
 {"schema_version":1,"ok":true,"data":{},"error":null}
 ```
 
-失败时，`ok` 为 `false`，`data` 为 `null`，`error` 为包含 `code`、`message`、`retryable` 和 `details` 的对象。请根据稳定的错误码和退出码决定后续操作；消息文本可能随语言变化。标准输出只包含 JSON。JSON 中的非 ASCII 文本会被转义，因此保存的计划也能在使用旧编码的 Windows 终端中正确写入并重新读取。诊断信息写入标准错误。`--help` 输出供人阅读的帮助文本，而非 JSON 响应。
+失败时，`ok` 为 `false`，`data` 为 `null`，`error` 为包含 `code`、`message`、`retryable` 和 `details` 的对象。请依据稳定的错误码和退出码决定后续操作；消息文本可能随语言变化。标准输出只包含 JSON。JSON 中的非 ASCII 文本会被转义，因此保存的计划也能在使用旧编码的 Windows 终端中正确写入并重新读取。诊断信息输出到标准错误。`--help` 输出供人阅读的帮助文本，而非 JSON 响应。
 
 计划的 `data` 包含 `plan_version: 1`、`rule_name`、`feed_url`、`feed_path` 和 `rule_definition`。其中 `rule_definition` 是拟提交的 qBittorrent RSS 规则。运行 `mikancli schema` 可获取完整的机器可读约定。更改配置或预期过滤条件后，请重新检查已保存的计划；提交操作使用计划中保存的值。
 
@@ -82,17 +82,17 @@ mikancli rules plan --bangumi-id 123 --subgroup-id 456 --name "One Piece" --incl
 
 ## 配置与凭据
 
-可以根据需要为自动化使用独立的配置文件。配置文件的选择优先级依次为 `--config PATH`、`MIKANCLI_CONFIG`、常规用户配置路径。以下环境变量会覆盖已保存的 qBittorrent 设置：
+自动化场景可以按需使用独立的配置文件。配置文件的选择优先级依次为 `--config PATH`、`MIKANCLI_CONFIG`、常规用户配置路径。以下环境变量会覆盖已保存的 qBittorrent 设置：
 
 - `MIKANCLI_QBITTORRENT_URL`
 - `MIKANCLI_QBITTORRENT_USERNAME`
 - `MIKANCLI_QBITTORRENT_PASSWORD`
 
-`config show` 会隐藏用户名、密码以及 URL 中嵌入的凭据。使用环境变量提供凭据，无需将其放入命令参数。现有的 `--setup-qbittorrent` 仍可用于交互式配置。
+`config show` 会隐藏用户名、密码以及 URL 中嵌入的凭据。可通过环境变量提供凭据，无需把它们放进命令参数。现有的 `--setup-qbittorrent` 仍可用于交互式配置。
 
 ## 兼容性
 
-在终端中运行 `mikancli` 仍会打开引导式流程。重定向标准输入时，请选择显式的非交互命令，以避免交互提示。旧版 `mikancli KEYWORD --json` 仍用于预览规则草稿，并保留原有的成功响应结构。它现在要求动画和字幕组的匹配结果均唯一：存在多个匹配项时返回 `AMBIGUOUS_SELECTION`，查询失败时返回错误封装和非零退出码。需要带版本号的 Agent 接口时，请使用 `search`、`subgroups` 和 `rules plan`。
+在终端中运行 `mikancli` 仍会进入引导式流程。如果标准输入被重定向，请改用显式的非交互命令，以免触发交互提示。旧版 `mikancli KEYWORD --json` 仍用于预览规则草稿，并保留原有的成功响应结构。它现在要求动画和字幕组的匹配结果均唯一：存在多个匹配项时返回 `AMBIGUOUS_SELECTION`，查询失败时返回错误封装和非零退出码。需要带版本号的 Agent 接口时，请使用 `search`、`subgroups` 和 `rules plan`。
 
 命令名在第一个位置参数处为保留名称。若要将其中一个名称用作旧版搜索关键词，请将它放在 `--` 之后，例如 `mikancli --json -- search`。
 

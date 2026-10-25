@@ -4,7 +4,7 @@
 
 MikanCli 是一个 Python 命令行工具，可以在 Mikanani.me 上搜索番剧/动画，选定对应的 Bangumi 条目和字幕组 RSS 订阅，并据此生成 qBittorrent 的 RSS 下载规则。
 
-它既提供引导式交互流程，也支持面向 AI Agent 和脚本的非交互式 JSON 命令，可发现订阅、保存规则计划，并将计划提交到 qBittorrent 后验证。
+它既提供引导式交互流程，也提供面向 AI Agent 和脚本的非交互式 JSON 命令：可以查找订阅、保存规则计划，再提交到 qBittorrent 并验证结果。
 
 ## 功能
 
@@ -18,7 +18,7 @@ MikanCli 是一个 Python 命令行工具，可以在 Mikanani.me 上搜索番�
 - 通过命令行配置 qBittorrent WebUI 访问
 - 将 RSS 订阅和自动下载规则提交到 qBittorrent，并验证 qBittorrent 已保存这些内容
 - 以 JSON 形式输出规则草稿，不提交任何内容
-- 通过显式 ID、带版本号的 JSON 响应和可重复执行的规则计划支持 Agent 工作流
+- 通过显式 ID、带版本号的 JSON 响应和支持安全重复提交的规则计划，支持 Agent 工作流
 
 ## 界面预览
 
@@ -58,7 +58,7 @@ mikancli
 
 ## AI Agent 和脚本
 
-使用显式命令搜索候选项、选择 ID、预览发布内容，再保存规则计划并提交。这些命令不会提示交互输入，始终输出 JSON。重复提交相同计划会报告规则未变更。
+用显式命令搜索候选项、选定 ID、预览发布内容，然后保存规则计划并提交。这些命令不会发起交互式提示，始终输出 JSON。重复提交同一计划时，会报告规则未变更。
 
 ```bash
 mikancli search "One Piece"
@@ -69,9 +69,9 @@ mikancli rules apply --file plan.json --if-exists fail
 mikancli rules get --name "One Piece"
 ```
 
-请使用搜索结果中的实际 ID 替换示例，并在提交前检查计划。在这些非交互式命令中，只有 `rules apply` 会写入 qBittorrent，且可能触发 RSS 下载。使用 `config show` 可查看已隐藏凭据的配置，使用 `schema` 可导出响应和规则计划的 JSON Schema。
+请将示例中的 ID 替换为搜索结果中的实际 ID，并在提交前检查计划。在这些非交互式命令中，只有 `rules apply` 会写入 qBittorrent，且可能触发 RSS 下载。可用 `config show` 查看已隐藏凭据的配置，用 `schema` 导出响应和规则计划的 JSON Schema。
 
-这些命令接受 `--config PATH`、`--timeout SECONDS`，以及可选的 `--json` / `--non-interactive` 标志。完整命令参考、响应结构、退出码和凭据环境变量见 Agent 使用指南：[简体中文](docs/agents.zh-CN.md) | [English](docs/agents.md)。
+这些命令接受 `--config PATH`、`--timeout SECONDS`，以及可选的 `--json` / `--non-interactive` 标志。完整的命令参考、响应结构、退出码和凭据环境变量请见 Agent 使用指南：[简体中文](docs/agents.zh-CN.md) | [English](docs/agents.md)。
 
 ## 通过克隆仓库安装
 
@@ -111,7 +111,7 @@ mikancli
 
 `--json` 草稿模式只输出一个 JSON 文档，不使用 Rich 格式，也不显示进度消息。
 
-显式非交互式命令也只向标准输出写入 JSON，错误同样使用带版本号的 `schema_version`、`ok`、`data` 和 `error` 响应结构。面向用户的 `--help` 帮助文本除外。没有交互式终端时，请使用这些命令或旧版 `--json` 模式；引导式流程会立即报错，不会等待输入。
+显式非交互式命令同样只向标准输出写入 JSON；错误响应也采用带版本号的 `schema_version`、`ok`、`data` 和 `error` 结构。唯一例外是面向用户的 `--help` 帮助文本。没有交互式终端时，请改用这些命令或旧版 `--json` 模式；引导式流程会立即报错，不会等待输入。
 
 ## 引导式流程
 
@@ -160,7 +160,7 @@ MikanCli 将配置保存在 JSON 文件中：
 
 - Windows：`%APPDATA%\MikanCli\config.json`
 
-可通过 `--config PATH` 或 `MIKANCLI_CONFIG` 选择其他配置文件。非交互式命令还支持使用 `MIKANCLI_QBITTORRENT_URL`、`MIKANCLI_QBITTORRENT_USERNAME` 和 `MIKANCLI_QBITTORRENT_PASSWORD` 覆盖已保存的 qBittorrent 设置。
+可通过 `--config PATH` 或 `MIKANCLI_CONFIG` 指定其他配置文件。非交互式命令还支持用 `MIKANCLI_QBITTORRENT_URL`、`MIKANCLI_QBITTORRENT_USERNAME` 和 `MIKANCLI_QBITTORRENT_PASSWORD` 环境变量覆盖已保存的 qBittorrent 设置。
 
 保存的设置可包括：
 
@@ -175,7 +175,7 @@ qBittorrent 密码会保存在配置文件中，以便 MikanCli 后续运行时�
 
 ## 语言支持
 
-MikanCli 的引导式流程支持英文和简体中文，包括菜单、提示、设置说明、摘要和旧版选项帮助。非交互式命令的帮助文本和机器错误消息目前使用英文，接受 `--language` 选项以保持兼容。命令名、选项名、JSON 字段名和错误码、Mikan 标题、字幕组名称、URL 和 qBittorrent API 数据保持固定，不随语言变化。
+MikanCli 的引导式流程支持英文和简体中文，涵盖菜单、提示、设置说明、摘要和旧版选项帮助。非交互式命令的帮助文本和机器错误消息目前使用英文；这些命令虽接受 `--language` 选项，但仅用于保持兼容。命令名、选项名、JSON 字段名和错误码、Mikan 标题、字幕组名称、URL 以及 qBittorrent API 数据均保持固定，不随语言变化。
 
 语言选择优先级如下：
 
@@ -193,7 +193,7 @@ mikancli/
   cli/             CLI 入口、非交互式命令、提示和引导式流程
   core/            数据类、规范化和规则生成逻辑
   integrations/    Mikan 和 qBittorrent 适配器
-  services/        规则计划、经验证的提交操作和已保存规则查询
+  services/        规则计划、经验证的提交以及已保存规则查询
   config.py        用户配置和文件夹选择辅助函数
   display.py       Rich 摘要、订阅预览、反馈和加载指示器
 ```
@@ -207,7 +207,7 @@ mikancli = "mikancli.cli.entrypoint:main"
 
 ## 命令用法
 
-[Agent 使用指南](docs/agents.zh-CN.md) 列出了所有非交互式命令。可运行 `mikancli COMMAND --help` 或 `mikancli rules ACTION --help` 查看相应选项。引导式流程和旧版草稿预览接受以下选项：
+[Agent 使用指南](docs/agents.zh-CN.md) 列出了所有非交互式命令。运行 `mikancli COMMAND --help` 或 `mikancli rules ACTION --help` 可查看对应选项。引导式流程和旧版草稿预览接受以下选项：
 
 ```text
 usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
@@ -228,11 +228,11 @@ usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
 - `--setup-qbittorrent`：配置并验证 qBittorrent WebUI 设置
 - `--language {en,zh-CN}`：为本次运行选择 CLI 语言
 - `--version`：输出已安装的 CLI 版本
-- `--config PATH`：选择配置文件，替代默认用户配置
+- `--config PATH`：指定配置文件，替代默认用户配置
 - `--timeout SECONDS`：设置旧版 JSON 查询的超时时间，须大于 0 且不超过 300 秒
 - `--non-interactive`：如果本次调用需要交互输入，则立即报错
 
-旧版 `mikancli KEYWORD --json` 要求恰好匹配一个动画条目和一个字幕组。结果不唯一或查询失败时，会返回 JSON 错误和非零退出码。请使用显式命令查看候选项并选择 ID。命令名是首个位置参数的保留字；若要将 `search` 等命令名用作旧版搜索关键词，请使用 `mikancli --json -- search`。
+旧版 `mikancli KEYWORD --json` 要求恰好匹配一个动画条目和一个字幕组。结果不唯一或查询失败时，会返回 JSON 错误和非零退出码。请改用显式命令查看候选项并选定 ID。命令名在第一个位置参数处为保留名称；若要将 `search` 等命令名用作旧版搜索关键词，请使用 `mikancli --json -- search`。
 
 ## 最低集数过滤
 
@@ -251,7 +251,7 @@ mikancli "one piece" --include SubsPlease --min-episode 1126
 
 MikanCli 会将最低集数转换为 qBittorrent 规则 `mustContain` 字段中的正则表达式，并启用 `useRegex`。普通的 `--include` 和 `--exclude` 值仍按字面词或短语处理；只有标题中包含所有 include 值，qBittorrent 才会视为匹配。
 
-通过引导式流程提交最低集数规则时，MikanCli 会检查 qBittorrent 的 RSS 条目保留上限。如果 qBittorrent 每个订阅保留的条目少于 500 条，MikanCli 会询问是否调高该设置，以便 qBittorrent 能看到足够多的 Mikan 订阅条目来匹配较新的集数。非交互式 `rules apply` 不会修改全局 RSS 首选项。
+通过引导式流程提交最低集数规则时，MikanCli 会检查 qBittorrent 的 RSS 条目保留上限。如果 qBittorrent 每个订阅保留的条目少于 500 条，MikanCli 会询问是否调高该设置，以便 qBittorrent 能看到足够多的 Mikan 订阅条目来匹配较新的集数。非交互式 `rules apply` 不会修改全局 RSS 偏好设置。
 
 ## 发布
 
