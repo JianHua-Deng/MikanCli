@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+import xml.etree.ElementTree as ET
 
 from mikancli.core.models import MikanBangumi, MikanFeedItem, MikanSubgroup
 from mikancli.integrations.mikan_parsers import (
@@ -23,6 +24,17 @@ USER_AGENT = "MikanCli/0.1 (+https://mikanani.me)"
 class MikanLookupError(RuntimeError):
     """Raised when a Mikan page cannot be fetched or parsed."""
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str = "UPSTREAM_ERROR",
+        retryable: bool = False,
+    ) -> None:
+        super().__init__(message)
+        self.code = code
+        self.retryable = retryable
+
 
 def fetch_html(url: str, *, timeout: float = 15.0) -> str:
     """Fetch a Mikan page or feed as decoded UTF-8 text. Returns the response body, or raises MikanLookupError for HTTP and network failures."""
@@ -31,11 +43,36 @@ def fetch_html(url: str, *, timeout: float = 15.0) -> str:
     try:
         with urlopen(request, timeout=timeout) as response:
             return response.read().decode("utf-8", errors="replace")
-    except HTTPError as exc:  # pragma: no cover
-        raise MikanLookupError(f"Mikan returned HTTP {exc.code} for {url}") from exc
-    except URLError as exc:  # pragma: no cover
-        reason = getattr(exc, "reason", exc)
-        raise MikanLookupError(f"Could not reach Mikan: {reason}") from exc
+    except HTTPError as exc:
+        exc.close()
+        code = "UPSTREAM_ERROR"
+        retryable = False
+        if exc.code == 408:
+            code, retryable = "TIMEOUT", True
+        elif 500 <= exc.code <= 599:
+            code, retryable = "NETWORK_ERROR", True
+        raise MikanLookupError(
+            f"Mikan returned HTTP {exc.code}.",
+            code=code,
+            retryable=retryable,
+        ) from exc
+    except URLError as exc:
+        timed_out = isinstance(exc.reason, TimeoutError)
+        raise MikanLookupError(
+            "Mikan request timed out." if timed_out else "Could not reach Mikan.",
+            code="TIMEOUT" if timed_out else "NETWORK_ERROR",
+            retryable=True,
+        ) from exc
+    except TimeoutError as exc:
+        raise MikanLookupError(
+            "Mikan request timed out.", code="TIMEOUT", retryable=True
+        ) from exc
+    except OSError as exc:
+        raise MikanLookupError(
+            "Could not complete the Mikan request.",
+            code="NETWORK_ERROR",
+            retryable=True,
+        ) from exc
 
 
 def search_mikan_bangumi(keyword: str, *, timeout: float = 15.0) -> tuple[MikanBangumi, ...]:
@@ -59,6 +96,15 @@ def fetch_mikan_feed_items(feed_url: str, *, timeout: float = 15.0) -> tuple[Mik
 def parse_feed_items(xml_text: str) -> tuple[MikanFeedItem, ...]:
     """Parse Mikan RSS XML and convert parser errors into MikanLookupError. Returns parsed feed items, or an empty tuple for a valid feed with no items."""
     try:
+        # A proxy or login page can be valid XML while being an invalid RSS
+        # response. Keep that distinct from a valid feed with zero releases.
+        root = ET.fromstring(xml_text)
+        if root.tag != "rss" or root.find("channel") is None:
+            raise MikanLookupError(
+                "Mikan returned an invalid RSS feed.", code="INVALID_RESPONSE"
+            )
         return parse_mikan_feed_items(xml_text)
-    except MikanParseError as exc:
-        raise MikanLookupError(str(exc)) from exc
+    except (MikanParseError, ET.ParseError) as exc:
+        raise MikanLookupError(
+            "Could not parse the Mikan RSS feed.", code="INVALID_RESPONSE"
+        ) from exc

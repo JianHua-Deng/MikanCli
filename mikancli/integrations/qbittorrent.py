@@ -174,7 +174,9 @@ def check_connection(settings: QBittorrentSettings) -> str:
             if "HTTP 403" in str(exc):
                 raise QBittorrentError(
                     "qBittorrent rejected the login request. Check the WebUI "
-                    "username/password in qBittorrent settings and try again."
+                    "username/password in qBittorrent settings and try again.",
+                    code=exc.code,
+                    retryable=exc.retryable,
                 ) from exc
             raise
     try:
@@ -185,7 +187,9 @@ def check_connection(settings: QBittorrentSettings) -> str:
             raise QBittorrentError(
                 "qBittorrent WebUI is reachable, but it requires a username and "
                 "password. Enter the WebUI credentials from qBittorrent settings "
-                "and try again."
+                "and try again.",
+                code=exc.code,
+                retryable=exc.retryable,
             ) from exc
         raise
 

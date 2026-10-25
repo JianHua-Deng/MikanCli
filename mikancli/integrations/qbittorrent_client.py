@@ -14,6 +14,17 @@ from mikancli.core.normalize import collapse_spaces
 class QBittorrentError(Exception):
     """Raised when qBittorrent WebUI setup or verification fails."""
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str = "UPSTREAM_ERROR",
+        retryable: bool = False,
+    ) -> None:
+        super().__init__(message)
+        self.code = code
+        self.retryable = retryable
+
 
 @dataclass(frozen=True)
 class QBittorrentSubmissionResult:
@@ -30,6 +41,7 @@ class QBittorrentSubmissionResult:
 class QBittorrentClient:
     settings: QBittorrentSettings
     opener: object | None = None
+    timeout: float = 15.0
 
     def __post_init__(self) -> None:
         self.settings = QBittorrentSettings(
@@ -55,14 +67,18 @@ class QBittorrentClient:
         if response_text.strip().casefold() not in {"ok.", "ok"}:
             raise QBittorrentError(
                 "qBittorrent rejected the WebUI username or password. Check the "
-                "credentials in qBittorrent settings and try again."
+                "credentials in qBittorrent settings and try again.",
+                code="AUTH_FAILED",
             )
 
     def get_version(self) -> str:
         """Fetch the qBittorrent WebUI app version. Returns the version string or raises QBittorrentError when qBittorrent returns an empty response."""
         version = self.open_text("/api/v2/app/version").strip()
         if not version:
-            raise QBittorrentError("qBittorrent returned an empty version response.")
+            raise QBittorrentError(
+                "qBittorrent returned an empty version response.",
+                code="INVALID_RESPONSE",
+            )
         return version
 
     def add_feed(self, feed_url: str, *, path: str | None = None) -> None:
@@ -112,7 +128,8 @@ class QBittorrentClient:
         payload = self.open_json("/api/v2/rss/items?withData=false")
         if not isinstance(payload, dict):
             raise QBittorrentError(
-                "qBittorrent returned an invalid RSS items response."
+                "qBittorrent returned an invalid RSS items response.",
+                code="INVALID_RESPONSE",
             )
         return payload
 
@@ -121,7 +138,8 @@ class QBittorrentClient:
         payload = self.open_json("/api/v2/rss/rules")
         if not isinstance(payload, dict):
             raise QBittorrentError(
-                "qBittorrent returned an invalid RSS rules response."
+                "qBittorrent returned an invalid RSS rules response.",
+                code="INVALID_RESPONSE",
             )
         return payload
 
@@ -130,7 +148,8 @@ class QBittorrentClient:
         payload = self.open_json("/api/v2/app/preferences")
         if not isinstance(payload, dict):
             raise QBittorrentError(
-                "qBittorrent returned an invalid preferences response."
+                "qBittorrent returned an invalid preferences response.",
+                code="INVALID_RESPONSE",
             )
         return payload
 
@@ -190,18 +209,44 @@ class QBittorrentClient:
         request = Request(full_url, data=data, headers=headers)
 
         try:
-            response = self.opener.open(request)
+            response = self.opener.open(request, timeout=self.timeout)
             return response.read().decode("utf-8", errors="replace")
         except HTTPError as exc:
-            body = exc.read().decode("utf-8", errors="replace").strip()
-            suffix = f" Response: {body}" if body else ""
+            # An upstream error body or URL may contain credentials. Only expose
+            # the HTTP status; the stable code tells callers how to recover.
+            exc.close()
+            code = "UPSTREAM_ERROR"
+            retryable = False
+            if exc.code in {401, 403}:
+                code = "AUTH_FAILED"
+            elif exc.code == 408:
+                code, retryable = "TIMEOUT", True
+            elif 500 <= exc.code <= 599:
+                code, retryable = "NETWORK_ERROR", True
             raise QBittorrentError(
-                f"qBittorrent request failed with HTTP {exc.code} for {path}.{suffix}"
+                f"qBittorrent request failed with HTTP {exc.code}.",
+                code=code,
+                retryable=retryable,
             ) from exc
         except URLError as exc:
+            timed_out = isinstance(exc.reason, TimeoutError)
             raise QBittorrentError(
-                "Could not reach qBittorrent WebUI at "
-                f"{self.settings.url}: {exc.reason}"
+                "qBittorrent WebUI request timed out."
+                if timed_out else "Could not reach qBittorrent WebUI.",
+                code="TIMEOUT" if timed_out else "NETWORK_ERROR",
+                retryable=True,
+            ) from exc
+        except TimeoutError as exc:
+            raise QBittorrentError(
+                "qBittorrent WebUI request timed out.",
+                code="TIMEOUT",
+                retryable=True,
+            ) from exc
+        except OSError as exc:
+            raise QBittorrentError(
+                "Could not complete the qBittorrent WebUI request.",
+                code="NETWORK_ERROR",
+                retryable=True,
             ) from exc
 
     def build_origin_header(self) -> str:
@@ -214,7 +259,8 @@ class QBittorrentClient:
             return json.loads(response_text)
         except json.JSONDecodeError as exc:
             raise QBittorrentError(
-                f"qBittorrent returned invalid JSON for {path}."
+                "qBittorrent returned invalid JSON.",
+                code="INVALID_RESPONSE",
             ) from exc
 
 

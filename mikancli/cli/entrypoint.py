@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from dataclasses import replace
 from pathlib import Path
 
 from mikancli import __version__
+from mikancli.cli import commands
 from mikancli.cli.input_parsing import (
     parse_optional_positive_int,
     prompt_optional_positive_int,
@@ -42,16 +44,21 @@ from mikancli.i18n import (
     set_language,
     t,
 )
+from mikancli.integrations.mikan import MikanLookupError
+from mikancli.services.errors import CommandError
 
 STARTUP_ACTION_SEARCH = "search"
 STARTUP_ACTION_QBITTORRENT = "qbittorrent"
 STARTUP_ACTION_LANGUAGE = "language"
 
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
+def build_parser(*, machine: bool = False) -> argparse.ArgumentParser:
+    parser_type = commands.CommandParser if machine else argparse.ArgumentParser
+    parser = parser_type(
         prog="mikancli",
         description=t("arg.description"),
+        allow_abbrev=False,
+        epilog="Noninteractive commands: search, subgroups, feed, rules plan/apply/get, config show, schema. Run mikancli COMMAND --help for details.",
     )
     parser.add_argument("keyword", nargs="?", help=t("arg.keyword.help"))
     parser.add_argument(
@@ -96,6 +103,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="version",
         version=f"%(prog)s {__version__}",
     )
+    parser.add_argument("--config", help="Use a specific config file (or set MIKANCLI_CONFIG).")
+    parser.add_argument("--timeout", type=commands.positive_timeout, default=15.0,
+                        help="Network request timeout in seconds for JSON lookup (default: 15).")
+    parser.add_argument("--non-interactive", action="store_true",
+                        help="Fail if this invocation would require a prompt.")
     return parser
 
 
@@ -125,7 +137,7 @@ def parse_min_episode_arg(value: str) -> int:
 
 
 def parse_requested_language(argv: list[str] | None) -> str | None:
-    pre_parser = argparse.ArgumentParser(add_help=False)
+    pre_parser = commands.CommandParser(add_help=False, allow_abbrev=False)
     pre_parser.add_argument("--language")
     args, _ = pre_parser.parse_known_args(argv)
     return args.language
@@ -174,7 +186,7 @@ def run_language_configuration_flow(config: AppConfig, config_path: Path) -> App
 
 def build_request_from_args(args: argparse.Namespace, *, config: AppConfig, config_path: Path) -> SearchRequest:
 
-    if not args.keyword:
+    if not collapse_spaces(args.keyword or ""):
         raise ValueError(t("request.keyword_required_json"))
 
     save_path = resolve_save_path(
@@ -238,24 +250,44 @@ def build_interactive_draft(args: argparse.Namespace, *, config: AppConfig,confi
 
 
 def main(argv: list[str] | None = None) -> int:
+    actual_argv = list(sys.argv[1:] if argv is None else argv)
+    if commands.is_command_invocation(actual_argv):
+        return commands.run_commands(actual_argv)
     try:
-        return _run(argv)
+        return _run(actual_argv)
+    except CommandError as exc:
+        commands.emit_result(error=exc)
+        return exc.exit_code
+    except MikanLookupError as exc:
+        error = CommandError(getattr(exc, "code", "UPSTREAM_ERROR"), str(exc),
+                             retryable=getattr(exc, "retryable", False))
+        commands.emit_result(error=error)
+        return error.exit_code
     except KeyboardInterrupt:
         print(t("common.cancelled"), file=sys.stderr)
         return 130
 
 
 def _run(argv: list[str] | None = None) -> int:
-    config_path = get_config_path()
+    startup_parser = commands.CommandParser(add_help=False, allow_abbrev=False)
+    startup_parser.add_argument("--config")
+    startup_options, _ = startup_parser.parse_known_args(argv)
+    configured_path = startup_options.config or os.environ.get("MIKANCLI_CONFIG")
+    config_path = Path(configured_path).expanduser() if configured_path else get_config_path()
     config = load_config(config_path)
     requested_language = parse_requested_language(argv)
     set_language(resolve_startup_language(requested_language, config))
 
-    parser = build_parser()
+    parser = build_parser(machine="--json" in (argv or []) or "--non-interactive" in (argv or []))
     args = parser.parse_args(argv)
 
     if args.language:
         set_language(args.language)
+
+    if args.json and args.setup_qbittorrent:
+        raise CommandError("INVALID_ARGUMENT", "--setup-qbittorrent requires interactive input and cannot be combined with --json.", exit_code=2)
+    if not args.json and (args.non_interactive or not sys.stdin.isatty()):
+        raise CommandError("INTERACTIVE_REQUIRED", "This invocation requires a terminal. Use search, subgroups, feed, or rules plan/apply/get for noninteractive usage.", exit_code=2)
 
     if args.setup_qbittorrent:
         try:
@@ -274,14 +306,14 @@ def _run(argv: list[str] | None = None) -> int:
         except ValueError as exc:
             parser.error(str(exc))
 
-        bangumi, subgroup, lookup_notes = resolve_mikan_selection(request)
+        bangumi, subgroup, lookup_notes = resolve_mikan_selection(request, timeout=args.timeout)
         draft = build_rule_draft(
             request,
             bangumi=bangumi,
             subgroup=subgroup,
             notes=lookup_notes,
         )
-        print(json.dumps(draft.to_dict(), ensure_ascii=False, indent=2))
+        print(json.dumps(draft.to_dict(), ensure_ascii=True, indent=2))
         return 0
 
     has_startup_menu = args.keyword is None

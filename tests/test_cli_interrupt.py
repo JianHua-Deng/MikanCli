@@ -11,6 +11,9 @@ from mikancli.i18n import get_language, set_language, t
 class InterruptTests(TestCase):
     def setUp(self) -> None:
         self.addCleanup(set_language, get_language())
+        terminal_input = patch("sys.stdin.isatty", return_value=True)
+        terminal_input.start()
+        self.addCleanup(terminal_input.stop)
 
     def test_url_interrupt_exits_cleanly_without_saving(self) -> None:
         for language in ("en", "zh-CN"):

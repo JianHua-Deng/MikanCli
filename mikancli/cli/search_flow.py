@@ -23,6 +23,7 @@ from mikancli.integrations.mikan import (
     fetch_mikan_subgroups,
     search_mikan_bangumi,
 )
+from mikancli.services.errors import CommandError
 
 SEARCH_AGAIN = "__search_again__"
 BACK_TO_CANDIDATES = "__back_to_candidates__"
@@ -136,43 +137,25 @@ def confirm_subgroup_selection(
         return selected
 
 
-def resolve_mikan_selection(request: SearchRequest,) -> tuple[MikanBangumi | None, MikanSubgroup | None, tuple[str, ...]]:
-    """Resolve the first matching Bangumi and subgroup for non-interactive JSON mode. Returns optional selected objects plus notes describing missing data or JSON-mode limitations"""
-
-    try:
-        candidates = search_mikan_bangumi(request.keyword)
-    except MikanLookupError as exc:
-        return None, None, (str(exc), t("search.json_preview_note"))
-
+def resolve_mikan_selection(request: SearchRequest, *, timeout: float = 15.0) -> tuple[MikanBangumi, MikanSubgroup, tuple[str, ...]]:
+    """Keep legacy JSON drafts usable while refusing an ambiguous selection."""
+    candidates = search_mikan_bangumi(request.keyword, timeout=timeout)
     if not candidates:
-        return (
-            None,
-            None,
-            (
-                t("search.no_matching_json"),
-                t("search.json_preview_note"),
-            ),
+        raise CommandError("NOT_FOUND", "No matching Mikan anime was found.", exit_code=3)
+    if len(candidates) > 1:
+        raise CommandError(
+            "AMBIGUOUS_SELECTION", "Multiple anime matched. Use search and rules plan with explicit IDs.",
+            exit_code=4, details={"bangumi_ids": [item.bangumi_id for item in candidates]},
         )
-
     selected_bangumi = candidates[0]
-
-    try:
-        subgroups = fetch_mikan_subgroups(selected_bangumi.bangumi_id)
-    except MikanLookupError as exc:
-        return (
-            selected_bangumi,
-            None,
-            (str(exc), t("search.json_preview_note")),
-        )
-
+    subgroups = fetch_mikan_subgroups(selected_bangumi.bangumi_id, timeout=timeout)
     if not subgroups:
-        return (
-            selected_bangumi,
-            None,
-            (
-                t("search.no_subgroup_json"),
-                t("search.json_preview_note"),
-            ),
+        raise CommandError("NOT_FOUND", "No subgroup feed was found for the selected anime.", exit_code=3)
+    if len(subgroups) > 1:
+        raise CommandError(
+            "AMBIGUOUS_SELECTION", "Multiple subgroup feeds matched. Use subgroups and rules plan with explicit IDs.",
+            exit_code=4, details={"bangumi_id": selected_bangumi.bangumi_id,
+                                  "subgroup_ids": [item.subgroup_id for item in subgroups]},
         )
 
     return selected_bangumi, subgroups[0], (t("search.json_preview_note"),)

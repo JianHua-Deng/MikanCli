@@ -4,7 +4,7 @@ Language: [简体中文](README.md) | [English](README.en.md)
 
 MikanCli is a Python command-line tool for finding bangumi/anime on Mikanani.me, choosing the correct Bangumi and subgroup RSS feed, and turning that selection into a qBittorrent RSS download rule.
 
-It supports both a guided interactive flow and a JSON preview mode for scripting or inspection. The interactive flow is the most complete mode right now.
+It supports a guided interactive flow and noninteractive JSON commands for agents and scripts, including discovery, saved rule plans, and verified application to qBittorrent.
 
 ## Features
 
@@ -18,6 +18,7 @@ It supports both a guided interactive flow and a JSON preview mode for scripting
 - Configure qBittorrent WebUI access from the CLI
 - Submit RSS feeds and auto-download rules to qBittorrent, then verify that qBittorrent saved them
 - Print rule drafts as JSON without submitting anything
+- Use explicit IDs, versioned JSON responses, and idempotent saved plans in agent workflows
 
 ## Screenshots
 
@@ -54,6 +55,23 @@ Now that it is installed, run the following and follow the menu:
 ```bash
 mikancli
 ```
+
+## Agents and Scripts
+
+Use explicit commands to search candidates, choose IDs, preview releases, and save a rule plan before applying it. These commands never prompt and always return JSON. Reapplying the same plan reports it as unchanged.
+
+```bash
+mikancli search "One Piece"
+mikancli subgroups --bangumi-id 123
+mikancli feed --bangumi-id 123 --subgroup-id 456 --limit 20
+mikancli rules plan --bangumi-id 123 --subgroup-id 456 --name "One Piece" --include 1080p > plan.json
+mikancli rules apply --file plan.json --if-exists fail
+mikancli rules get --name "One Piece"
+```
+
+Replace the example IDs with discovery results and review the plan before applying it. Among these noninteractive commands, only `rules apply` writes to qBittorrent and can trigger RSS downloads. Use `config show` to inspect redacted configuration and `schema` to export the response and plan JSON Schemas.
+
+These commands accept `--config PATH`, `--timeout SECONDS`, and optional `--json` / `--non-interactive` flags. See the agent usage guide in [English](docs/agents.md) or [简体中文](docs/agents.zh-CN.md) for the full command reference, response schema, exit codes, and credential environment variables.
 
 ## Install by Cloning the Repo
 
@@ -92,6 +110,8 @@ mikancli
 Remove that setting with `Remove-Item Env:NO_COLOR`. Bold or dim text and loading animations may remain; InquirerPy manages menu styling separately.
 
 The `--json` draft mode prints one JSON document without Rich formatting or progress messages.
+
+The explicit noninteractive commands also use JSON-only stdout, including errors, with a versioned `schema_version`, `ok`, `data`, and `error` envelope. Human-readable `--help` is an exception. Without an interactive terminal, use one of these commands or the legacy `--json` mode; the guided flow fails immediately instead of prompting.
 
 ## Guided Flow
 
@@ -138,7 +158,9 @@ Setup notes:
 
 MikanCli stores configuration in a JSON file:
 
-- Windows: `%APPDATA%\Roaming\MikanCli\config.json`
+- Windows: `%APPDATA%\MikanCli\config.json`
+
+Use `--config PATH` or `MIKANCLI_CONFIG` to select a different file. Noninteractive commands also accept `MIKANCLI_QBITTORRENT_URL`, `MIKANCLI_QBITTORRENT_USERNAME`, and `MIKANCLI_QBITTORRENT_PASSWORD` as overrides for saved qBittorrent settings.
 
 Saved settings can include:
 
@@ -153,7 +175,7 @@ The qBittorrent password is stored in the config file so MikanCli can submit rul
 
 ## Language Support
 
-MikanCli supports English and Simplified Chinese for user-facing CLI text, including interactive menus, prompts, setup instructions, summaries, and help text. Command names, option names, JSON field names, Mikan titles, subgroup names, URLs, and qBittorrent API payloads stay stable.
+MikanCli supports English and Simplified Chinese for the guided flow, including menus, prompts, setup instructions, summaries, and legacy option help. Noninteractive command help and machine error messages are currently in English; `--language` is accepted for compatibility. Command names, option names, JSON field names and error codes, Mikan titles, subgroup names, URLs, and qBittorrent API payloads stay stable.
 
 Language selection uses this precedence order:
 
@@ -168,9 +190,10 @@ Interactive users can always change language from the startup menu. The selected
 
 ```text
 mikancli/
-  cli/             CLI entrypoint, prompts, and interactive flows
+  cli/             entrypoint, noninteractive commands, prompts, and guided flows
   core/            dataclasses, normalization, and rule-building logic
   integrations/    Mikan and qBittorrent adapters
+  services/        rule plans, validated application, and saved-rule inspection
   config.py        user config and folder selection helpers
   display.py       Rich summaries, feed previews, feedback, and loading indicators
 ```
@@ -184,10 +207,13 @@ mikancli = "mikancli.cli.entrypoint:main"
 
 ## Commands Usage
 
+The [agent guide](docs/agents.md) lists all noninteractive commands. Run `mikancli COMMAND --help` or `mikancli rules ACTION --help` for their options. The guided flow and legacy draft preview accept these options:
+
 ```text
 usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
                 [--min-episode MIN_EPISODE] [--save-path SAVE_PATH] [--json]
                 [--setup-qbittorrent] [--language {en,zh-CN}] [--version]
+                [--config CONFIG] [--timeout TIMEOUT] [--non-interactive]
                 [keyword]
 ```
 
@@ -202,6 +228,11 @@ Options:
 - `--setup-qbittorrent`: configure and verify qBittorrent WebUI settings
 - `--language {en,zh-CN}`: choose CLI language for this run
 - `--version`: print the installed CLI version
+- `--config PATH`: select a config file instead of the default user config
+- `--timeout SECONDS`: set the legacy JSON lookup timeout, greater than 0 and at most 300 seconds
+- `--non-interactive`: fail if this invocation would require a prompt
+
+Legacy `mikancli KEYWORD --json` requires exactly one matching anime and subgroup. Ambiguity and lookup failures return a JSON error and nonzero exit status. Use the explicit commands to inspect candidates and choose IDs. Command names are reserved as the first positional argument; for a legacy keyword such as `search`, use `mikancli --json -- search`.
 
 ## Minimum Episode Filtering
 
@@ -220,7 +251,7 @@ mikancli "one piece" --include SubsPlease --min-episode 1126
 
 MikanCli converts the minimum episode into a qBittorrent regular expression in the rule's `mustContain` field and enables `useRegex`. Normal `--include` and `--exclude` values still behave as literal words or phrases, and every include value must also be present in a title before qBittorrent treats it as a match.
 
-When submitting a minimum-episode rule, MikanCli checks qBittorrent's RSS article retention limit. If qBittorrent is keeping fewer than 500 articles per feed, MikanCli offers to increase that setting so qBittorrent can see enough of Mikan's feed to match newer episodes.
+When submitting a minimum-episode rule through the guided flow, MikanCli checks qBittorrent's RSS article retention limit. If qBittorrent is keeping fewer than 500 articles per feed, MikanCli offers to increase that setting so qBittorrent can see enough of Mikan's feed to match newer episodes. Noninteractive `rules apply` does not change global RSS preferences.
 
 ## Release
 

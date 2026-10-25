@@ -49,7 +49,7 @@ def load_config_payload(config_path: Path) -> dict[str, object]:
         return {}
 
     try:
-        payload = json.loads(target_path.read_text(encoding="utf-8"))
+        payload = json.loads(target_path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError):
         return {}
 
