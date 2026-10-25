@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -237,6 +238,14 @@ def build_interactive_draft(args: argparse.Namespace, *, config: AppConfig,confi
 
 
 def main(argv: list[str] | None = None) -> int:
+    try:
+        return _run(argv)
+    except KeyboardInterrupt:
+        print(t("common.cancelled"), file=sys.stderr)
+        return 130
+
+
+def _run(argv: list[str] | None = None) -> int:
     config_path = get_config_path()
     config = load_config(config_path)
     requested_language = parse_requested_language(argv)
