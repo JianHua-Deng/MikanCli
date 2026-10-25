@@ -14,6 +14,7 @@ from mikancli.display import (
     loading,
     print_feed_preview_page,
     print_message,
+    print_section,
 )
 from mikancli.i18n import t
 from mikancli.integrations.mikan import (
@@ -38,6 +39,7 @@ def search_prompt(*, retry: bool = False) -> str:
 
 def select_candidate_or_search_again(candidates: tuple[MikanBangumi, ...], *, keyword: str) -> MikanBangumi | str:
 
+    print_section(t("ui.search_results"), keyword)
     options: list[tuple[int | str, str]] = [
         (index, f"{candidate.title} (Bangumi {candidate.bangumi_id})")
         for index, candidate in enumerate(candidates)
@@ -60,6 +62,7 @@ def select_candidate_or_search_again(candidates: tuple[MikanBangumi, ...], *, ke
 def select_subgroup_or_navigate(subgroups: tuple[MikanSubgroup, ...], *, bangumi_title: str) -> MikanSubgroup | str:
     """Ask the user to choose a subgroup RSS feed or navigate back through the search flow. Returns a MikanSubgroup, BACK_TO_CANDIDATES, or SEARCH_AGAIN based on the user's decision."""
 
+    print_section(t("ui.subgroups"), bangumi_title)
     options: list[tuple[int | str, str]] = [
         (index, f"{subgroup.title} (Subgroup {subgroup.subgroup_id})")
         for index, subgroup in enumerate(subgroups)

@@ -7,11 +7,28 @@ from rich.console import Console
 from rich.theme import Theme
 
 from mikancli.core.models import RuleDraft
-from mikancli.display import loading, print_message, print_text_summary
+from mikancli.display import loading, print_message, print_section, print_text_summary
 from mikancli.i18n import get_language, set_language
 
 
 class DisplayTests(TestCase):
+    def test_sections_wrap_literal_context_and_stay_plain_when_redirected(self) -> None:
+        title = "[bold]动画[/bold]"
+        context = "https://example.test/rss?title=[literal]&padding=" + "x" * 60
+        for interactive in (False, True):
+            with self.subTest(interactive=interactive):
+                output = StringIO()
+                terminal = Console(file=output, width=40, height=40, force_terminal=interactive,
+                                   color_system=None, theme=Theme({"heading": "cyan"}))
+                with patch("mikancli.display.console", terminal):
+                    print_section(title, context)
+                rendered = output.getvalue()
+                compact = "".join(c for c in rendered if not c.isspace() and c not in "╭╮╰╯┌┐└┘│─")
+                self.assertIn(title, compact)
+                self.assertIn(context, compact)
+                if not interactive:
+                    self.assertEqual(rendered, f"\n{title}\n\n{context}\n")
+
     def test_loading_gates_animation_and_cleans_up_when_requests_fail(self) -> None:
         literal = "[bold]正在加载[/bold] :smile:"
         for terminal, interactive in ((False, False), (False, True), (True, False), (True, True)):

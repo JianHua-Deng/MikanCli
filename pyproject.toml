@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mikancli"
-version = "0.2.0"
+version = "0.2.1"
 description = "CLI foundation for building qBittorrent RSS rules from anime search input."
-readme = "README.md"
+readme = "README.en.md"
 requires-python = ">=3.10"
 authors = [
     { name = "metails" },

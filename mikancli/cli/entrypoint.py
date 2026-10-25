@@ -31,7 +31,7 @@ from mikancli.config import get_config_path, load_config, save_config
 from mikancli.core.models import AppConfig, RuleDraft, SearchRequest
 from mikancli.core.normalize import collapse_spaces
 from mikancli.core.rules import build_rule_draft
-from mikancli.display import print_message, print_text_summary
+from mikancli.display import print_message, print_section, print_text_summary
 from mikancli.i18n import (
     LANGUAGE_LABELS,
     SUPPORTED_LANGUAGES,
@@ -143,6 +143,7 @@ def resolve_startup_language(requested_language: str | None, config: AppConfig) 
 
 
 def prompt_startup_action() -> str:
+    print_section("MikanCli")
     return select_option(
         t("startup.choose_action"),
         [
@@ -156,6 +157,7 @@ def prompt_startup_action() -> str:
 
 
 def run_language_configuration_flow(config: AppConfig, config_path: Path) -> AppConfig:
+    print_section(t("startup.language"))
     selected_language = select_option(
         t("language.choose"),
         [(language, LANGUAGE_LABELS[language]) for language in SUPPORTED_LANGUAGES],
@@ -194,6 +196,8 @@ def build_interactive_draft(args: argparse.Namespace, *, config: AppConfig,confi
 
     bangumi, subgroup = run_interactive_selection(initial_keyword=args.keyword)
 
+    if not args.include or not args.exclude or args.min_episode is None:
+        print_section(t("ui.filters"))
     include_words = tuple(args.include) or prompt_word_list(
         t("filters.include_prompt")
     )
@@ -206,6 +210,7 @@ def build_interactive_draft(args: argparse.Namespace, *, config: AppConfig,confi
             t("filters.min_episode_prompt"),
             field_name=t("filters.min_episode_field"),
         )
+    print_section(t("ui.save_path"))
     save_path = resolve_save_path(
         args.save_path,
         config,

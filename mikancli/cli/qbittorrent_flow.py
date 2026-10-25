@@ -6,7 +6,7 @@ from mikancli.cli.prompts import confirm_choice, prompt_password, prompt_text
 from mikancli.config import save_config
 from mikancli.core.models import AppConfig, QBittorrentSettings, RuleDraft
 from mikancli.core.normalize import collapse_spaces, sanitize_folder_name
-from mikancli.display import loading, print_message
+from mikancli.display import loading, print_message, print_section
 from mikancli.i18n import t
 from mikancli.integrations.qbittorrent import (
     MIN_RSS_ARTICLES_FOR_EPISODE_FILTER,
@@ -28,15 +28,10 @@ QBITTORRENT_ERROR = 3
 
 def setup_qbittorrent(config: AppConfig, config_path: Path) -> int:
     """Prompt for qBittorrent WebUI settings, verify the connection, and save them on success. Returns QBITTORRENT_SETUP_SUCCESS when verification succeeds and QBITTORRENT_ERROR when qBittorrent rejects or cannot be reached."""
-    print()
-    print(t("qb.setup.title"))
-    print(t("qb.setup.step1"))
-    print(t("qb.setup.step2"))
-    print(t("qb.setup.step3"))
-    print(t("qb.setup.step4"))
-    print(t("qb.setup.step5"))
-    print("------------------------------------------")
-    print()
+    print_section(
+        t("qb.setup.title").strip("- "),
+        "\n".join(t(f"qb.setup.step{step}") for step in range(1, 6)),
+    )
 
     default_url = config.qbittorrent_url or "http://localhost:8080"
     entered_url = (
@@ -208,6 +203,7 @@ def prompt_to_submit_rule_to_qbittorrent(config: AppConfig, draft: RuleDraft,) -
     if not config.qbittorrent_url:
         return QBITTORRENT_NOT_CONFIGURED
 
+    print_section("qBittorrent")
     should_submit = confirm_choice(
         t("qb.submit.continue"),
         default=True,

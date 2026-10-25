@@ -1,57 +1,57 @@
 # MikanCli
 
-Language: [English](README.md) | [简体中文](README.zh-CN.md)
+语言：[简体中文](README.md) | [English](README.en.md)
 
-MikanCli is a Python command-line tool for finding bangumi/anime on Mikanani.me, choosing the correct Bangumi and subgroup RSS feed, and turning that selection into a qBittorrent RSS download rule.
+MikanCli 是一个 Python 命令行工具，用于在 Mikanani.me 上查找番剧/动画，选择正确的 Bangumi 和字幕组 RSS 订阅，并把该选择转换成 qBittorrent RSS 下载规则。
 
-It supports both a guided interactive flow and a JSON preview mode for scripting or inspection. The interactive flow is the most complete mode right now.
+它支持引导式交互流程，也支持用于脚本或检查的 JSON 预览模式。目前交互式流程是最完整的模式。
 
-## Features
+## 功能
 
-- Search Mikan by anime title or keyword
-- Choose from matching Bangumi results and subgroup-specific RSS feeds
-- Preview recent RSS feed items with pagination before confirming a feed
-- Read Rich-formatted rule summaries, feed previews, and status messages, with loading indicators for network requests
-- Build qBittorrent RSS rules with include and exclude filters
-- Filter anime-style episode numbers at or above a minimum episode
-- Choose and save a default download folder
-- Configure qBittorrent WebUI access from the CLI
-- Submit RSS feeds and auto-download rules to qBittorrent, then verify that qBittorrent saved them
-- Print rule drafts as JSON without submitting anything
+- 根据动画标题或关键词搜索 Mikan
+- 从匹配的 Bangumi 结果和字幕组 RSS 订阅中进行选择
+- 在确认订阅前分页预览最近的 RSS 条目
+- 使用 Rich 显示规则摘要、订阅预览和状态消息，并在网络请求期间显示加载指示器
+- 使用包含和排除过滤条件生成 qBittorrent RSS 规则
+- 过滤达到某个最低集数的动画标题格式
+- 选择并保存默认下载文件夹
+- 从命令行配置 qBittorrent WebUI 访问
+- 将 RSS 订阅和自动下载规则提交到 qBittorrent，并验证 qBittorrent 已保存这些内容
+- 以 JSON 形式打印规则草稿，不提交任何内容
 
-## Requirements
+## 环境要求
 
-- Python 3.10 or newer
-- `pipx` for installing MikanCli as a standalone CLI app
-- qBittorrent, if you want MikanCli to submit RSS feeds and rules automatically
+- Python 3.10 或更新版本
+- `pipx`，用于把 MikanCli 安装为独立命令行应用
+- qBittorrent，如果你希望 MikanCli 自动提交 RSS 订阅和规则
 
-## Quick Start | Install
+## 快速开始 | 安装
 
-I recommend installing MikanCli with `pipx` so you can use it as a CLI app from any terminal.
-You can skip the following if you already have `pipx` installed:
+推荐使用 `pipx` 安装 MikanCli，这样你可以在任何终端中直接使用它。
+如果你已经安装了 `pipx`，可以跳过下面两条命令：
 
 ```bash
-python -m pip install --user pipx           # Install pipx for the current user
-python -m pipx ensurepath                   # Add the pipx executable folder to PATH
+python -m pip install --user pipx           # 为当前用户安装 pipx
+python -m pipx ensurepath                   # 将 pipx 可执行文件目录添加到 PATH
 ```
 
-Refresh by reopening a new terminal after running `pipx ensurepath`, then run:
+运行 `pipx ensurepath` 后，重新打开一个终端，然后执行：
 
 ```bash
 pipx install mikancli
 ```
 
-## How to Use
+## 使用方法
 
-Now that it is installed, run the following and follow the menu:
+安装完成后，运行下面的命令并按照菜单操作：
 
 ```bash
 mikancli
 ```
 
-## Install by Cloning the Repo
+## 通过克隆仓库安装
 
-To install from a local clone:
+从本地克隆安装：
 
 ```bash
 git clone https://github.com/JianHua-Deng/MikanCli.git
@@ -59,124 +59,125 @@ cd MikanCli
 python -m pipx install -e .
 ```
 
-For development, an editable `pip` install also works:
+用于开发时，也可以使用可编辑的 `pip` 安装：
 
 ```bash
 python -m pip install -e .
 python -m mikancli
 ```
 
-Dependencies, including Rich for output and InquirerPy for prompts, are declared in `pyproject.toml` and installed by `pip` or `pipx`. MikanCli does not install packages at runtime.
+依赖项（包括用于输出的 Rich 和用于交互提示的 InquirerPy）声明在 `pyproject.toml` 中，并由 `pip` 或 `pipx` 安装。MikanCli 不会在运行时安装依赖包。
 
-After pulling dependency changes into an existing editable `pip` installation, rerun `python -m pip install -e .` in that environment. Update `pipx` installations through `pipx` so dependencies stay in the app's environment.
+已有可编辑 `pip` 安装在拉取依赖变更后，需要在原环境中重新运行 `python -m pip install -e .`。通过 `pipx` 安装的应用应使用 `pipx` 更新，让依赖仍安装在应用自己的环境中。
 
-## Terminal Output
+## 终端输出
 
-Rich formats rule summaries, feed previews, and feedback. InquirerPy handles menus and text input. Release titles containing brackets are displayed literally, and long titles, URLs, and paths wrap to fit the terminal.
+Rich 用于显示规则摘要、订阅预览和反馈消息，InquirerPy 负责菜单和文本输入。发布标题中的方括号会原样显示，较长的标题、URL 和路径会根据终端宽度自动换行。
 
-Interactive terminals show loading indicators during network requests. Indicators stop before prompts and after failures. Redirected output uses static status messages, and feed previews retain their plain-text layout.
+交互式终端会在网络请求期间显示加载指示器，并在提示输入前或请求失败后停止。输出被重定向时，会使用静态状态消息，订阅预览保留纯文本布局。
 
-To disable Rich colors in PowerShell:
+在 PowerShell 中禁用 Rich 颜色：
 
 ```powershell
 $env:NO_COLOR = "1"
 mikancli
 ```
 
-Remove that setting with `Remove-Item Env:NO_COLOR`. Bold or dim text and loading animations may remain; InquirerPy manages menu styling separately.
+使用 `Remove-Item Env:NO_COLOR` 移除此设置。粗体、暗色样式和加载动画可能仍会显示；菜单样式由 InquirerPy 单独管理。
 
-The `--json` draft mode prints one JSON document without Rich formatting or progress messages.
+`--json` 草稿模式只输出一个 JSON 文档，不包含 Rich 格式或进度消息。
 
-## Guided Flow
+## 引导式流程
 
-When you run `mikancli` without arguments, the first menu lets you:
+不带参数运行 `mikancli` 时，第一个菜单会让你选择：
 
-- search anime
-- modify qBittorrent configuration
-- change language
-- exit MikanCli
+- 搜索动画
+- 修改 qBittorrent 配置
+- 切换语言
+- 退出 MikanCli
 
-The search flow then:
+搜索流程会依次：
 
-1. asks for an anime title or keyword
-2. searches Mikan for matching Bangumi entries
-3. lets you choose the correct Bangumi entry
-4. fetches subgroup RSS feeds from the selected Bangumi page
-5. lets you choose a subgroup
-6. previews recent RSS feed items
-7. asks for include, exclude, and minimum episode filters
-8. asks where downloads should be saved
-9. builds a rule draft
-10. submits the feed and rule to qBittorrent
-11. verifies the submitted feed and rule through the qBittorrent WebUI API
+1. 询问动画标题或关键词
+2. 在 Mikan 上搜索匹配的 Bangumi 条目
+3. 让你选择正确的 Bangumi 条目
+4. 从所选 Bangumi 页面获取字幕组 RSS 订阅
+5. 让你选择字幕组
+6. 预览最近的 RSS 订阅条目
+7. 询问包含、排除和最低集数过滤条件
+8. 询问下载保存位置
+9. 生成规则草稿
+10. 将订阅和规则提交到 qBittorrent
+11. 通过 qBittorrent WebUI API 验证提交的订阅和规则
 
-Interactive prompts accept `exit` or `quit` where text input is requested, and menus include an exit option.
+在需要输入文本的交互式提示中，可以输入 `exit` 或 `quit` 退出；菜单中也会包含退出选项。
 
-## qBittorrent Setup
+## qBittorrent 设置
 
-Before MikanCli can submit feeds or rules, enable qBittorrent WebUI:
+在 MikanCli 可以提交订阅或规则之前，需要先启用 qBittorrent WebUI：
 
-1. Open qBittorrent settings
-2. Enable WebUI or remote control
-3. Confirm the WebUI address, username, and password. If the address is empty, it usually means it is `http://localhost:[port]`
-4. Run `mikancli --setup-qbittorrent`
+1. 打开 qBittorrent 设置
+2. 启用 WebUI 或远程控制
+3. 确认 WebUI 地址、用户名和密码。如果地址为空，通常表示它是 `http://localhost:[port]`
+4. 运行 `mikancli --setup-qbittorrent`
 
-Setup notes:
+设置说明：
 
-- Pressing Enter for the URL uses `http://localhost:8080`
-- Entering `localhost:8080` is normalized to `http://localhost:8080`
-- Username and password can be left blank if your qBittorrent WebUI allows localhost access without authentication
-- If qBittorrent rejects the connection, re-check the WebUI port and credentials in qBittorrent settings
+- URL 直接按 Enter 会使用 `http://localhost:8080`
+- 输入 `localhost:8080` 会自动规范化为 `http://localhost:8080`
+- 如果 qBittorrent WebUI 允许 localhost 绕过认证，用户名和密码可以留空
+- 如果 qBittorrent 拒绝连接，请重新检查 qBittorrent 设置里的 WebUI 端口和凭据
 
-## Configuration
+## 配置
 
-MikanCli stores configuration in a JSON file:
+MikanCli 将配置保存在 JSON 文件中：
 
-- Windows: `%APPDATA%\Roaming\MikanCli\config.json`
+- Windows：`%APPDATA%\Roaming\MikanCli\config.json`
 
-Saved settings can include:
+保存的设置可以包括：
 
-- default download folder
-- language preference
+- 默认下载文件夹
+- 语言偏好
 - qBittorrent WebUI URL
-- qBittorrent username and password
-- qBittorrent category
-- whether qBittorrent should add matched torrents paused
+- qBittorrent 用户名和密码
+- qBittorrent 分类
+- qBittorrent 是否应将匹配的种子以暂停状态添加
 
-The qBittorrent password is stored in the config file so MikanCli can submit rules in later runs. Keep that file private on shared machines.
+qBittorrent 密码会保存在配置文件中，这样 MikanCli 后续运行时才能提交规则。共享机器上请保护好这个文件。
 
-## Language Support
+## 语言支持
 
-MikanCli supports English and Simplified Chinese for user-facing CLI text, including interactive menus, prompts, setup instructions, summaries, and help text. Command names, option names, JSON field names, Mikan titles, subgroup names, URLs, and qBittorrent API payloads stay stable.
+MikanCli 支持英文和简体中文的用户界面文本，包括交互式菜单、提示、设置说明、摘要和帮助文本。命令名称、选项名称、JSON 字段名、Mikan 标题、字幕组名称、URL 和 qBittorrent API 数据保持稳定。
 
-Language selection uses this precedence order:
+语言选择优先级如下：
 
-1. `--language en` or `--language zh-CN`
-2. `MIKANCLI_LANG=en` or `MIKANCLI_LANG=zh-CN`
-3. saved config value
-4. English fallback
+1. `--language en` 或 `--language zh-CN`
+2. `MIKANCLI_LANG=en` 或 `MIKANCLI_LANG=zh-CN`
+3. 已保存的配置值
+4. 默认回退到英文
 
-Interactive users can always change language from the startup menu. The selected language is saved to the config file for future runs.
+交互式用户始终可以从启动菜单切换语言。选中的语言会保存到配置文件，供以后运行使用。
 
-## Project Structure
+
+## 项目结构
 
 ```text
 mikancli/
-  cli/             CLI entrypoint, prompts, and interactive flows
-  core/            dataclasses, normalization, and rule-building logic
-  integrations/    Mikan and qBittorrent adapters
-  config.py        user config and folder selection helpers
-  display.py       Rich summaries, feed previews, feedback, and loading indicators
+  cli/             CLI 入口、提示和交互流程
+  core/            数据类、规范化和规则生成逻辑
+  integrations/    Mikan 和 qBittorrent 适配器
+  config.py        用户配置和文件夹选择辅助函数
+  display.py       Rich 摘要、订阅预览、反馈和加载指示器
 ```
 
-The console command is declared in `pyproject.toml`:
+控制台命令在 `pyproject.toml` 中声明：
 
 ```toml
 [project.scripts]
 mikancli = "mikancli.cli.entrypoint:main"
 ```
 
-## Commands Usage
+## 命令用法
 
 ```text
 usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
@@ -185,37 +186,37 @@ usage: mikancli [-h] [--include INCLUDE] [--exclude EXCLUDE]
                 [keyword]
 ```
 
-Options:
+选项：
 
-- `keyword`: anime title or search phrase
-- `--include VALUE`: require a word or phrase in accepted release titles. Repeat for multiple values
-- `--exclude VALUE`: reject release titles containing a word or phrase. Repeat for multiple values
-- `--min-episode NUMBER`: only accept anime-style release titles at or above this episode number
-- `--save-path PATH`: use this base download folder for the generated qBittorrent rule
-- `--json`: print the rule draft as JSON. This mode does not submit to qBittorrent
-- `--setup-qbittorrent`: configure and verify qBittorrent WebUI settings
-- `--language {en,zh-CN}`: choose CLI language for this run
-- `--version`: print the installed CLI version
+- `keyword`：动画标题或搜索短语
+- `--include VALUE`：要求已接受的发布标题中包含某个词或短语。可重复传入多个值
+- `--exclude VALUE`：拒绝标题中包含某个词或短语的发布。可重复传入多个值
+- `--min-episode NUMBER`：只接受达到此集数或更高集数的动画发布标题
+- `--save-path PATH`：为生成的 qBittorrent 规则使用这个基础下载文件夹
+- `--json`：以 JSON 形式打印规则草稿。此模式不会提交到 qBittorrent
+- `--setup-qbittorrent`：配置并验证 qBittorrent WebUI 设置
+- `--language {en,zh-CN}`：为本次运行选择 CLI 语言
+- `--version`：打印已安装的 CLI 版本
 
-## Minimum Episode Filtering
+## 最低集数过滤
 
-Use `--min-episode` when RSS item titles use common anime formats with a dash before the episode number or a bracketed episode number:
+当 RSS 条目标题使用常见的动画格式，并在集数前有短横线或使用方括号集数时，可以使用 `--min-episode`：
 
 ```text
 [SubsPlease] One Piece - 1126 (1080p)
 [Skymoon-Raws][One Piece][1126][ViuTV][WEB-RIP][CHT][SRT][1080p][MKV]
 ```
 
-For example:
+例如：
 
 ```bash
 mikancli "one piece" --include SubsPlease --min-episode 1126
 ```
 
-MikanCli converts the minimum episode into a qBittorrent regular expression in the rule's `mustContain` field and enables `useRegex`. Normal `--include` and `--exclude` values still behave as literal words or phrases, and every include value must also be present in a title before qBittorrent treats it as a match.
+MikanCli 会把最低集数转换成 qBittorrent 规则 `mustContain` 字段中的正则表达式，并启用 `useRegex`。普通的 `--include` 和 `--exclude` 值仍然按字面词或短语处理，并且每个包含值都必须出现在标题中，qBittorrent 才会认为它匹配。
 
-When submitting a minimum-episode rule, MikanCli checks qBittorrent's RSS article retention limit. If qBittorrent is keeping fewer than 500 articles per feed, MikanCli offers to increase that setting so qBittorrent can see enough of Mikan's feed to match newer episodes.
+提交最低集数规则时，MikanCli 会检查 qBittorrent 的 RSS 条目保留上限。如果 qBittorrent 每个订阅保留少于 500 个条目，MikanCli 会询问是否增加这个设置，让 qBittorrent 能看到足够多的 Mikan 订阅条目来匹配较新的集数。
 
-## Release
+## 发布
 
-The repository includes a GitHub Actions workflow at `.github/workflows/publish.yml` that publishes to PyPI from `main` when the package version in `pyproject.toml` changes.
+仓库包含 GitHub Actions 工作流 `.github/workflows/publish.yml`。当 `main` 分支中 `pyproject.toml` 的包版本发生变化时，该工作流会发布到 PyPI。

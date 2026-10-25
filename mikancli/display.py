@@ -3,7 +3,9 @@ from __future__ import annotations
 from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime
 
-from rich.console import Console
+from rich.console import Console, Group
+from rich.panel import Panel
+from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
@@ -11,11 +13,12 @@ from rich.theme import Theme
 from mikancli.core.models import MikanFeedItem, MikanSubgroup, RuleDraft
 from mikancli.i18n import t
 
+PRIMARY_COLOR = "#ffb454"
 FEED_PREVIEW_PAGE_SIZE = 12
 console = Console(
     markup=False, highlight=False, emoji=False,
     theme=Theme({
-        "heading": "bold cyan", "label": "cyan", "note": "dim",
+        "heading": f"bold {PRIMARY_COLOR}", "label": PRIMARY_COLOR, "note": "dim",
         "success": "green", "warning": "yellow", "error": "bold red",
     }),
 )
@@ -26,10 +29,24 @@ def print_message(message: str, *, style: str = "note") -> None:
     console.print(Text(message), style=style, soft_wrap=not console.is_terminal)
 
 
+def print_section(title: str, *paragraphs: str) -> None:
+    """Give each interactive stage a wrapping heading and optional context."""
+    content = Text()
+    content.append(title, style="heading")
+    for paragraph in paragraphs:
+        content.append("\n\n" + paragraph)
+    console.print()
+    if console.is_terminal:
+        console.print(Panel(content, border_style="heading", padding=(0, 1),
+                            width=min(console.width, 100)))
+    else:
+        console.print(content, soft_wrap=True)
+
+
 def loading(message: str) -> AbstractContextManager[object]:
     """Animate terminal requests, or print one static message when redirected."""
     if console.is_terminal and console.is_interactive:
-        return console.status(Text(message), spinner="line")
+        return console.status(Text(message), spinner="line", spinner_style=PRIMARY_COLOR)
     print_message(message)
     return nullcontext()
 
@@ -53,10 +70,17 @@ def print_text_summary(draft: RuleDraft) -> int:
     table.add_column(style="label")
     table.add_column(overflow="fold")
     for key, value in fields.items():
+        if console.is_terminal and key in {"must_contain", "save_path"}:
+            table.add_row()
         table.add_row(Text(t(f"display.{key}", value="").rstrip()), Text(str(value)))
     console.print()
-    console.rule(Text(t("display.rule_header").strip("- ")), style="heading")
-    console.print(table)
+    heading = Text(t("display.rule_header").strip("- "))
+    if console.is_terminal:
+        console.print(Panel(table, title=heading, border_style="heading",
+                            padding=(1, 2), width=min(console.width, 100)))
+    else:
+        console.rule(heading, style="heading")
+        console.print(table)
     console.print()
     for note in draft.notes:
         console.print(Text(t("display.next_step", value=note)), style="note")
@@ -117,13 +141,23 @@ def print_feed_preview_page(
         console.print(Text(content), soft_wrap=True)
         return
 
-    preview = Text()
-    for index, line in enumerate(content.splitlines(keepends=True)):
-        style = "heading" if index == 0 else ""
-        if index in (1, 2) or line.startswith("   "):
-            style = "note"
-        preview.append(line, style=style)
-    console.print(preview, overflow="fold")
+    sections = []
+    for index, line in enumerate(content.splitlines()):
+        if not line:
+            sections.append(Rule(style="note"))
+            continue
+        if line.startswith("   "):
+            details = Text(line.lstrip())
+            if details.cell_len <= min(console.width, 100) - 8:
+                sections.append(Rule(details, align="left", style="note"))
+            else:
+                sections.append(details)
+            continue
+        style = "heading" if index == 0 else "bold" if index >= 4 else ""
+        sections.append(Text(line, style=style))
+    console.print()
+    console.print(Panel(Group(*sections), border_style="heading",
+                        padding=(0, 1), width=min(console.width, 100)))
 
 
 def build_feed_preview_page_text(

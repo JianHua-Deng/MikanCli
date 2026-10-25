@@ -26,11 +26,14 @@ class FeedPreviewTests(TestCase):
                 for page in (1, 2):
                     with self.subTest(language=language, width=width, page=page):
                         output = StringIO()
-                        terminal = Console(file=output, width=width, force_terminal=True,
+                        terminal = Console(file=output, width=width, height=40, force_terminal=True,
                                            color_system=None, theme=theme)
                         with patch("mikancli.display.console", terminal):
                             print_feed_preview_page(subgroup, items, page=page)
-                        rendered = "".join(output.getvalue().split())
+                        framed = output.getvalue()
+                        self.assertIn("│", framed)
+                        rendered = "".join(char for char in framed
+                                           if not char.isspace() and char not in "╭╮╰╯┌┐└┘│─")
                         expected = build_feed_preview_page_text(subgroup, items, page=page)
                         self.assertEqual(rendered, "".join(expected.split()))
                         self.assertEqual("[13]" in rendered, page == 2)

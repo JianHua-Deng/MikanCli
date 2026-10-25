@@ -4,12 +4,12 @@ from collections.abc import Iterable
 from typing import Any, TypeVar
 
 from mikancli.core.normalize import collapse_spaces
+from mikancli.display import PRIMARY_COLOR, console
 from mikancli.i18n import t
 
 T = TypeVar("T")
 EXIT_OPTION = "__exit_cli__"
 EXIT_TEXT_VALUES = {"exit", "quit"}
-PROMPT_SEPARATOR = "----------------------------------------"
 MENU_SEPARATOR_LABEL = ""
 
 
@@ -39,8 +39,18 @@ def get_separator_class():
     return Separator
 
 
+def get_prompt_style():
+    from InquirerPy import get_style
+
+    return get_style({
+        "questionmark": PRIMARY_COLOR, "question": "bold",
+        "answermark": PRIMARY_COLOR, "answer": PRIMARY_COLOR, "input": PRIMARY_COLOR,
+        "pointer": f"bold {PRIMARY_COLOR}", "fuzzy_border": PRIMARY_COLOR,
+    }, style_override=False)
+
+
 def prepare_prompt_message(message: str) -> str:
-    print(PROMPT_SEPARATOR)
+    console.print()
     return message.strip("\n")
 
 
@@ -86,6 +96,8 @@ def select_option(
         pointer=">",
         instruction=t("common.use_arrow_keys"),
         max_height="70%",
+        style=get_prompt_style(),
+        border=len(options) > 2,
         cycle=True,
     )
     selected = prompt.execute()
@@ -101,6 +113,7 @@ def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = 
     prompt = inquirer.text(
         message=prepare_prompt_message(message),
         default=default or "",
+        style=get_prompt_style(),
     )
     entered = collapse_spaces(prompt.execute())
     if allow_exit and entered.casefold() in EXIT_TEXT_VALUES:
@@ -113,9 +126,9 @@ def prompt_password(message: str, *, allow_exit: bool = False) -> str:
     inquirer = get_inquirer()
     prompt_factory = getattr(inquirer, "secret", None)
     if prompt_factory is not None:
-        prompt = prompt_factory(message=prepare_prompt_message(message))
+        prompt = prompt_factory(message=prepare_prompt_message(message), style=get_prompt_style())
     else:  # pragma: no cover - fallback for alternate InquirerPy versions
-        prompt = inquirer.text(message=prepare_prompt_message(message), secret=True)
+        prompt = inquirer.text(message=prepare_prompt_message(message), secret=True, style=get_prompt_style())
 
     entered = prompt.execute()
     if allow_exit and entered.strip().casefold() in EXIT_TEXT_VALUES:
