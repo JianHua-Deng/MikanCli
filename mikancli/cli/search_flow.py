@@ -38,7 +38,7 @@ def search_prompt(*, retry: bool = False) -> str:
 
 
 def prompt_search_keyword(*, retry: bool = False) -> str:
-    return prompt_required_text(search_prompt(retry=retry), boxed=True)
+    return prompt_required_text(search_prompt(retry=retry))
 
 
 def select_candidate_or_search_again(candidates: tuple[MikanBangumi, ...], *, keyword: str) -> MikanBangumi | str:

@@ -54,6 +54,19 @@ def prepare_prompt_message(message: str) -> str:
     return message.strip("\n")
 
 
+def frame_prompt(prompt: Any) -> Any:
+    """Frame native prompts while retaining their controls and keyboard focus."""
+    if console.is_terminal:
+        if hasattr(prompt, "_session"):
+            prompt._session.show_frame = True
+        else:
+            from prompt_toolkit.layout.containers import to_container
+            from prompt_toolkit.widgets import Frame
+            layout = prompt.application.layout
+            layout.container = to_container(Frame(layout.container))
+    return prompt
+
+
 def build_select_choices(options: list[tuple[T, str]], *, allow_exit: bool, separator_before_values: Iterable[T] = (), separator_before_exit: bool = True) -> list[object]:
     separator_values = set(separator_before_values)
     separator = get_separator_class()(MENU_SEPARATOR_LABEL)
@@ -97,16 +110,16 @@ def select_option(
         instruction=t("common.use_arrow_keys"),
         max_height="70%",
         style=get_prompt_style(),
-        border=len(options) > 2,
+        border=False,
         cycle=True,
     )
-    selected = prompt.execute()
+    selected = frame_prompt(prompt).execute()
     if allow_exit and selected == EXIT_OPTION:
         raise ExitRequested()
     return selected
 
 
-def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = False, boxed: bool = False) -> str:
+def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = False) -> str:
 
     inquirer = get_inquirer()
 
@@ -115,10 +128,7 @@ def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = 
         default=default or "",
         style=get_prompt_style(),
     )
-    if boxed and console.is_terminal:
-        # InquirerPy wraps PromptSession; its native frame preserves input editing.
-        prompt._session.show_frame = True
-    entered = collapse_spaces(prompt.execute())
+    entered = collapse_spaces(frame_prompt(prompt).execute())
     if allow_exit and entered.casefold() in EXIT_TEXT_VALUES:
         raise ExitRequested()
     return entered
@@ -133,7 +143,7 @@ def prompt_password(message: str, *, allow_exit: bool = False) -> str:
     else:  # pragma: no cover - fallback for alternate InquirerPy versions
         prompt = inquirer.text(message=prepare_prompt_message(message), secret=True, style=get_prompt_style())
 
-    entered = prompt.execute()
+    entered = frame_prompt(prompt).execute()
     if allow_exit and entered.strip().casefold() in EXIT_TEXT_VALUES:
         raise ExitRequested()
     return entered

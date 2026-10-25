@@ -6,9 +6,9 @@ from mikancli.display import print_message
 from mikancli.i18n import t
 
 
-def prompt_required_text(prompt: str, *, boxed: bool = False) -> str:
+def prompt_required_text(prompt: str) -> str:
     while True:
-        entered = collapse_spaces(prompt_text(prompt, allow_exit=True, boxed=boxed))
+        entered = collapse_spaces(prompt_text(prompt, allow_exit=True))
         if entered:
             return entered
         print_message(t("common.value_required"), style="warning")

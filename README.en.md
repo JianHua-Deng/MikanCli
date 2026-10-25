@@ -21,9 +21,9 @@ It supports both a guided interactive flow and a JSON preview mode for scripting
 
 ## Screenshots
 
-![Search input (demo data)](docs/images/search-input.png)
+![Search input (demo data)](docs/images/search-input.en.png)
 
-![RSS feed preview (demo data)](docs/images/feed-preview.png)
+![RSS feed preview (demo data)](docs/images/feed-preview.en.png)
 
 ## Requirements
 
