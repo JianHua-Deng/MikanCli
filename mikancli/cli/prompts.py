@@ -106,7 +106,7 @@ def select_option(
     return selected
 
 
-def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = False) -> str:
+def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = False, boxed: bool = False) -> str:
 
     inquirer = get_inquirer()
 
@@ -115,6 +115,9 @@ def prompt_text(message: str, *, default: str | None = None, allow_exit: bool = 
         default=default or "",
         style=get_prompt_style(),
     )
+    if boxed and console.is_terminal:
+        # InquirerPy wraps PromptSession; its native frame preserves input editing.
+        prompt._session.show_frame = True
     entered = collapse_spaces(prompt.execute())
     if allow_exit and entered.casefold() in EXIT_TEXT_VALUES:
         raise ExitRequested()

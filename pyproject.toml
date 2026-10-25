@@ -27,6 +27,7 @@ classifiers = [
 ]
 dependencies = [
     "InquirerPy>=0.3",
+    "prompt-toolkit>=3.0.52,<4",
     "rich>=14.0",
 ]
 

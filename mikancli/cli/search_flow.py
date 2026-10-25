@@ -37,6 +37,10 @@ def search_prompt(*, retry: bool = False) -> str:
     return t("search.prompt_retry" if retry else "search.prompt")
 
 
+def prompt_search_keyword(*, retry: bool = False) -> str:
+    return prompt_required_text(search_prompt(retry=retry), boxed=True)
+
+
 def select_candidate_or_search_again(candidates: tuple[MikanBangumi, ...], *, keyword: str) -> MikanBangumi | str:
 
     print_section(t("ui.search_results"), keyword)
@@ -179,7 +183,7 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
     
     keyword = collapse_spaces(initial_keyword or "")
     if not keyword:
-        keyword = prompt_required_text(search_prompt())
+        keyword = prompt_search_keyword()
 
     while True:
         try:
@@ -187,17 +191,17 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
                 candidates = search_mikan_bangumi(keyword)
         except MikanLookupError as exc:
             print_message(str(exc), style="error")
-            keyword = prompt_required_text(search_prompt(retry=True))
+            keyword = prompt_search_keyword(retry=True)
             continue
 
         if not candidates:
             print_message(t("search.no_results", keyword=keyword), style="warning")
-            keyword = prompt_required_text(search_prompt(retry=True))
+            keyword = prompt_search_keyword(retry=True)
             continue
 
         selected_candidate = select_candidate_or_search_again(candidates, keyword=keyword)
         if selected_candidate == SEARCH_AGAIN:
-            keyword = prompt_required_text(search_prompt(retry=True))
+            keyword = prompt_search_keyword(retry=True)
             continue
 
         bangumi = selected_candidate
@@ -222,7 +226,7 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
             if selected_subgroup == BACK_TO_CANDIDATES:
                 break
             if selected_subgroup == SEARCH_AGAIN:
-                keyword = prompt_required_text(search_prompt(retry=True))
+                keyword = prompt_search_keyword(retry=True)
                 break
 
             subgroup = selected_subgroup
@@ -238,7 +242,7 @@ def run_interactive_selection(*, initial_keyword: str | None) -> tuple[MikanBang
             if decision == BACK_TO_SUBGROUPS:
                 continue
             if decision == REJECT_SUBGROUP:
-                keyword = prompt_required_text(search_prompt(retry=True))
+                keyword = prompt_search_keyword(retry=True)
                 break
 
             return bangumi, subgroup

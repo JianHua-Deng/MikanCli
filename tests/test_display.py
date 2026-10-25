@@ -40,6 +40,7 @@ class DisplayTests(TestCase):
                         raise failure
                 if terminal and interactive:
                     target.status.assert_called_once()
+                    self.assertEqual(target.status.call_args.kwargs["spinner"], "dots")
                     self.assertEqual(target.status.call_args.args[0].plain, literal)
                     target.status.return_value.__exit__.assert_called_once_with(ValueError, failure, ANY)
                     message.assert_not_called()

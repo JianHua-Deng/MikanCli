@@ -46,7 +46,7 @@ def print_section(title: str, *paragraphs: str) -> None:
 def loading(message: str) -> AbstractContextManager[object]:
     """Animate terminal requests, or print one static message when redirected."""
     if console.is_terminal and console.is_interactive:
-        return console.status(Text(message), spinner="line", spinner_style=PRIMARY_COLOR)
+        return console.status(Text(message), spinner="dots", spinner_style=PRIMARY_COLOR)
     print_message(message)
     return nullcontext()
 

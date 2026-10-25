@@ -19,6 +19,12 @@ It supports both a guided interactive flow and a JSON preview mode for scripting
 - Submit RSS feeds and auto-download rules to qBittorrent, then verify that qBittorrent saved them
 - Print rule drafts as JSON without submitting anything
 
+## Screenshots
+
+![Search input (demo data)](docs/images/search-input.png)
+
+![RSS feed preview (demo data)](docs/images/feed-preview.png)
+
 ## Requirements
 
 - Python 3.10 or newer
